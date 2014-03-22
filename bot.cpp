@@ -6,10 +6,17 @@ extern "C" {
 #include <stdarg.h>
 };
 
+#include <string>
+#include <sstream>
+#include <vector>
+#include <cstdlib>
+using namespace std;
+
 int conn;
 char sbuf[512];
 
-void raw(char *fmt, ...) {
+void raw(char *fmt, ...) 
+{
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(sbuf, 512, fmt, ap);
@@ -18,8 +25,13 @@ void raw(char *fmt, ...) {
     write(conn, sbuf, strlen(sbuf));
 }
 
-int main() {
-    
+void say(char* msg, char* channel)
+{
+	raw("PRIVMSG %s :%s\r\n", channel, msg);
+}
+
+int main() 
+{    
     char *nick = "immabot";
     char *channel = "#bitbottest";
     char *host = "irc.esper.net";
@@ -30,6 +42,7 @@ int main() {
     char buf[513];
     struct addrinfo hints, *res;
     
+    srand (time(NULL));
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
@@ -102,11 +115,39 @@ int main() {
                         {
                         	if(!strncmp(&message[1], "beep", 4))	//Process different messages
                         	{
-                        		raw("PRIVMSG %s :Imma bot. beep.\r\n", channel);
+                        		say("Imma bot. beep.", channel);
+													}
+													else if(!strncmp(&message[1], "ex", 2))
+                        	{
+                        		say("Your ex is ugly", channel);
+													}
+													else if(!strncmp(&message[1], "hug", 3))
+                        	{
+                        		say("Setting phasors to hug.", channel);
+                        		sleep(rand() % 7 + 1);	//Pause for a random amount of time
+                        		raw("PRIVMSG %s :\001ACTION hugs %s a little too tightly\001\r\n", channel, user);
 													}
 												}
-                        
-                        //raw("%s %s :%s", command, target, message); // If you enable this the IRCd will get its "*** Looking up your hostname..." messages thrown back at it but it works...
+												else	//Other misc. commands
+												{
+													string s = message;
+													if(s.find(nick) != string::npos)	//Highlighted; respond with a "your ex" joke
+													{
+														//Split
+														istringstream iss(s);
+														vector<string> vec;
+														do
+														{
+																string sub;
+																iss >> sub;
+																if(sub.size() > 1 && (sub.find(nick) == string::npos))
+																	vec.push_back(sub);
+														} while (iss);
+														
+														int num = rand() % vec.size();
+														raw("PRIVMSG %s :Your ex is %s\r\n", channel, vec[num].c_str());
+													}
+												}
                     }
                 }
                 
