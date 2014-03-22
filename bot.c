@@ -19,7 +19,7 @@ void raw(char *fmt, ...) {
 int main() {
     
     char *nick = "immabot";
-    char *channel = "#bitblot";
+    char *channel = "#bitbottest";
     char *host = "irc.esper.net";
     char *port = "6667";
     
@@ -90,9 +90,20 @@ int main() {
                     else if (!strncmp(command, "PRIVMSG", 7) || !strncmp(command, "NOTICE", 6)) 
                     {
                         if (where == NULL || message == NULL) continue;
-                        if ((sep = strchr(user, '!')) != NULL) user[sep - user] = '\0';
-                        if (where[0] == '#' || where[0] == '&' || where[0] == '+' || where[0] == '!') target = where; else target = user;
+                        if ((sep = strchr(user, '!')) != NULL) 
+                        	user[sep - user] = '\0';
+                        if (where[0] == '#' || where[0] == '&' || where[0] == '+' || where[0] == '!') 
+                        	target = where; else target = user;
                         printf("[from: %s] [reply-with: %s] [where: %s] [reply-to: %s] %s", user, command, where, target, message);
+                        
+                        if(message[0] == '!')	//bot commands
+                        {
+                        	if(!strncmp(&message[1], "beep", 4))	//Process different messages
+                        	{
+                        		raw("PRIVMSG %s :Imma bot. beep.\r\n", channel);
+													}
+												}
+                        
                         //raw("%s %s :%s", command, target, message); // If you enable this the IRCd will get its "*** Looking up your hostname..." messages thrown back at it but it works...
                     }
                 }
