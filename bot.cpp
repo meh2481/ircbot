@@ -1,8 +1,10 @@
+extern "C" {
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <netdb.h>
 #include <stdarg.h>
+};
 
 int conn;
 char sbuf[512];
