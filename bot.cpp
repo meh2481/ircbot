@@ -172,7 +172,22 @@ int main()
                         	{
                         		say("Setting phasors to hug.", channel);
                         		sleep(rand() % 7 + 1);	//Pause for a random amount of time
-                        		raw("PRIVMSG %s :\001ACTION hugs %s a little too tightly\001\r\n", channel, user);
+                        		if(strlen(message) > 5)	//Hug somebody else	//TODO: See if they're here first, and disappointed if not
+                        		{
+                        			string sPerson = &message[5];
+                        			size_t pos = sPerson.find('\r');
+                        			if(pos != string::npos)
+                        				sPerson.erase(pos);
+                        			else
+                        			{
+                        				pos = sPerson.find('\n');
+                        				if(pos != string::npos)
+                        					sPerson.erase(pos);
+                        			}
+                        			raw("PRIVMSG %s :\001ACTION hugs %s a little too tightly\001\r\n", channel, sPerson.c_str());
+                        		}
+                        		else	//hug the person who did the command
+                        			raw("PRIVMSG %s :\001ACTION hugs %s a little too tightly\001\r\n", channel, user);
 													}
 													else if(!strncmp(&message[1], "roll", 4) ||
 																	!strncmp(&message[1], "dice", 4) ||
@@ -231,7 +246,7 @@ int main()
 															 		  s.find("n8") != string::npos ||
 															 		  s.find("later") != string::npos)
 														{
-															switch(rand() % 3)
+															switch(rand() % 4)
 															{
 																case 0:
 																	say("Bai!", channel);
@@ -239,6 +254,10 @@ int main()
 																	
 																case 1:
 																	say("Nite!", channel);
+																	break;
+																	
+																case 2:
+																	say("Bye!", channel);
 																	break;
 																	
 																default:
@@ -294,8 +313,8 @@ int main()
                     	{
                     		sUser.erase(pos);
 											}
-                      if(tolowercase(sUser) != tolowercase(nick))
-                    		raw("PRIVMSG %s :Hi %s!\r\n", channel, sUser.c_str());
+                      if(tolowercase(sUser) != tolowercase(nick))	//Make sure it wasn't me
+                    		raw("PRIVMSG %s :Hi %s!\r\n", channel, sUser.c_str());	//Say hi
 										}
                 }
                 
