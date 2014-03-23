@@ -10,10 +10,56 @@ extern "C" {
 #include <sstream>
 #include <vector>
 #include <cstdlib>
+#include <algorithm>
+#include <fstream>
 using namespace std;
 
 int conn;
 char sbuf[512];
+
+vector<string> vBadWords;
+vector<string> vBirdWords;
+
+string tolowercase(string s)
+{
+	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+	return s;
+}
+
+string touppercase(string s)
+{
+	std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+	return s;
+}
+
+void inputWordList(string sFilename, vector<string>& dest)
+{
+	ifstream infile(sFilename.c_str());
+	while(!infile.fail())
+	{
+		string sLine;
+		getline(infile, sLine);
+		if(sLine.size())
+			dest.push_back(sLine);
+	}
+}
+
+void readWords()
+{
+	inputWordList("badwords.txt", vBadWords);
+	inputWordList("birdwords.txt", vBirdWords);
+}
+
+bool isInside(string s, vector<string>& vec)
+{
+	s = tolowercase(s);
+	for(vector<string>::iterator i = vec.begin(); i != vec.end(); i++)
+	{
+		if(s.find(*i) != string::npos)
+			return true;
+	}
+	return false;
+}
 
 void raw(char *fmt, ...) 
 {
@@ -33,7 +79,7 @@ void say(char* msg, char* channel)
 int main() 
 {    
     char *nick = "immabot";
-    char *channel = "#bitbottest";
+    char *channel = "#bitblot";
     char *host = "irc.esper.net";
     char *port = "6667";
     
@@ -43,6 +89,7 @@ int main()
     struct addrinfo hints, *res;
     
     srand (time(NULL));
+    readWords();
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
@@ -127,28 +174,129 @@ int main()
                         		sleep(rand() % 7 + 1);	//Pause for a random amount of time
                         		raw("PRIVMSG %s :\001ACTION hugs %s a little too tightly\001\r\n", channel, user);
 													}
+													else if(!strncmp(&message[1], "roll", 4) ||
+																	!strncmp(&message[1], "dice", 4) ||
+																	!strncmp(&message[1], "die", 3))
+                        	{
+                        		say("Rolling a d6...", channel);
+                        		int randnum = rand() % 6 + 1;
+                        		raw("PRIVMSG %s :You rolled a %d!\r\n", channel, randnum);
+													}
 												}
 												else	//Other misc. commands
 												{
-													string s = message;
-													if(s.find(nick) != string::npos)	//Highlighted; respond with a "your ex" joke
+													string s = tolowercase(message);
+													if(s.find(tolowercase(nick)) != string::npos)	//Highlighted; respond with a "your ex" joke
 													{
-														//Split
-														istringstream iss(s);
-														vector<string> vec;
-														do
-														{
-																string sub;
-																iss >> sub;
-																if(sub.size() > 1 && (sub.find(nick) == string::npos))
-																	vec.push_back(sub);
-														} while (iss);
+														string sUser = user;
 														
-														int num = rand() % vec.size();
-														raw("PRIVMSG %s :Your ex is %s\r\n", channel, vec[num].c_str());
+														//Kill command by privileged user
+														if(s.find("cheese curls") != string::npos && sUser.find("Daxar") == 0)	//Password for shutting off
+														{
+															say("Kthxbai.", channel);
+															raw("PART %s :Quit command invoked by %s\r\n", channel, user);
+															return 0;	//Quit
+														}
+														
+														//hai
+														else if(s.find("hi") != string::npos ||
+															  		s.find("hai") != string::npos ||
+															 		  s.find("hello") != string::npos ||
+															 			s.find("hey") != string::npos ||
+															 			s.find("sup") != string::npos)
+														{
+															switch(rand() % 3)
+															{
+																case 0:
+																	say("ohai", channel);
+																	break;
+																	
+																case 1:
+																	say("Hai thar!", channel);
+																	break;
+																	
+																default:
+																	say("sup word diggly dog", channel);
+																	break;
+															}
+														}
+														
+														//bai
+														else if(s.find("bye") != string::npos ||
+															  		s.find("bai") != string::npos ||
+															 		  s.find("see ya") != string::npos ||
+															 			s.find("so long") != string::npos ||
+															 		  s.find("night") != string::npos ||
+															 		  s.find("nite") != string::npos ||
+															 		  s.find("n8") != string::npos ||
+															 		  s.find("later") != string::npos)
+														{
+															switch(rand() % 3)
+															{
+																case 0:
+																	say("Bai!", channel);
+																	break;
+																	
+																case 1:
+																	say("Nite!", channel);
+																	break;
+																	
+																default:
+																	say("toodles with oodles of noodles!", channel);
+																	break;
+															}
+														}
+														
+														//Insult people for highlighting the bot randomly
+														else
+														{
+															//Split
+															istringstream iss(s);
+															vector<string> vec;
+															do
+															{
+																	string sub;
+																	iss >> sub;
+																	if(sub.size() > 1 && (sub.find(nick) == string::npos) && (sub.find("\001action") == string::npos))
+																	{
+																		if(sub[sub.length() -1] == '\001')
+																			sub.erase(sub.length() -1);	//In case user highlighted via /me
+																		vec.push_back(sub);
+																	}
+															} while (iss);
+														
+															if(vec.size())
+															{
+																int num = rand() % vec.size();
+																raw("PRIVMSG %s :Your ex is %s\r\n", channel, vec[num].c_str());
+															}
+														}
+													}
+													else if(isInside(s, vBadWords))	//Dirty language
+													{
+														raw("PRIVMSG %s :\001ACTION slaps %s for their foul language\001\r\n", channel, user);
+													}
+													else if(isInside(s, vBirdWords))	//Birdy language
+													{
+														raw("PRIVMSG %s :\001ACTION flaps %s for their fowl language\001\r\n", channel, user);
+													}
+													else if(touppercase(message) == ((string)(message)) && s.length() > 5)	//All uppercase
+													{
+														raw("PRIVMSG %s :\001ACTION covers his ears to block out %s's yelling\001\r\n", channel, user);
 													}
 												}
                     }
+                    else if(!strncmp(command, "JOIN", 4))	//User joined
+                    {
+                    	string sUser = user;
+                    	size_t pos = sUser.find('!');
+                    	if(pos != string::npos)
+                    	{
+                    		sUser.erase(pos);
+											}
+                      if(tolowercase(sUser) != tolowercase(nick))
+                    		raw("PRIVMSG %s :Hi %s!\r\n", channel, sUser.c_str());
+										}
                 }
                 
             }
