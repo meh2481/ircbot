@@ -1,3 +1,10 @@
+OS = $(shell uname -s)
+
+LIBS = ""
+
+ifneq (,$(findstring MINGW,$(OS)))
+    LIBS = -lWs2_32
+endif
 
 CC = g++
 
@@ -21,4 +28,4 @@ clean-bin:
 	rm -rf $(TARGET)
 	
 $(TARGET): $(OBJECTS)
-	$(CC) -g -o $(TARGET) $(OBJECTS)
+	$(CC) -g -o $(TARGET) $(OBJECTS) $(LIBS)

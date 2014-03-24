@@ -1,3 +1,4 @@
+#ifndef _WIN32
 extern "C" {
 #include <stdio.h>
 #include <unistd.h>
@@ -5,6 +6,20 @@ extern "C" {
 #include <netdb.h>
 #include <stdarg.h>
 };
+#endif
+
+#ifdef _WIN32
+	#undef UNICODE
+	#define _WIN32_WINNT 0x0501
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
+	#undef _WIN32_WINNT
+	#include <stdio.h>
+	#include <io.h>
+	#include <ctime>
+	#define sleep(x) Sleep(x * 1000)
+	//#define read(x, y, z) _read(x, y, z)
+#endif
 
 #include <string>
 #include <sstream>
@@ -94,13 +109,17 @@ bool isInside(string s, set<string>& sSet)
 
 void raw(char *fmt, ...) 
 {
-		char sbuf[512];
+	char sbuf[512];
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(sbuf, 512, fmt, ap);
     va_end(ap);
     printf("<< %s", sbuf);
+	#ifdef _WIN32
+    send(conn, sbuf, strlen(sbuf), 0);
+	#else
     write(conn, sbuf, strlen(sbuf));
+	#endif
 }
 
 void say(char* channel, char* msg, ...)
@@ -125,9 +144,9 @@ void action(char* channel, char* msg, ...)
 
 int main() 
 {    
-		char sbuf[512];
-    char *nick = "immabott";
-    char *channel = "#bitblottest";
+	char sbuf[512];
+    char *nick = "immabot";
+    char *channel = "#bitblot";
     char *host = "irc.esper.net";
     char *port = "6667";
     
@@ -138,6 +157,17 @@ int main()
     
     srand (time(NULL));
     readWords();
+	
+	#ifdef _WIN32
+		WSADATA wsaData;
+		int iResult;
+		iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		if (iResult != 0) {
+			printf("WSAStartup failed: %d\n", iResult);
+			return 1;
+		}
+	#endif
+	
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
@@ -147,8 +177,11 @@ int main()
     
     raw("USER %s 0 0 :%s\r\n", nick, nick);
     raw("NICK %s\r\n", nick);
-    
+	#ifdef _WIN32
+    while ((sl = recv(conn, sbuf, 512, 0))) 
+	#else
     while ((sl = read(conn, sbuf, 512))) 
+	#endif
     {
         for (i = 0; i < sl; i++) 
         {
@@ -181,17 +214,20 @@ int main()
                                 case 2: command = buf + start; break;
                                 case 3: where = buf + start; break;
                             }
-                            if (j == l - 1) continue;
+                            if (j == l - 1) 
+								continue;
                             start = j + 1;
                         } 
                         else if (buf[j] == ':' && wordcount == 3) 
                         {
-                            if (j < l - 1) message = buf + j + 1;
+                            if (j < l - 1) 
+								message = buf + j + 1;
                             break;
                         }
                     }
                     
-                    if (wordcount < 2) continue;
+                    if (wordcount < 2) 
+						continue;
                     
                     if (!strncmp(command, "001", 3) && channel != NULL) 
                     {
@@ -200,7 +236,8 @@ int main()
                     } 
                     else if (!strncmp(command, "PRIVMSG", 7) || !strncmp(command, "NOTICE", 6)) 
                     {
-                        if (where == NULL || message == NULL) continue;
+                        if (where == NULL || message == NULL) 
+							continue;
                         if ((sep = strchr(user, '!')) != NULL) 
                         	user[sep - user] = '\0';
                         if (where[0] == '#' || where[0] == '&' || where[0] == '+' || where[0] == '!') 
@@ -212,12 +249,12 @@ int main()
                         	if(!strncmp(&message[1], "beep", 4))	//Process different messages
                         	{
                         		say(channel, "Imma bot. beep.");
-													}
-													else if(!strncmp(&message[1], "ex", 2))
+							}
+							else if(!strncmp(&message[1], "ex", 2))
                         	{
                         		say(channel, "Your ex is ugly");
-													}
-													else if(!strncmp(&message[1], "hug", 3))
+							}
+							else if(!strncmp(&message[1], "hug", 3))
                         	{
                         		say(channel, "Setting phasors to hug.");
                         		sleep(rand() % 5 + 1);	//Pause for a random amount of time
@@ -240,117 +277,117 @@ int main()
                         			action(channel, "hugs %s a little too tightly", user);
                         			printf("user %s\n", user);
                         		}
-													}
-													else if(!strncmp(&message[1], "roll", 4) ||
-																	!strncmp(&message[1], "dice", 4) ||
-																	!strncmp(&message[1], "die", 3) ||
-																	!strncmp(&message[1], "d6", 2))
+							}
+							else if(!strncmp(&message[1], "roll", 4) ||
+											!strncmp(&message[1], "dice", 4) ||
+											!strncmp(&message[1], "die", 3) ||
+											!strncmp(&message[1], "d6", 2))
                         	{
                         		say(channel, "Rolling a d6...");
                         		int randnum = rand() % 6 + 1;
                         		say(channel, "You rolled a %d!", randnum);
-													}
-												}
-												else	//Other misc. commands
-												{
-													string s = tolowercase(message);
-													if(s.find(tolowercase(nick)) != string::npos)	//Highlighted; respond with a "your ex" joke
-													{
-														string sUser = user;
-														
-														//Kill command by privileged user
-														if(s.find("cheese curls") != string::npos && sUser.find("Daxar") == 0)	//Password for shutting off
-														{
-															say(channel, "Kthxbai.");
-															raw("PART %s :Quit command invoked by %s\r\n", channel, user);
-															return 0;	//Quit
-														}
-														
-														//hai
-														else if(s.find("hi") != string::npos ||
-															  		s.find("hai") != string::npos ||
-															 		  s.find("hello") != string::npos ||
-															 			s.find("hey") != string::npos ||
-															 			s.find("sup") != string::npos)
-														{
-															switch(rand() % 3)
-															{
-																case 0:
-																	say(channel, "ohai");
-																	break;
-																	
-																case 1:
-																	say(channel, "Hai thar!");
-																	break;
-																	
-																default:
-																	say(channel, "sup word diggly dog");
-																	break;
-															}
-														}
-														
-														//bai
-														else if(s.find("bye") != string::npos ||
-															  		s.find("bai") != string::npos ||
-															 		  s.find("see ya") != string::npos ||
-															 			s.find("so long") != string::npos ||
-															 		  s.find("night") != string::npos ||
-															 		  s.find("nite") != string::npos ||
-															 		  s.find("n8") != string::npos ||
-															 		  s.find("later") != string::npos)
-														{
-															switch(rand() % 4)
-															{
-																case 0:
-																	say(channel, "Bai!");
-																	break;
-																	
-																case 1:
-																	say(channel, "Nite!");
-																	break;
-																	
-																case 2:
-																	say(channel, "Bye!");
-																	break;
-																	
-																default:
-																	say(channel, "toodles with oodles of noodles!");
-																	break;
-															}
-														}
-														
-														//Insult people for highlighting the bot randomly
-														else
-														{
-															//Split
-															list<string> lWords = splitWords(tolowercase(s));
-															lWords.remove("");
-															lWords.remove(nick);
-															lWords.remove("action");
-														
-															if(lWords.size())
-															{
-																int num = rand() % lWords.size();
-																list<string>::iterator word = lWords.begin();
-																for(int i = 0; i < num; i++)
-																	word++;
-																say(channel, "Your ex is %s", word->c_str());
-															}
-														}
-													}
-													else if(isInside(s, mBadWords))	//Dirty language
-													{
-														action(channel, "slaps %s for their foul language", user);
-													}
-													else if(isInside(s, mBirdWords))	//Birdy language
-													{
-														action(channel, "flaps %s for their fowl language", user);
-													}
-													else if(touppercase(message) == ((string)(message)) && s.length() > 5)	//All uppercase
-													{
-														action(channel, "covers his ears to block out %s's yelling", user);
-													}
-												}
+							}
+						}
+						else	//Other misc. commands
+						{
+							string s = tolowercase(message);
+							if(s.find(tolowercase(nick)) != string::npos)	//Highlighted; respond with a "your ex" joke
+							{
+								string sUser = user;
+								
+								//Kill command by privileged user
+								if(s.find("cheese curls") != string::npos && sUser.find("Daxar") == 0)	//Password for shutting off
+								{
+									say(channel, "Kthxbai.");
+									raw("PART %s :Quit command invoked by %s\r\n", channel, user);
+									return 0;	//Quit
+								}
+								
+								//hai
+								else if(s.find("hi") != string::npos ||
+										s.find("hai") != string::npos ||
+										s.find("hello") != string::npos ||
+										s.find("hey") != string::npos ||
+										s.find("sup") != string::npos)
+								{
+									switch(rand() % 3)
+									{
+										case 0:
+											say(channel, "ohai");
+											break;
+											
+										case 1:
+											say(channel, "Hai thar!");
+											break;
+											
+										default:
+											say(channel, "sup word diggly dog");
+											break;
+									}
+								}
+								
+								//bai
+								else if(s.find("bye") != string::npos ||
+										s.find("bai") != string::npos ||
+										s.find("see ya") != string::npos ||
+										s.find("so long") != string::npos ||
+										s.find("night") != string::npos ||
+										s.find("nite") != string::npos ||
+										s.find("n8") != string::npos ||
+										s.find("later") != string::npos)
+								{
+									switch(rand() % 4)
+									{
+										case 0:
+											say(channel, "Bai!");
+											break;
+											
+										case 1:
+											say(channel, "Nite!");
+											break;
+											
+										case 2:
+											say(channel, "Bye!");
+											break;
+											
+										default:
+											say(channel, "toodles with oodles of noodles!");
+											break;
+									}
+								}
+								
+								//Insult people for highlighting the bot randomly
+								else
+								{
+									//Split
+									list<string> lWords = splitWords(tolowercase(s));
+									lWords.remove("");
+									lWords.remove(nick);
+									lWords.remove("action");
+								
+									if(lWords.size())
+									{
+										int num = rand() % lWords.size();
+										list<string>::iterator word = lWords.begin();
+										for(int i = 0; i < num; i++)
+											word++;
+										say(channel, "Your ex is %s", word->c_str());
+									}
+								}
+							}
+							else if(isInside(s, mBadWords))	//Dirty language
+							{
+								action(channel, "slaps %s for their foul language", user);
+							}
+							else if(isInside(s, mBirdWords))	//Birdy language
+							{
+								action(channel, "flaps %s for their fowl language", user);
+							}
+							else if(touppercase(message) == ((string)(message)) && s.length() > 5)	//All uppercase
+							{
+								action(channel, "covers his ears to block out %s's yelling", user);
+							}
+						}
                     }
                     else if(!strncmp(command, "JOIN", 4))	//User joined
                     {
@@ -361,7 +398,7 @@ int main()
                     		sUser.erase(pos);
                       if(tolowercase(sUser) != tolowercase(nick))	//Make sure it wasn't me
                     		say(channel, "Hi %s!", sUser.c_str());	//Say hi
-										}
+					}
                 }
             }
         }
