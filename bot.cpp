@@ -104,20 +104,7 @@ string replaceWhitespace(string s)
 	return s;
 }
 
-string stripEnd(string s)
-{
-	size_t pos = s.find('\r');
-	if(pos != string::npos)
-		s.erase(pos);
-	pos = s.find('\n');
-	if(pos != string::npos)
-		s.erase(pos);
-	if(s[s.size()-1] == ' ')
-		s.erase(s.size()-1);
-	return s;
-}
-
-set<string> splitWords(string s, bool bLowercase = true)
+set<string> ssplitWords(string s, bool bLowercase = true)
 {
 	set<string> ret;
 	istringstream iss(replaceWhitespace(s));
@@ -134,10 +121,41 @@ set<string> splitWords(string s, bool bLowercase = true)
   return ret;
 }
 
+list<string> splitWords(string s, bool bLowercase = true)
+{
+	list<string> ret;
+	istringstream iss(replaceWhitespace(s));
+	do
+	{
+	  string sub;
+	  iss >> sub;
+	  if(!sub.size()) continue;
+	  if(bLowercase)
+		ret.push_back(tolowercase(sub));
+	  else
+		ret.push_back(sub);
+	} while (iss);
+	return ret;
+}
+
+string stripEnd(string s)
+{
+	size_t pos = s.find('\r');
+	if(pos != string::npos)
+		s.erase(pos);
+	pos = s.find('\n');
+	if(pos != string::npos)
+		s.erase(pos);
+	if(s[s.size()-1] == ' ')
+		s.erase(s.size()-1);
+	list<string> words = splitWords(s, false);
+	return *(words.begin());
+}
+
 bool isInside(string s, set<string>& sSet)
 {
 	s = tolowercase(s);
-	set<string> lWords = splitWords(s);
+	set<string> lWords = ssplitWords(s);
 	for(set<string>::iterator i = lWords.begin(); i != lWords.end(); i++)
 	{
 		if(sSet.count(*i))
@@ -296,15 +314,11 @@ int main()
                         if(message[0] == '!')	//bot commands
                         {
 							string sCompare = stripEnd(tolowercase(&message[1]));
-							//printf("compare %s\n", sCompare.c_str());
+							printf("compare %s\n", sCompare.c_str());
 							//Process different messages
                         	if(sCompare == "beep")	
                         	{
                         		say(channel, "Imma bot. beep.");
-							}
-							else if(sCompare == "ex")
-                        	{
-                        		say(channel, "Your ex is ugly");
 							}
 							else if(sCompare == "hug")
                         	{
@@ -322,7 +336,7 @@ int main()
                         				if(pos != string::npos)
                         					sPerson.erase(pos);
                         			}
-									set<string> sset = splitWords(sPerson, false);
+									list<string> sset = splitWords(sPerson, false);
 									sPerson = *sset.begin();
 									if(sNickListLowercase.count(tolowercase(sPerson)))	//Person is here
 										action(channel, "hugs %s a little too tightly", sPerson.c_str());
@@ -353,7 +367,7 @@ int main()
 									sCompare == "botsnack" ||
 									sCompare == "snack")	//give a bot a cookie
 							{
-								set<string> sset = splitWords(user, false);
+								list<string> sset = splitWords(user, false);
 								string sPerson = *sset.begin();
 								switch(rand() % 3)
 								{
@@ -377,6 +391,10 @@ int main()
 								sBirdWords.clear();
 								readWords();
 							}
+							else if(sCompare == "seen")
+							{
+								
+							}
 							else if(mLastSeen.count(sCompare))	//Username
 							{
 								//Say last time they were seen active
@@ -391,7 +409,7 @@ int main()
 						else	//Other misc. commands
 						{
 							string s = tolowercase(forceascii(message));
-							set<string> words = splitWords(message);
+							set<string> words = ssplitWords(message);
 							if(s.find(tolowercase(nick)) != string::npos)	//Highlighted; respond with a "your ex" joke
 							{
 								string sUser = user;
@@ -453,7 +471,7 @@ int main()
 											break;
 											
 										default:
-											say(channel, "toodles with oodles of noodles!");
+											say(channel, "Toodles with oodles of noodles!");
 											break;
 									}
 								}
@@ -477,15 +495,15 @@ int main()
 								else
 								{
 									//Split
-									set<string> lWords = splitWords(tolowercase(s));
-									lWords.erase("");
-									lWords.erase(nick);
-									lWords.erase("action");
+									list<string> lWords = splitWords(tolowercase(s));
+									lWords.remove("");
+									lWords.remove(nick);
+									lWords.remove("action");
 								
 									if(lWords.size())
 									{
 										int num = rand() % lWords.size();
-										set<string>::iterator word = lWords.begin();
+										list<string>::iterator word = lWords.begin();
 										for(int i = 0; i < num; i++)
 											word++;
 										say(channel, "Your ex is %s", word->c_str());
@@ -533,6 +551,7 @@ int main()
 						}
 						sNickList.insert(user);	//Add user to current user list
 						sNickListLowercase.insert(sUser);
+						mLastSeen[sUser] = time(NULL);
 					}
 					else if(!strncmp(command, "PART", 4) ||
 							!strncmp(command, "QUIT", 4))	//User left
@@ -562,8 +581,8 @@ int main()
 						if(pos != string::npos)
 						{
 							s.erase(0, pos+1);	//Erase beginning of string, so all we're left with is nicks
-							set<string> sNicks = splitWords(s, false);	//Split into individual nicks, case sensitive
-							for(set<string>::iterator i = sNicks.begin(); i != sNicks.end(); i++)
+							list<string> sNicks = splitWords(s, false);	//Split into individual nicks, case sensitive
+							for(list<string>::iterator i = sNicks.begin(); i != sNicks.end(); i++)
 							{
 								//Deal with op symbols
 								string sNick = *i;
