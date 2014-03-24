@@ -80,12 +80,13 @@ list<string> splitWords(string s)
   return ret;
 }
 
-bool isInside(string s, set<string>& vec)
+bool isInside(string s, set<string>& sSet)
 {
 	s = tolowercase(s);
-	for(set<string>::iterator i = vec.begin(); i != vec.end(); i++)
+	list<string> lWords = splitWords(s);
+	for(list<string>::iterator i = lWords.begin(); i != lWords.end(); i++)
 	{
-		if(s.find(*i) != string::npos)
+		if(sSet.count(*i))
 			return true;
 	}
 	return false;
