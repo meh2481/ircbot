@@ -16,7 +16,6 @@ extern "C" {
 using namespace std;
 
 int conn;
-char sbuf[512];
 
 set<string> mBadWords;
 set<string> mBirdWords;
@@ -41,7 +40,7 @@ void inputWordList(string sFilename, set<string>& dest)
 		string sLine;
 		getline(infile, sLine);
 		if(sLine.size())
-			dest.insert(sLine);
+			dest.insert(tolowercase(sLine));
 	}
 }
 
@@ -94,6 +93,7 @@ bool isInside(string s, set<string>& vec)
 
 void raw(char *fmt, ...) 
 {
+		char sbuf[512];
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(sbuf, 512, fmt, ap);
@@ -104,13 +104,29 @@ void raw(char *fmt, ...)
 
 void say(char* channel, char* msg, ...)
 {
-	raw("PRIVMSG %s :%s\r\n", channel, msg);
+	char sbuf[512];
+	va_list ap;
+	va_start(ap, msg);
+	vsnprintf(sbuf, 512, msg, ap);
+	va_end(ap);
+	raw("PRIVMSG %s :%s\r\n", channel, sbuf);
+}
+
+void action(char* channel, char* msg, ...)
+{
+	char sbuf[512];
+	va_list ap;
+	va_start(ap, msg);
+	vsnprintf(sbuf, 512, msg, ap);
+	va_end(ap);
+	raw("PRIVMSG %s :\001ACTION %s\001\r\n", channel, sbuf);
 }
 
 int main() 
 {    
-    char *nick = "immabot_";
-    char *channel = "#bitbottest";
+		char sbuf[512];
+    char *nick = "immabott";
+    char *channel = "#bitblottest";
     char *host = "irc.esper.net";
     char *port = "6667";
     
@@ -179,6 +195,7 @@ int main()
                     if (!strncmp(command, "001", 3) && channel != NULL) 
                     {
                         raw("JOIN %s\r\n", channel);
+                        say(channel, "Imma bot. Beep.");
                     } 
                     else if (!strncmp(command, "PRIVMSG", 7) || !strncmp(command, "NOTICE", 6)) 
                     {
@@ -202,8 +219,8 @@ int main()
 													else if(!strncmp(&message[1], "hug", 3))
                         	{
                         		say(channel, "Setting phasors to hug.");
-                        		sleep(rand() % 7 + 1);	//Pause for a random amount of time
-                        		if(strlen(message) > 5)	//Hug somebody else	//TODO: See if they're here first, and disappointed if not
+                        		sleep(rand() % 5 + 1);	//Pause for a random amount of time
+                        		if(strlen(message) > 7)	//Hug somebody else	//TODO: See if they're here first, and disappointed if not
                         		{
                         			string sPerson = &message[5];
                         			size_t pos = sPerson.find('\r');
@@ -215,10 +232,13 @@ int main()
                         				if(pos != string::npos)
                         					sPerson.erase(pos);
                         			}
-                        			raw("PRIVMSG %s :\001ACTION hugs %s a little too tightly\001\r\n", channel, sPerson.c_str());
+                        			action(channel, "hugs %s a little too tightly", sPerson.c_str());
                         		}
                         		else	//hug the person who did the command
-                        			raw("PRIVMSG %s :\001ACTION hugs %s a little too tightly\001\r\n", channel, user);
+                        		{
+                        			action(channel, "hugs %s a little too tightly", user);
+                        			printf("user %s\n", user);
+                        		}
 													}
 													else if(!strncmp(&message[1], "roll", 4) ||
 																	!strncmp(&message[1], "dice", 4) ||
@@ -227,7 +247,7 @@ int main()
                         	{
                         		say(channel, "Rolling a d6...");
                         		int randnum = rand() % 6 + 1;
-                        		raw("PRIVMSG %s :You rolled a %d!\r\n", channel, randnum);
+                        		say(channel, "You rolled a %d!", randnum);
 													}
 												}
 												else	//Other misc. commands
@@ -302,7 +322,6 @@ int main()
 														else
 														{
 															//Split
-															printf("split\n");
 															list<string> lWords = splitWords(tolowercase(s));
 															lWords.remove("");
 															lWords.remove(nick);
@@ -314,34 +333,33 @@ int main()
 																list<string>::iterator word = lWords.begin();
 																for(int i = 0; i < num; i++)
 																	word++;
-																raw("PRIVMSG %s :Your ex is %s\r\n", channel, word->c_str());
+																say(channel, "Your ex is %s", word->c_str());
 															}
 														}
 													}
 													else if(isInside(s, mBadWords))	//Dirty language
 													{
-														raw("PRIVMSG %s :\001ACTION slaps %s for their foul language\001\r\n", channel, user);
+														action(channel, "slaps %s for their foul language", user);
 													}
 													else if(isInside(s, mBirdWords))	//Birdy language
 													{
-														raw("PRIVMSG %s :\001ACTION flaps %s for their fowl language\001\r\n", channel, user);
+														action(channel, "flaps %s for their fowl language", user);
 													}
 													else if(touppercase(message) == ((string)(message)) && s.length() > 5)	//All uppercase
 													{
-														raw("PRIVMSG %s :\001ACTION covers his ears to block out %s's yelling\001\r\n", channel, user);
+														action(channel, "covers his ears to block out %s's yelling", user);
 													}
 												}
                     }
                     else if(!strncmp(command, "JOIN", 4))	//User joined
                     {
+                    	//Split user string by hand
                     	string sUser = user;
                     	size_t pos = sUser.find('!');
                     	if(pos != string::npos)
-                    	{
                     		sUser.erase(pos);
-											}
                       if(tolowercase(sUser) != tolowercase(nick))	//Make sure it wasn't me
-                    		raw("PRIVMSG %s :Hi %s!\r\n", channel, sUser.c_str());	//Say hi
+                    		say(channel, "Hi %s!", sUser.c_str());	//Say hi
 										}
                 }
             }
