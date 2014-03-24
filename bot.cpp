@@ -8,7 +8,8 @@ extern "C" {
 
 #include <string>
 #include <sstream>
-#include <vector>
+#include <set>
+#include <list>
 #include <cstdlib>
 #include <algorithm>
 #include <fstream>
@@ -17,8 +18,8 @@ using namespace std;
 int conn;
 char sbuf[512];
 
-vector<string> vBadWords;
-vector<string> vBirdWords;
+set<string> mBadWords;
+set<string> mBirdWords;
 
 string tolowercase(string s)
 {
@@ -32,7 +33,7 @@ string touppercase(string s)
 	return s;
 }
 
-void inputWordList(string sFilename, vector<string>& dest)
+void inputWordList(string sFilename, set<string>& dest)
 {
 	ifstream infile(sFilename.c_str());
 	while(!infile.fail())
@@ -40,20 +41,50 @@ void inputWordList(string sFilename, vector<string>& dest)
 		string sLine;
 		getline(infile, sLine);
 		if(sLine.size())
-			dest.push_back(sLine);
+			dest.insert(sLine);
 	}
 }
 
 void readWords()
 {
-	inputWordList("badwords.txt", vBadWords);
-	inputWordList("birdwords.txt", vBirdWords);
+	inputWordList("badwords.txt", mBadWords);
+	inputWordList("birdwords.txt", mBirdWords);
 }
 
-bool isInside(string s, vector<string>& vec)
+string replaceChar(string s, char cSearch, char cReplace)
+{
+	size_t pos = 0;
+	while((pos = s.find(cSearch, pos)) != string::npos)
+		s[pos] = cReplace;
+	return s;
+}
+
+string replaceWhitespace(string s)
+{
+	const char* cMarkup = "!-\";:?.,()";
+	for(int c = 0; c < strlen(cMarkup); c++)
+		s = replaceChar(s, cMarkup[c], ' ');
+	printf("Replaced %s\n", s.c_str());
+	return s;
+}
+
+list<string> splitWords(string s)
+{
+	list<string> ret;
+	istringstream iss(replaceWhitespace(s));
+	do
+  {
+      string sub;
+      iss >> sub;
+      ret.push_back(tolowercase(sub));
+  } while (iss);
+  return ret;
+}
+
+bool isInside(string s, set<string>& vec)
 {
 	s = tolowercase(s);
-	for(vector<string>::iterator i = vec.begin(); i != vec.end(); i++)
+	for(set<string>::iterator i = vec.begin(); i != vec.end(); i++)
 	{
 		if(s.find(*i) != string::npos)
 			return true;
@@ -71,15 +102,15 @@ void raw(char *fmt, ...)
     write(conn, sbuf, strlen(sbuf));
 }
 
-void say(char* msg, char* channel)
+void say(char* channel, char* msg, ...)
 {
 	raw("PRIVMSG %s :%s\r\n", channel, msg);
 }
 
 int main() 
 {    
-    char *nick = "immabot";
-    char *channel = "#bitblot";
+    char *nick = "immabot_";
+    char *channel = "#bitbottest";
     char *host = "irc.esper.net";
     char *port = "6667";
     
@@ -162,15 +193,15 @@ int main()
                         {
                         	if(!strncmp(&message[1], "beep", 4))	//Process different messages
                         	{
-                        		say("Imma bot. beep.", channel);
+                        		say(channel, "Imma bot. beep.");
 													}
 													else if(!strncmp(&message[1], "ex", 2))
                         	{
-                        		say("Your ex is ugly", channel);
+                        		say(channel, "Your ex is ugly");
 													}
 													else if(!strncmp(&message[1], "hug", 3))
                         	{
-                        		say("Setting phasors to hug.", channel);
+                        		say(channel, "Setting phasors to hug.");
                         		sleep(rand() % 7 + 1);	//Pause for a random amount of time
                         		if(strlen(message) > 5)	//Hug somebody else	//TODO: See if they're here first, and disappointed if not
                         		{
@@ -191,9 +222,10 @@ int main()
 													}
 													else if(!strncmp(&message[1], "roll", 4) ||
 																	!strncmp(&message[1], "dice", 4) ||
-																	!strncmp(&message[1], "die", 3))
+																	!strncmp(&message[1], "die", 3) ||
+																	!strncmp(&message[1], "d6", 2))
                         	{
-                        		say("Rolling a d6...", channel);
+                        		say(channel, "Rolling a d6...");
                         		int randnum = rand() % 6 + 1;
                         		raw("PRIVMSG %s :You rolled a %d!\r\n", channel, randnum);
 													}
@@ -208,7 +240,7 @@ int main()
 														//Kill command by privileged user
 														if(s.find("cheese curls") != string::npos && sUser.find("Daxar") == 0)	//Password for shutting off
 														{
-															say("Kthxbai.", channel);
+															say(channel, "Kthxbai.");
 															raw("PART %s :Quit command invoked by %s\r\n", channel, user);
 															return 0;	//Quit
 														}
@@ -223,15 +255,15 @@ int main()
 															switch(rand() % 3)
 															{
 																case 0:
-																	say("ohai", channel);
+																	say(channel, "ohai");
 																	break;
 																	
 																case 1:
-																	say("Hai thar!", channel);
+																	say(channel, "Hai thar!");
 																	break;
 																	
 																default:
-																	say("sup word diggly dog", channel);
+																	say(channel, "sup word diggly dog");
 																	break;
 															}
 														}
@@ -249,19 +281,19 @@ int main()
 															switch(rand() % 4)
 															{
 																case 0:
-																	say("Bai!", channel);
+																	say(channel, "Bai!");
 																	break;
 																	
 																case 1:
-																	say("Nite!", channel);
+																	say(channel, "Nite!");
 																	break;
 																	
 																case 2:
-																	say("Bye!", channel);
+																	say(channel, "Bye!");
 																	break;
 																	
 																default:
-																	say("toodles with oodles of noodles!", channel);
+																	say(channel, "toodles with oodles of noodles!");
 																	break;
 															}
 														}
@@ -270,32 +302,27 @@ int main()
 														else
 														{
 															//Split
-															istringstream iss(s);
-															vector<string> vec;
-															do
-															{
-																	string sub;
-																	iss >> sub;
-																	if(sub.size() > 1 && (sub.find(nick) == string::npos) && (sub.find("\001action") == string::npos))
-																	{
-																		if(sub[sub.length() -1] == '\001')
-																			sub.erase(sub.length() -1);	//In case user highlighted via /me
-																		vec.push_back(sub);
-																	}
-															} while (iss);
+															printf("split\n");
+															list<string> lWords = splitWords(tolowercase(s));
+															lWords.remove("");
+															lWords.remove(nick);
+															lWords.remove("action");
 														
-															if(vec.size())
+															if(lWords.size())
 															{
-																int num = rand() % vec.size();
-																raw("PRIVMSG %s :Your ex is %s\r\n", channel, vec[num].c_str());
+																int num = rand() % lWords.size();
+																list<string>::iterator word = lWords.begin();
+																for(int i = 0; i < num; i++)
+																	word++;
+																raw("PRIVMSG %s :Your ex is %s\r\n", channel, word->c_str());
 															}
 														}
 													}
-													else if(isInside(s, vBadWords))	//Dirty language
+													else if(isInside(s, mBadWords))	//Dirty language
 													{
 														raw("PRIVMSG %s :\001ACTION slaps %s for their foul language\001\r\n", channel, user);
 													}
-													else if(isInside(s, vBirdWords))	//Birdy language
+													else if(isInside(s, mBirdWords))	//Birdy language
 													{
 														raw("PRIVMSG %s :\001ACTION flaps %s for their fowl language\001\r\n", channel, user);
 													}
@@ -317,12 +344,9 @@ int main()
                     		raw("PRIVMSG %s :Hi %s!\r\n", channel, sUser.c_str());	//Say hi
 										}
                 }
-                
             }
         }
-        
     }
     
     return 0;
-    
 }
