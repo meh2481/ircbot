@@ -6,7 +6,7 @@ Kiwi
 bird
 Waterfowl
 Penguin
-Diver
+duck
 Albatross
 Petrel
 Grebe
@@ -14,10 +14,11 @@ Flamingo
 Stork
 Heron
 Pelican
-Birds of Prey
 Wader
 Gull
+seagull
 Auk
+sandpiper
 Sandgrouse
 Pigeon
 Dove
@@ -39,7 +40,7 @@ Asities
 Pitta
 Manakin
 Cotinga
-Tyrant Flycatcher
+Flycatcher
 Antbird
 Gnateater
 Tapaculo
@@ -50,13 +51,13 @@ Woodcreeper
 Lyrebird
 Bowerbird
 Scrubbird
-Australasian Treecreeper
+Treecreeper
 Honeyeater
 Bristlebird
 Pardalotes
 Thornbill
 Gerygone
-Australasian Babbler
+Babbler
 Logrunner
 Satinbird
 Berrypecker
@@ -87,11 +88,9 @@ Fantail
 Monarch
 Jay
 Mudnester
-Australian Robin
+Robin
 Waxwing
 Palmchat
-True Tit
-Penduline Tit
 Bushtit
 Swallow
 Martin
@@ -110,7 +109,6 @@ Nuthatch
 Treecreeper
 Mockingbird
 Thrasher
-Philippine Creeper
 Starling
 Thrush
 Flycatcher
@@ -119,9 +117,8 @@ Leafbird
 Flowerpecker
 Sunbird
 Sugarbird
-Old World Sparrow
-Rock Sparrow
-finch 
+Sparrow
+finch
 sparrow
 Weaver
 Waxbill

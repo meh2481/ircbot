@@ -1,11 +1,11 @@
 #ifndef _WIN32
-extern "C" {
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <netdb.h>
-#include <stdarg.h>
-};
+	extern "C" {
+		#include <stdio.h>
+		#include <unistd.h>
+		#include <string.h>
+		#include <netdb.h>
+		#include <stdarg.h>
+	};
 #endif
 
 #ifdef _WIN32
@@ -39,6 +39,18 @@ map<string, int> mYellList;
 set<string> sNickList;
 set<string> sNickListLowercase;
 map<string, time_t> mLastSeen;
+
+string forceascii(const char* msg)
+{
+	string s;
+	for(int i = 0; i < strlen(msg); i++)
+	{
+		if(msg[i] == '\n' || msg[i] == '\r') break;	//Done
+		if(msg[i] >= ' ' && msg[i] <= '~') 
+			s.push_back(msg[i]);
+	}
+	return s;
+}
 
 string tolowercase(string s)
 {
@@ -142,11 +154,11 @@ void raw(char *fmt, ...)
     vsnprintf(sbuf, 512, fmt, ap);
     va_end(ap);
     printf("<< %s", sbuf);
-	#ifdef _WIN32
+#ifdef _WIN32
     send(conn, sbuf, strlen(sbuf), 0);
-	#else
+#else
     write(conn, sbuf, strlen(sbuf));
-	#endif
+#endif
 }
 
 void say(char* channel, char* msg, ...)
@@ -172,13 +184,13 @@ void action(char* channel, char* msg, ...)
 int main() 
 {    
 	char sbuf[512];
-	#ifdef DEBUG
+#ifdef DEBUG
     char *nick = "immabot_";
     char *channel = "#bitbottest";
-	#else
+#else
     char *nick = "immabot";
     char *channel = "#bitblot";
-	#endif
+#endif
     char *host = "irc.esper.net";
     char *port = "6667";
     
@@ -190,15 +202,15 @@ int main()
     srand (time(NULL));
     readWords();
 	
-	#ifdef _WIN32
-		WSADATA wsaData;
-		int iResult;
-		iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (iResult != 0) {
-			printf("WSAStartup failed: %d\n", iResult);
-			return 1;
-		}
-	#endif
+#ifdef _WIN32
+	WSADATA wsaData;
+	int iResult;
+	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != 0) {
+		printf("WSAStartup failed: %d\n", iResult);
+		return 1;
+	}
+#endif
 	
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
@@ -337,11 +349,6 @@ int main()
                         		int randnum = rand() % 6 + 1;
                         		say(channel, "You rolled a %d!", randnum);
 							}
-							else if(sCompare == "list")	//List usernames
-							{
-								for(set<string>::iterator i = sNickList.begin(); i != sNickList.end(); i++)
-									say(channel, "Nick: %s", i->c_str());
-							}
 							else if(sCompare == "cookie" ||
 									sCompare == "botsnack" ||
 									sCompare == "snack")	//give a bot a cookie
@@ -363,6 +370,13 @@ int main()
 										break;
 								}
 							}
+							else if(sCompare == "reload")
+							{
+								say(channel, "K");
+								sBadWords.clear();
+								sBirdWords.clear();
+								readWords();
+							}
 							else if(mLastSeen.count(sCompare))	//Username
 							{
 								//Say last time they were seen active
@@ -376,7 +390,7 @@ int main()
 						}
 						else	//Other misc. commands
 						{
-							string s = tolowercase(message);
+							string s = tolowercase(forceascii(message));
 							set<string> words = splitWords(message);
 							if(s.find(tolowercase(nick)) != string::npos)	//Highlighted; respond with a "your ex" joke
 							{
