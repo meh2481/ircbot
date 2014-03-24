@@ -3,7 +3,6 @@ Ostrich
 Cassowaries
 Emu
 Kiwi
-Bird
 bird
 Waterfowl
 Penguin
