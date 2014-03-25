@@ -34,8 +34,8 @@
 #include <fstream>
 using namespace std;
 
+//Global variables
 extern int conn;
-
 extern set<string> sBadWords;
 extern set<string> sBirdWords;
 extern map<string, int> mYellList;
@@ -43,12 +43,13 @@ extern set<string> sNickList;
 extern set<string> sNickListLowercase;
 extern map<string, time_t> mLastSeen;
 
-
+//parse.cpp functions
 string forceascii(const char* msg);
 string tolowercase(string s);
 string touppercase(string s);
 void inputWordList(string sFilename, set<string>& dest);
 void readWords();
+void addWord(string sFilename, string sWord);
 string replaceChar(string s, char cSearch, char cReplace);
 string replaceWhitespace(string s);
 set<string> ssplitWords(string s, bool bLowercase = true);
@@ -56,13 +57,17 @@ list<string> splitWords(string s, bool bLowercase = true);
 string stripEnd(string s);
 bool isInside(string s, set<string>& sSet);
 
+//network.cpp functions
+void initNetworking();
+void raw(const char *fmt, ...);
+void say(const char* channel, const char* msg, ...);
+void action(const char* channel, const char* msg, ...);
+void shutdownNetworking();
+void join(const char* channel);
+void setupConnection(const char* host, const char* port, int* connection);
 
-
-
-
-
-
-
+#define BAD_WORD_LIST 	"badwords.txt"
+#define BIRD_WORD_LIST	"birdwords.txt"
 
 
 

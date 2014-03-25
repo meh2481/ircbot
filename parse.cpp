@@ -44,8 +44,20 @@ void inputWordList(string sFilename, set<string>& dest)
 
 void readWords()
 {
-	inputWordList("badwords.txt", sBadWords);
-	inputWordList("birdwords.txt", sBirdWords);
+	sBadWords.clear();
+	sBirdWords.clear();
+	inputWordList(BAD_WORD_LIST, sBadWords);
+	inputWordList(BIRD_WORD_LIST, sBirdWords);
+}
+
+void addWord(string sFilename, string sWord)
+{
+	ofstream ofile(sFilename.c_str(), ios_base::app);
+	if(!ofile.fail())
+		ofile << sWord << endl;
+	ofile.close();
+	
+	readWords();	//Reload list
 }
 
 string replaceChar(string s, char cSearch, char cReplace)

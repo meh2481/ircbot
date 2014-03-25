@@ -9,41 +9,6 @@ set<string> sNickList;
 set<string> sNickListLowercase;
 map<string, time_t> mLastSeen;
 
-void raw(char *fmt, ...) 
-{
-	char sbuf[512];
-	va_list ap;
-	va_start(ap, fmt);
-	vsnprintf(sbuf, 512, fmt, ap);
-	va_end(ap);
-	printf("<< %s", sbuf);
-#ifdef _WIN32
-	send(conn, sbuf, strlen(sbuf), 0);
-#else
-	write(conn, sbuf, strlen(sbuf));
-#endif
-}
-
-void say(char* channel, char* msg, ...)
-{
-	char sbuf[512];
-	va_list ap;
-	va_start(ap, msg);
-	vsnprintf(sbuf, 512, msg, ap);
-	va_end(ap);
-	raw("PRIVMSG %s :%s\r\n", channel, sbuf);
-}
-
-void action(char* channel, char* msg, ...)
-{
-	char sbuf[512];
-	va_list ap;
-	va_start(ap, msg);
-	vsnprintf(sbuf, 512, msg, ap);
-	va_end(ap);
-	raw("PRIVMSG %s :\001ACTION %s\001\r\n", channel, sbuf);
-}
-
 int main() 
 {	
 	char sbuf[512];
@@ -58,29 +23,14 @@ int main()
 	char *port = "6667";
 	
 	char *user, *command, *where, *message, *sep, *target;
-	int i, j, l, sl, o = -1, start, wordcount;
+	int sl, o = -1, start, wordcount;
 	char buf[513];
-	struct addrinfo hints, *res;
 	
 	srand (time(NULL));
 	readWords();
 	
-#ifdef _WIN32
-	WSADATA wsaData;
-	int iResult;
-	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (iResult != 0) {
-		printf("WSAStartup failed: %d\n", iResult);
-		return 1;
-	}
-#endif
-	
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	getaddrinfo(host, port, &hints, &res);
-	conn = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-	connect(conn, res->ai_addr, res->ai_addrlen);
+	initNetworking();
+	setupConnection(host, port, &conn);	
 	
 	raw("USER %s 0 0 :%s\r\n", nick, nick);
 	raw("NICK %s\r\n", nick);
@@ -91,14 +41,14 @@ int main()
 	while ((sl = read(conn, sbuf, 512)) && !bDone) 
 	#endif
 	{
-		for (i = 0; i < sl; i++) 
+		for (int i = 0; i < sl; i++) 
 		{
 			o++;
 			buf[o] = sbuf[i];
 			if ((i > 0 && sbuf[i] == '\n' && sbuf[i - 1] == '\r') || o == 512) 
 			{
 				buf[o + 1] = '\0';
-				l = o;
+				int l = o;
 				o = -1;
 				
 				printf(">> %s", buf);
@@ -114,7 +64,7 @@ int main()
 				{
 					wordcount = 0;
 					user = command = where = message = NULL;
-					for (j = 1; j < l; j++) 
+					for (int j = 1; j < l; j++) 
 					{
 						if (buf[j] == ' ') 
 						{
@@ -142,7 +92,7 @@ int main()
 					
 					if (!strncmp(command, "001", 3) && channel != NULL) //Connected message
 					{
-						raw("JOIN %s\r\n", channel);
+						join(channel);
 					} 
 					else if (!strncmp(command, "PRIVMSG", 7) || !strncmp(command, "NOTICE", 6)) //Message from IRC
 					{
@@ -229,14 +179,33 @@ int main()
 							}
 							else if(sCompare == "reload")
 							{
-								say(channel, "K");
-								sBadWords.clear();
-								sBirdWords.clear();
 								readWords();
 							}
 							else if(sCompare == "seen")
 							{
 								
+							}
+							else if(sCompare == "join")
+							{
+								join(channel);	//rejoin
+							}
+							else if(sCompare.find("addbad") == 0)	
+							{
+								list<string> sList = splitWords(&message[1], true);
+								for(list<string>::iterator i = sList.begin(); i != sList.end(); i++)
+								{
+									if(i != sList.begin())
+										addWord(BAD_WORD_LIST, *i);
+								}
+							}
+							else if(sCompare.find("addbird") == 0)	
+							{
+								list<string> sList = splitWords(&message[1], true);
+								for(list<string>::iterator i = sList.begin(); i != sList.end(); i++)
+								{
+									if(i != sList.begin())
+										addWord(BIRD_WORD_LIST, *i);
+								}
 							}
 							else if(mLastSeen.count(sCompare))	//Username
 							{
@@ -260,7 +229,6 @@ int main()
 								//Kill command by privileged user
 								if(s.find("cheese curls") != string::npos && sUser.find("Daxar") == 0)	//Password for shutting off
 								{
-									say(channel, "Kthxbai.");
 									raw("PART %s :Quit command invoked by %s\r\n", channel, user);
 									bDone = true;	//Quit
 								}
@@ -417,6 +385,10 @@ int main()
 						sNickListLowercase.erase(tolowercase(sUser));
 						mLastSeen[tolowercase(sUser)] = time(NULL);
 					}
+					else if(!strncmp(command, "KICK", 4))	//User kicked from channel
+					{
+						say(channel, "Trololol");	//Bask in the glory of a user being kicked
+					}
 					else if(!strncmp(command, "353", 3))	//List of nicks currently in channel (353 for espernet, freenode, efnet, so I'm assuming everywhere else also)
 					{
 						//Search for end of message to avoid overflow
@@ -454,12 +426,14 @@ int main()
 							}
 						}
 					}
+					else if(!strncmp(command, "404", 3))	//404 can't send to channel
+					{
+						join(channel);	//rejoin
+					}
 				}
 			}
 		}
 	}
-#ifdef _WIN32
-	WSACleanup();
-#endif
+	shutdownNetworking();
 	return 0;
 }
