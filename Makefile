@@ -1,6 +1,6 @@
 OS = $(shell uname -s)
 LIBS = ""
-OBJECTS = bot.o
+OBJECTS = bot.o parse.o
 CXXFLAGS = -Wno-write-strings
 CC = g++
 

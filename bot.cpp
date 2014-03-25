@@ -1,35 +1,4 @@
-#ifndef _WIN32
-	extern "C" {
-		#include <stdio.h>
-		#include <unistd.h>
-		#include <string.h>
-		#include <netdb.h>
-		#include <stdarg.h>
-	};
-#endif
-
-#ifdef _WIN32
-	#undef UNICODE
-	#define _WIN32_WINNT 0x0501
-	#include <winsock2.h>
-	#include <ws2tcpip.h>
-	#undef _WIN32_WINNT
-	#define _USE_32BIT_TIME_T 1
-	#include <stdio.h>
-	#include <io.h>
-	#include <ctime>
-	#define sleep(x) Sleep(x * 1000)
-#endif
-
-#include <string>
-#include <sstream>
-#include <set>
-#include <map>
-#include <list>
-#include <cstdlib>
-#include <algorithm>
-#include <fstream>
-using namespace std;
+#include "bot.h"
 
 int conn;
 
@@ -40,142 +9,18 @@ set<string> sNickList;
 set<string> sNickListLowercase;
 map<string, time_t> mLastSeen;
 
-string forceascii(const char* msg)
-{
-	string s;
-	for(int i = 0; i < strlen(msg); i++)
-	{
-		if(msg[i] == '\n' || msg[i] == '\r') break;	//Done
-		if(msg[i] >= ' ' && msg[i] <= '~') 
-			s.push_back(msg[i]);
-	}
-	return s;
-}
-
-string tolowercase(string s)
-{
-	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-	return s;
-}
-
-string touppercase(string s)
-{
-	std::transform(s.begin(), s.end(), s.begin(), ::toupper);
-	return s;
-}
-
-void inputWordList(string sFilename, set<string>& dest)
-{
-	ifstream infile(sFilename.c_str());
-	while(!infile.fail())
-	{
-		string sLine;
-		getline(infile, sLine);
-		if(sLine.size())
-		{
-			dest.insert(tolowercase(sLine));
-			//Deal with possible plural cases as well
-			dest.insert(tolowercase(sLine + "s"));
-			dest.insert(tolowercase(sLine + "es"));
-		}
-	}
-	infile.close();
-}
-
-void readWords()
-{
-	inputWordList("badwords.txt", sBadWords);
-	inputWordList("birdwords.txt", sBirdWords);
-}
-
-string replaceChar(string s, char cSearch, char cReplace)
-{
-	size_t pos = 0;
-	while((pos = s.find(cSearch, pos)) != string::npos)
-		s[pos] = cReplace;
-	return s;
-}
-
-string replaceWhitespace(string s)
-{
-	const char* cMarkup = "!-\";:?.,()";
-	for(int c = 0; c < strlen(cMarkup); c++)
-		s = replaceChar(s, cMarkup[c], ' ');
-	return s;
-}
-
-set<string> ssplitWords(string s, bool bLowercase = true)
-{
-	set<string> ret;
-	istringstream iss(replaceWhitespace(s));
-	do
-	{
-	  string sub;
-	  iss >> sub;
-	  if(!sub.size()) continue;
-	  if(bLowercase)
-		ret.insert(tolowercase(sub));
-	  else
-		ret.insert(sub);
-	} while (iss);
-  return ret;
-}
-
-list<string> splitWords(string s, bool bLowercase = true)
-{
-	list<string> ret;
-	istringstream iss(replaceWhitespace(s));
-	do
-	{
-	  string sub;
-	  iss >> sub;
-	  if(!sub.size()) continue;
-	  if(bLowercase)
-		ret.push_back(tolowercase(sub));
-	  else
-		ret.push_back(sub);
-	} while (iss);
-	return ret;
-}
-
-string stripEnd(string s)
-{
-	size_t pos = s.find('\r');
-	if(pos != string::npos)
-		s.erase(pos);
-	pos = s.find('\n');
-	if(pos != string::npos)
-		s.erase(pos);
-	if(s[s.size()-1] == ' ')
-		s.erase(s.size()-1);
-	list<string> words = splitWords(s, false);
-	return *(words.begin());
-}
-
-bool isInside(string s, set<string>& sSet)
-{
-	s = tolowercase(s);
-	set<string> lWords = ssplitWords(s);
-	for(set<string>::iterator i = lWords.begin(); i != lWords.end(); i++)
-	{
-		if(sSet.count(*i))
-			return true;
-	}
-	return false;
-}
-
 void raw(char *fmt, ...) 
 {
 	char sbuf[512];
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(sbuf, 512, fmt, ap);
-    va_end(ap);
-    printf("<< %s", sbuf);
+	va_list ap;
+	va_start(ap, fmt);
+	vsnprintf(sbuf, 512, fmt, ap);
+	va_end(ap);
+	printf("<< %s", sbuf);
 #ifdef _WIN32
-    send(conn, sbuf, strlen(sbuf), 0);
+	send(conn, sbuf, strlen(sbuf), 0);
 #else
-    write(conn, sbuf, strlen(sbuf));
+	write(conn, sbuf, strlen(sbuf));
 #endif
 }
 
@@ -200,25 +45,25 @@ void action(char* channel, char* msg, ...)
 }
 
 int main() 
-{    
+{	
 	char sbuf[512];
 #ifdef DEBUG
-    char *nick = "immabot_";
-    char *channel = "#bitbottest";
+	char *nick = "immabot_";
+	char *channel = "#bitbottest";
 #else
-    char *nick = "immabot";
-    char *channel = "#bitblot";
+	char *nick = "immabot";
+	char *channel = "#bitblot";
 #endif
-    char *host = "irc.esper.net";
-    char *port = "6667";
-    
-    char *user, *command, *where, *message, *sep, *target;
-    int i, j, l, sl, o = -1, start, wordcount;
-    char buf[513];
-    struct addrinfo hints, *res;
-    
-    srand (time(NULL));
-    readWords();
+	char *host = "irc.esper.net";
+	char *port = "6667";
+	
+	char *user, *command, *where, *message, *sep, *target;
+	int i, j, l, sl, o = -1, start, wordcount;
+	char buf[513];
+	struct addrinfo hints, *res;
+	
+	srand (time(NULL));
+	readWords();
 	
 #ifdef _WIN32
 	WSADATA wsaData;
@@ -230,112 +75,110 @@ int main()
 	}
 #endif
 	
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    getaddrinfo(host, port, &hints, &res);
-    conn = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    connect(conn, res->ai_addr, res->ai_addrlen);
-    
-    raw("USER %s 0 0 :%s\r\n", nick, nick);
-    raw("NICK %s\r\n", nick);
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	getaddrinfo(host, port, &hints, &res);
+	conn = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	connect(conn, res->ai_addr, res->ai_addrlen);
+	
+	raw("USER %s 0 0 :%s\r\n", nick, nick);
+	raw("NICK %s\r\n", nick);
+	bool bDone = false;
 	#ifdef _WIN32
-    while ((sl = recv(conn, sbuf, 512, 0))) 
+	while ((sl = recv(conn, sbuf, 512, 0)) && !bDone) 
 	#else
-    while ((sl = read(conn, sbuf, 512))) 
+	while ((sl = read(conn, sbuf, 512)) && !bDone) 
 	#endif
-    {
-        for (i = 0; i < sl; i++) 
-        {
-            o++;
-            buf[o] = sbuf[i];
-            if ((i > 0 && sbuf[i] == '\n' && sbuf[i - 1] == '\r') || o == 512) 
+	{
+		for (i = 0; i < sl; i++) 
+		{
+			o++;
+			buf[o] = sbuf[i];
+			if ((i > 0 && sbuf[i] == '\n' && sbuf[i - 1] == '\r') || o == 512) 
 			{
-                buf[o + 1] = '\0';
-                l = o;
-                o = -1;
-                
-                printf(">> %s", buf);
+				buf[o + 1] = '\0';
+				l = o;
+				o = -1;
+				
+				printf(">> %s", buf);
 				char tempbuf[512];
 				memcpy(tempbuf, buf, strlen(buf));
-                
-                if (!strncmp(buf, "PING", 4)) //PONG any PING we get
-                {
-                    buf[1] = 'O';
-                    raw(buf);
-                } 
-                else if (buf[0] == ':') //Message
-                {
-                    wordcount = 0;
-                    user = command = where = message = NULL;
-                    for (j = 1; j < l; j++) 
-                    {
-                        if (buf[j] == ' ') 
-                        {
-                            buf[j] = '\0';
-                            wordcount++;
-                            switch(wordcount) {
-                                case 1: user = buf + 1; break;
-                                case 2: command = buf + start; break;
-                                case 3: where = buf + start; break;
-                            }
-                            if (j == l - 1) 
+				
+				if (!strncmp(buf, "PING", 4)) //PONG any PING we get
+				{
+					buf[1] = 'O';
+					raw(buf);
+				} 
+				else if (buf[0] == ':') //Message
+				{
+					wordcount = 0;
+					user = command = where = message = NULL;
+					for (j = 1; j < l; j++) 
+					{
+						if (buf[j] == ' ') 
+						{
+							buf[j] = '\0';
+							wordcount++;
+							switch(wordcount) {
+								case 1: user = buf + 1; break;
+								case 2: command = buf + start; break;
+								case 3: where = buf + start; break;
+							}
+							if (j == l - 1) 
 								continue;
-                            start = j + 1;
-                        } 
-                        else if (buf[j] == ':' && wordcount == 3) 
-                        {
-                            if (j < l - 1) 
+							start = j + 1;
+						} 
+						else if (buf[j] == ':' && wordcount == 3) 
+						{
+							if (j < l - 1) 
 								message = buf + j + 1;
-                            break;
-                        }
-                    }
-                    
-                    if (wordcount < 2) 
+							break;
+						}
+					}
+					
+					if (wordcount < 2) 
 						continue;
-                    
-                    if (!strncmp(command, "001", 3) && channel != NULL) //Connected message
-                    {
-                        raw("JOIN %s\r\n", channel);
-						#ifndef DEBUG	//Don't go all annoying in debug mode
-                        say(channel, "Imma bot. Beep.");
-						#endif
-                    } 
-                    else if (!strncmp(command, "PRIVMSG", 7) || !strncmp(command, "NOTICE", 6)) //Message from IRC
-                    {
-                        if (where == NULL || message == NULL) 
+					
+					if (!strncmp(command, "001", 3) && channel != NULL) //Connected message
+					{
+						raw("JOIN %s\r\n", channel);
+					} 
+					else if (!strncmp(command, "PRIVMSG", 7) || !strncmp(command, "NOTICE", 6)) //Message from IRC
+					{
+						if (where == NULL || message == NULL) 
 							continue;
-                        if ((sep = strchr(user, '!')) != NULL) 
-                        	user[sep - user] = '\0';
-                        if (where[0] == '#' || where[0] == '&' || where[0] == '+' || where[0] == '!') 
-                        	target = where; else target = user;
-                        printf("[from: %s] [reply-with: %s] [where: %s] [reply-to: %s] %s", user, command, where, target, message);
-                        
-                        if(message[0] == '!')	//bot commands
-                        {
+						if ((sep = strchr(user, '!')) != NULL) 
+							user[sep - user] = '\0';
+						if (where[0] == '#' || where[0] == '&' || where[0] == '+' || where[0] == '!') 
+							target = where; else target = user;
+						printf("[from: %s] [reply-with: %s] [where: %s] [reply-to: %s] %s", user, command, where, target, message);
+						
+						if(message[0] == '!')	//bot commands
+						{
 							string sCompare = stripEnd(tolowercase(&message[1]));
 							printf("compare %s\n", sCompare.c_str());
 							//Process different messages
-                        	if(sCompare == "beep")	
-                        	{
-                        		say(channel, "Imma bot. beep.");
+							if(sCompare == "beep")	
+							{
+								say(channel, "Imma bot. beep.");
 							}
 							else if(sCompare == "hug")
-                        	{
-                        		say(channel, "Setting phasors to hug.");
-                        		sleep(rand() % 5 + 1);	//Pause for a random amount of time
-                        		if(strlen(message) > 7)	//Hug somebody else
-                        		{
-                        			string sPerson = &message[5];
-                        			size_t pos = sPerson.find('\r');
-                        			if(pos != string::npos)
-                        				sPerson.erase(pos);
-                        			else
-                        			{
-                        				pos = sPerson.find('\n');
-                        				if(pos != string::npos)
-                        					sPerson.erase(pos);
-                        			}
+							{
+								say(channel, "Setting phasors to hug.");
+								sleep(rand() % 5 + 1);	//Pause for a random amount of time
+								if(strlen(message) > 7)	//Hug somebody else
+								{
+									string sPerson = &message[5];
+									size_t pos = sPerson.find('\r');
+									if(pos != string::npos)
+										sPerson.erase(pos);
+									else
+									{
+										pos = sPerson.find('\n');
+										if(pos != string::npos)
+											sPerson.erase(pos);
+									}
 									list<string> sset = splitWords(sPerson, false);
 									sPerson = *sset.begin();
 									if(sNickListLowercase.count(tolowercase(sPerson)))	//Person is here
@@ -350,18 +193,18 @@ int main()
 										sleep(1);
 										action(channel, "flops onto couch and sighs dejectedly");
 									}
-                        		}
-                        		else	//hug the person who did the command
-                        			action(channel, "hugs %s a little too tightly", user);
+								}
+								else	//hug the person who did the command
+									action(channel, "hugs %s a little too tightly", user);
 							}
 							else if(sCompare == "roll" ||
 									sCompare == "dice" ||
 									sCompare == "die" ||
 									sCompare == "d6")	//random number
-                        	{
-                        		say(channel, "Rolling a d6...");
-                        		int randnum = rand() % 6 + 1;
-                        		say(channel, "You rolled a %d!", randnum);
+							{
+								say(channel, "Rolling a d6...");
+								int randnum = rand() % 6 + 1;
+								say(channel, "You rolled a %d!", randnum);
 							}
 							else if(sCompare == "cookie" ||
 									sCompare == "botsnack" ||
@@ -419,7 +262,7 @@ int main()
 								{
 									say(channel, "Kthxbai.");
 									raw("PART %s :Quit command invoked by %s\r\n", channel, user);
-									return 0;	//Quit
+									bDone = true;	//Quit
 								}
 								
 								//hai
@@ -496,9 +339,14 @@ int main()
 								{
 									//Split
 									list<string> lWords = splitWords(tolowercase(s));
-									lWords.remove("");
-									lWords.remove(nick);
-									lWords.remove("action");
+									//Cut out unacceptabru words
+									for(list<string>::iterator i = lWords.begin(); i != lWords.end();)
+									{
+										if(i->length() < 4 || *i == nick || *i == "action")
+											i = lWords.erase(i);
+										else
+											i++;
+									}
 								
 									if(lWords.size())
 									{
@@ -531,20 +379,24 @@ int main()
 								else
 									mYellList[user] = 1;
 							}
+							else if(touppercase(message) != ((string)(message)))	//Not all uppercase
+							{
+								mYellList[user] = 0;	//Reset yell counter
+							}
 						}
 						
 						//Mark last time seen this user
 						mLastSeen[tolowercase(user)] = time(NULL);
-                    }
-                    else if(!strncmp(command, "JOIN", 4))	//User joined
-                    {
-                    	//Split user string by hand
-                    	string sUser = tolowercase(user);
-                    	size_t pos = sUser.find('!');
-                    	if(pos != string::npos)
-                    		sUser.erase(pos);
+					}
+					else if(!strncmp(command, "JOIN", 4))	//User joined
+					{
+						//Split user string by hand
+						string sUser = tolowercase(user);
+						size_t pos = sUser.find('!');
+						if(pos != string::npos)
+							sUser.erase(pos);
 						if(tolowercase(sUser) != tolowercase(nick))	//Make sure it wasn't me
-                    	{
+						{
 							//If left more than 60 seconds ago, or if we haven't seen them before, say hi
 							if(!mLastSeen.count(sUser) || difftime(time(NULL), mLastSeen[sUser]) > 60.0)
 								say(channel, "Hi %s!", sUser.c_str());	//Say hi
@@ -555,12 +407,12 @@ int main()
 					}
 					else if(!strncmp(command, "PART", 4) ||
 							!strncmp(command, "QUIT", 4))	//User left
-                    {
-                    	//Split user string by hand
-                    	string sUser = user;
-                    	size_t pos = sUser.find('!');
-                    	if(pos != string::npos)
-                    		sUser.erase(pos);
+					{
+						//Split user string by hand
+						string sUser = user;
+						size_t pos = sUser.find('!');
+						if(pos != string::npos)
+							sUser.erase(pos);
 						sNickList.erase(sUser);	//Remove user from current user list
 						sNickListLowercase.erase(tolowercase(sUser));
 						mLastSeen[tolowercase(sUser)] = time(NULL);
@@ -602,10 +454,12 @@ int main()
 							}
 						}
 					}
-                }
-            }
-        }
-    }
-    
-    return 0;
+				}
+			}
+		}
+	}
+#ifdef _WIN32
+	WSACleanup();
+#endif
+	return 0;
 }
