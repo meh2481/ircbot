@@ -8,6 +8,9 @@ map<string, int> mYellList;
 set<string> sNickList;
 set<string> sNickListLowercase;
 map<string, time_t> mLastSeen;
+map<string, time_t> mLastPecked;
+map<string, time_t> mLastSlapped;
+
 
 int main() 
 {	
@@ -106,123 +109,13 @@ int main()
 						
 						if(message[0] == '!')	//bot commands
 						{
-							string sCompare = stripEnd(tolowercase(&message[1]));
-							printf("compare %s\n", sCompare.c_str());
-							//Process different messages
-							if(sCompare == "beep")	
-							{
-								say(channel, "Imma bot. beep.");
-							}
-							else if(sCompare == "hug")
-							{
-								say(channel, "Setting phasors to hug.");
-								sleep(rand() % 5 + 1);	//Pause for a random amount of time
-								if(strlen(message) > 7)	//Hug somebody else
-								{
-									string sPerson = &message[5];
-									size_t pos = sPerson.find('\r');
-									if(pos != string::npos)
-										sPerson.erase(pos);
-									else
-									{
-										pos = sPerson.find('\n');
-										if(pos != string::npos)
-											sPerson.erase(pos);
-									}
-									list<string> sset = splitWords(sPerson, false);
-									sPerson = *sset.begin();
-									if(sNickListLowercase.count(tolowercase(sPerson)))	//Person is here
-										action(channel, "hugs %s a little too tightly", sPerson.c_str());
-									else	//Disappointed
-									{
-										string sHalfPerson = sPerson;
-										sHalfPerson.erase(sHalfPerson.size() / 2);
-										action(channel, "hugs %s...", sHalfPerson.c_str());
-										sleep(2);
-										say(channel, "%s isn't here!", sPerson.c_str());
-										sleep(1);
-										action(channel, "flops onto couch and sighs dejectedly");
-									}
-								}
-								else	//hug the person who did the command
-									action(channel, "hugs %s a little too tightly", user);
-							}
-							else if(sCompare == "roll" ||
-									sCompare == "dice" ||
-									sCompare == "die" ||
-									sCompare == "d6")	//random number
-							{
-								say(channel, "Rolling a d6...");
-								int randnum = rand() % 6 + 1;
-								say(channel, "You rolled a %d!", randnum);
-							}
-							else if(sCompare == "cookie" ||
-									sCompare == "botsnack" ||
-									sCompare == "snack")	//give a bot a cookie
-							{
-								list<string> sset = splitWords(user, false);
-								string sPerson = *sset.begin();
-								switch(rand() % 3)
-								{
-									case 0:
-										action(channel, "happily grabs %s from %s and runs away to bury it", sCompare.c_str(), sPerson.c_str());
-										break;
-									
-									case 1:
-										action(channel, "grabs %s and scarfs it down hungrily", sCompare.c_str());
-										break;
-									
-									case 2:
-										action(channel, "goes om nom nom");
-										break;
-								}
-							}
-							else if(sCompare == "reload")
-							{
-								readWords();
-							}
-							else if(sCompare == "seen")
-							{
-								
-							}
-							else if(sCompare == "join")
-							{
-								join(channel);	//rejoin
-							}
-							else if(sCompare.find("addbad") == 0)	
-							{
-								list<string> sList = splitWords(&message[1], true);
-								for(list<string>::iterator i = sList.begin(); i != sList.end(); i++)
-								{
-									if(i != sList.begin())
-										addWord(BAD_WORD_LIST, *i);
-								}
-							}
-							else if(sCompare.find("addbird") == 0)	
-							{
-								list<string> sList = splitWords(&message[1], true);
-								for(list<string>::iterator i = sList.begin(); i != sList.end(); i++)
-								{
-									if(i != sList.begin())
-										addWord(BIRD_WORD_LIST, *i);
-								}
-							}
-							else if(mLastSeen.count(sCompare))	//Username
-							{
-								//Say last time they were seen active
-								unsigned int diff = (int)(difftime(time(NULL), mLastSeen[sCompare]));
-								unsigned int seconds = diff % 60;
-								unsigned int minutes = (diff / 60) % 60;
-								unsigned int hours = (diff / (60*60)) % 24;
-								unsigned int days = diff / (60*60*24);
-								say(channel, "User %s was last seen %dd, %dh, %dm, %ds ago", (stripEnd(&message[1])).c_str(), days, hours, minutes, seconds);
-							}
+							botcommand(message, channel, user, nick);
 						}
 						else	//Other misc. commands
 						{
 							string s = tolowercase(forceascii(message));
 							set<string> words = ssplitWords(message);
-							if(s.find(tolowercase(nick)) != string::npos)	//Highlighted; respond with a "your ex" joke
+							if(s.find(tolowercase(nick)) != string::npos)	//Highlighted
 							{
 								string sUser = user;
 								
@@ -243,20 +136,7 @@ int main()
 										words.count("morning") ||
 										words.count("mornin"))
 								{
-									switch(rand() % 3)
-									{
-										case 0:
-											say(channel, "ohai");
-											break;
-											
-										case 1:
-											say(channel, "Hai thar!");
-											break;
-											
-										default:
-											say(channel, "sup word diggly dog");
-											break;
-									}
+									hai(channel);
 								}
 								
 								//bai
@@ -267,24 +147,7 @@ int main()
 										words.count("n8") ||
 										words.count("later"))
 								{
-									switch(rand() % 4)
-									{
-										case 0:
-											say(channel, "Bai!");
-											break;
-											
-										case 1:
-											say(channel, "Nite!");
-											break;
-											
-										case 2:
-											say(channel, "Bye!");
-											break;
-											
-										default:
-											say(channel, "Toodles with oodles of noodles!");
-											break;
-									}
+									bai(channel);
 								}
 								
 								//good boy
@@ -301,38 +164,22 @@ int main()
 								{
 									action(channel, "sits down and whines");
 								}
-								
-								//Insult people for highlighting the bot randomly
-								else
-								{
-									//Split
-									list<string> lWords = splitWords(tolowercase(s));
-									//Cut out unacceptabru words
-									for(list<string>::iterator i = lWords.begin(); i != lWords.end();)
-									{
-										if(i->length() < 4 || *i == nick || *i == "action")
-											i = lWords.erase(i);
-										else
-											i++;
-									}
-								
-									if(lWords.size())
-									{
-										int num = rand() % lWords.size();
-										list<string>::iterator word = lWords.begin();
-										for(int i = 0; i < num; i++)
-											word++;
-										say(channel, "Your ex is %s", word->c_str());
-									}
-								}
 							}
 							else if(isInside(s, sBadWords))	//Dirty language
 							{
-								action(channel, "slaps %s for their foul language", user);
+								if(!mLastSlapped.count(user) || difftime(time(NULL), mLastSlapped[user]) > 60*5)	//5min timeout on slapping
+								{
+									action(channel, "slaps %s for their foul language", user);
+									mLastSlapped[user] = time(NULL);
+								}
 							}
 							else if(isInside(s, sBirdWords))	//Birdy language
 							{
-								action(channel, "pecks %s for their fowl language", user);
+								if(!mLastPecked.count(user) || difftime(time(NULL), mLastPecked[user]) > 60*5)	//5min timeout on pecking
+								{
+									action(channel, "pecks %s for their fowl language", user);
+									mLastPecked[user] = time(NULL);
+								}
 							}
 							else if(touppercase(message) == ((string)(message)) && s.length() > 5)	//All uppercase
 							{
@@ -428,7 +275,7 @@ int main()
 					}
 					else if(!strncmp(command, "404", 3))	//404 can't send to channel
 					{
-						join(channel);	//rejoin
+						//join(channel);	//rejoin
 					}
 				}
 			}

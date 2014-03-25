@@ -1,17 +1,18 @@
 OS = $(shell uname -s)
 LIBS = ""
-OBJECTS = bot.o parse.o network.o
+OBJECTS = bot.o parse.o network.o actions.o
 CXXFLAGS = -Wno-write-strings
 CC = g++
-
-ifneq (,$(findstring MINGW,$(OS)))
-    LIBS = -lWs2_32
-endif
 
 TARGET = ircbot
 ifeq ($(BUILD),debug)
     TARGET = ircbot_test
     CXXFLAGS = -Wno-write-strings -DDEBUG
+endif
+
+ifneq (,$(findstring MINGW,$(OS)))
+    LIBS = -lWs2_32
+	TARGET := $(TARGET).exe
 endif
 
 all: $(TARGET)

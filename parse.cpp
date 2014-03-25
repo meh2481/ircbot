@@ -135,3 +135,17 @@ bool isInside(string s, set<string>& sSet)
 	}
 	return false;
 }
+
+string stripNewline(string s)
+{
+	size_t pos = s.find('\r');
+	if(pos != string::npos)
+		s.erase(pos);
+	else
+	{
+		pos = s.find('\n');
+		if(pos != string::npos)
+			s.erase(pos);
+	}
+	return s;
+}
