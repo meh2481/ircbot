@@ -198,6 +198,34 @@ int main()
 							{
 								mYellList[user] = 0;	//Reset yell counter
 							}
+							
+							if(s.size())
+							{
+								//regex
+								char errbuf[512];
+								printf("Regex for %s\n", s.c_str());
+								//Extremely simple and stupid regex for URLs
+								TRex* pRegex = trex_compile("https?://\\S*", (const char**)&errbuf);
+								if(pRegex != NULL)
+								{
+									memcpy(errbuf, s.c_str(), s.length());
+									const TRexChar *out_begin,*out_end;
+									const TRexChar *out_temp = s.c_str();
+									while(trex_search(pRegex, out_temp, &out_begin, &out_end))
+									{
+										string sTemp;
+										for(const char* it = out_begin; it != out_end; it++)
+											sTemp.push_back(*it);
+										printf("Parse URL: %s\n", sTemp.c_str());
+										out_temp = out_end;
+									}
+									
+									trex_free(pRegex);
+								}
+								else
+									printf("trex error: %s\n", errbuf);
+								
+							}
 						}
 						
 						//Mark last time seen this user

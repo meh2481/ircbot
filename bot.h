@@ -24,6 +24,8 @@
 	#define sleep(x) Sleep(x * 1000)
 #endif
 
+#include "trex.h"
+
 #include <string>
 #include <sstream>
 #include <set>
