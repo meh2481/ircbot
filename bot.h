@@ -58,6 +58,7 @@ string replaceWhitespace(string s);
 set<string> ssplitWords(string s, bool bLowercase = true);
 list<string> splitWords(string s, bool bLowercase = true);
 string stripEnd(string s);
+string stripRN(string s);
 bool isInside(string s, set<string>& sSet);
 string stripNewline(string s);
 
@@ -80,6 +81,7 @@ void ex(const char* channel, const char* message, const char* nick);
 void cookie(const char* channel, string user, string sCompare);
 void eightball(const char* channel);
 void botcommand(const char* message, const char* channel, const char* user, const char* nick);
+void rpschoose(const char* channel, const char* message, const char* user);
 
 #define BAD_WORD_LIST 	"badwords.txt"
 #define BIRD_WORD_LIST	"birdwords.txt"

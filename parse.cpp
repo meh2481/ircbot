@@ -110,7 +110,7 @@ list<string> splitWords(string s, bool bLowercase)
 	return ret;
 }
 
-string stripEnd(string s)
+string stripRN(string s)
 {
 	size_t pos = s.find('\r');
 	if(pos != string::npos)
@@ -120,6 +120,12 @@ string stripEnd(string s)
 		s.erase(pos);
 	if(s[s.size()-1] == ' ')
 		s.erase(s.size()-1);
+	return s;
+}
+
+string stripEnd(string s)
+{
+	s = stripRN(s);
 	list<string> words = splitWords(s, false);
 	return *(words.begin());
 }

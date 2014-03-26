@@ -227,6 +227,9 @@ int main()
 									printf("trex error: %s\n", errbuf);
 								
 							}
+							
+							//Check and see if rps battle
+							rpschoose(channel, message, user);
 						}
 						
 						//Mark last time seen this user
