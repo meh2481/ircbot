@@ -76,13 +76,12 @@ protected:
     {
         if(!size)
             return;
-        //printf("===START==[Status:%d, Size:%d]======\n", GetStatusCode(), size);
+			
         for(char* i = buf; i < buf+size; i++)
 			sBuf.push_back(*i);
 		if(sBuf.size() >= MAX_ATTEMPT_LEN || sBuf.find("</title>") != string::npos)
 			//Shutdown socket; if we haven't hit it by now, we likely won't.
 			bStop = true;
-        //puts("\n===END====================");
     }
 };
 
@@ -91,7 +90,7 @@ void getURLTitle(const char* channel, string sURL)
 	bStop = false;
 	HttpSimpleSocket *ht = new HttpSimpleSocket;
 
-    ht->SetKeepAlive(3);
+    ht->SetKeepAlive(5);
     ht->SetBufsizeIn(MAX_ATTEMPT_LEN);
 	ht->Download(sURL);
 	minihttp::SocketSet ss;

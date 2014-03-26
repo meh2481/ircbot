@@ -203,14 +203,14 @@ int main()
 							{
 								//regex
 								char errbuf[512];
-								printf("Regex for %s\n", s.c_str());
+								string sURL = message;
 								//Extremely simple and stupid regex for URLs
 								TRex* pRegex = trex_compile("https?://\\S*", (const char**)&errbuf);
 								if(pRegex != NULL)
 								{
-									memcpy(errbuf, s.c_str(), s.length());
+									memcpy(errbuf, sURL.c_str(), sURL.length());
 									const TRexChar *out_begin,*out_end;
-									const TRexChar *out_temp = s.c_str();
+									const TRexChar *out_temp = sURL.c_str();
 									while(trex_search(pRegex, out_temp, &out_begin, &out_end))
 									{
 										string sTemp;

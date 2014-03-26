@@ -298,6 +298,27 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 				addWord(BIRD_WORD_LIST, *i);
 		}
 	}
+	//Google "I'm Feeling Lucky" search
+	else if(sCompare.find("google") == 0 ||
+			sCompare.find("search") == 0)
+	{
+		list<string> sList = splitWords(&message[1], true);
+		if(sList.size())
+			sList.erase(sList.begin());	//Remove first word
+		
+		const char* cGoogleURLStart = "https://www.google.com/search?q=";
+		const char* cGoogleURLEnd = "&btnI";
+		string sResult = cGoogleURLStart;
+		for(list<string>::iterator i = sList.begin(); i != sList.end(); i++)
+		{
+			sResult += *i;
+			list<string>::iterator j = i;
+			if(++j != sList.end())
+				sResult += '+';
+		}
+		sResult += cGoogleURLEnd;
+		say(channel, sResult.c_str());
+	}
 	else if(mLastSeen.count(sCompare))	//Username; say when they were last seen
 	{
 		seen(channel, &message[1]);
