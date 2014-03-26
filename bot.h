@@ -25,6 +25,7 @@
 #endif
 
 #include "trex.h"
+#include "minihttp.h"
 
 #include <string>
 #include <sstream>
@@ -68,6 +69,7 @@ void action(const char* channel, const char* msg, ...);
 void shutdownNetworking();
 void join(const char* channel);
 void setupConnection(const char* host, const char* port, int* connection);
+void getURLTitle(const char* channel, string sURL);
 
 //actions.cpp functions
 void seen(const char* channel, const char* message);

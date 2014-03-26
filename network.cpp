@@ -2,22 +2,12 @@
 
 void initNetworking()
 {
-#ifdef _WIN32
-	WSADATA wsaData;
-	int iResult;
-	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (iResult != 0) {
-		printf("WSAStartup failed: %d\n", iResult);
-		exit(1);
-	}
-#endif
+	minihttp::InitNetwork();
 }
 
 void shutdownNetworking()
 {
-#ifdef _WIN32
-	WSACleanup();
-#endif
+	minihttp::StopNetwork();
 }
 
 void raw(const char *fmt, ...) 
@@ -70,4 +60,69 @@ void setupConnection(const char* host, const char* port, int* connection)
 	getaddrinfo(host, port, &hints, &res);
 	*connection = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	connect(*connection, res->ai_addr, res->ai_addrlen);
+}
+
+
+#define MAX_ATTEMPT_LEN	4096	//4kB should be plenty
+string sBuf;
+bool bStop;
+class HttpSimpleSocket : public minihttp::HttpSocket
+{
+public:
+    virtual ~HttpSimpleSocket() {}
+
+protected:
+    virtual void _OnRecv(char *buf, unsigned int size)
+    {
+        if(!size)
+            return;
+        //printf("===START==[Status:%d, Size:%d]======\n", GetStatusCode(), size);
+        for(char* i = buf; i < buf+size; i++)
+			sBuf.push_back(*i);
+		if(sBuf.size() >= MAX_ATTEMPT_LEN || sBuf.find("</title>") != string::npos)
+			//Shutdown socket; if we haven't hit it by now, we likely won't.
+			bStop = true;
+        //puts("\n===END====================");
+    }
+};
+
+void getURLTitle(const char* channel, string sURL)
+{
+	bStop = false;
+	HttpSimpleSocket *ht = new HttpSimpleSocket;
+
+    ht->SetKeepAlive(3);
+    ht->SetBufsizeIn(MAX_ATTEMPT_LEN);
+	ht->Download(sURL);
+	minihttp::SocketSet ss;
+    ss.add(ht, true);
+	while(ss.size() && !bStop)	//Just spin here
+        ss.update();
+		
+	//Ok, now we have data in sBuf, parse regex
+	char errbuf[512];
+	TRex* pRegex = trex_compile("<title>", (const char**)&errbuf);
+	if(pRegex != NULL)
+	{
+		const TRexChar *out_begin,*out_end;
+		const TRexChar *out_temp = sBuf.c_str();
+		const TRexChar *end = out_temp + strlen(out_temp);
+		if(trex_search(pRegex, out_temp, &out_begin, &out_end))
+		{
+			string sTemp;
+			for(const char* it = out_end; *it != '<' && it < end; it++)
+				sTemp.push_back(*it);
+			printf("Title: %s\n", sTemp.c_str());
+			say(channel, "[%s]", sTemp.c_str());	//Say what the title is in chat
+		}
+		else
+			printf("No title found\n");
+		
+		trex_free(pRegex);
+	}
+	else
+		printf("2trex error: %s\n", errbuf);
+	
+	printf("buf size: %d\n", sBuf.size());
+	sBuf.clear();
 }

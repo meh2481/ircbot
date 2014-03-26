@@ -217,6 +217,7 @@ int main()
 										for(const char* it = out_begin; it != out_end; it++)
 											sTemp.push_back(*it);
 										printf("Parse URL: %s\n", sTemp.c_str());
+										getURLTitle(channel, sTemp);
 										out_temp = out_end;
 									}
 									
