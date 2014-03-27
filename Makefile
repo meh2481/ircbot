@@ -1,5 +1,5 @@
 OS = $(shell uname -s)
-LIBS = ""
+LIBS = 
 OBJECTS = bot.o parse.o network.o actions.o trex.o minihttp.o
 CXXFLAGS = -Wno-write-strings
 CC = g++
