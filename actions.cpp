@@ -466,18 +466,23 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 		if(sList.size())
 			sList.erase(sList.begin());	//Remove first word
 		
-		const char* cGoogleURLStart = "https://www.google.com/search?q=";
+		const char* cGoogleURLStart = "http://www.google.com/search?q=";
 		const char* cGoogleURLEnd = "&btnI";
-		string sResult = cGoogleURLStart;
+		string sGoogleURL = cGoogleURLStart;
 		for(list<string>::iterator i = sList.begin(); i != sList.end(); i++)
 		{
-			sResult += *i;
+			sGoogleURL += *i;
 			list<string>::iterator j = i;
 			if(++j != sList.end())
-				sResult += '+';
+				sGoogleURL += '+';
 		}
-		sResult += cGoogleURLEnd;
-		say(channel, sResult.c_str());	//TODO: Follow link or something
+		sGoogleURL += cGoogleURLEnd;
+		string sURLResult;
+		string sTitle = getURLTitle(sGoogleURL, sURLResult);
+		if(sTitle.size() && sURLResult.size())
+			say(channel, "[%s] - %s", sTitle.c_str(), sURLResult.c_str());
+		else
+			say(channel, "Unable to fetch link.");
 	}
 	//Rock-paper-scissors challenge
 	else if(sCompare.find("rps") == 0 ||

@@ -70,7 +70,7 @@ void action(const char* channel, const char* msg, ...);
 void shutdownNetworking();
 void join(const char* channel);
 void setupConnection(const char* host, const char* port, int* connection);
-void getURLTitle(const char* channel, string sURL);
+string getURLTitle(string sURL, string& soutURL);
 
 //actions.cpp functions
 void seen(const char* channel, const char* message);

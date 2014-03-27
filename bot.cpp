@@ -217,7 +217,10 @@ int main()
 										for(const char* it = out_begin; it != out_end; it++)
 											sTemp.push_back(*it);
 										printf("Parse URL: %s\n", sTemp.c_str());
-										getURLTitle(channel, sTemp);
+										string sThrowawayurl;
+										string sFinalTitle = getURLTitle(sTemp, sThrowawayurl);
+										if(sFinalTitle.size())
+											say(channel, "[%s]", sFinalTitle.c_str());
 										out_temp = out_end;
 									}
 									

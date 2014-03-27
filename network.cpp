@@ -66,6 +66,7 @@ void setupConnection(const char* host, const char* port, int* connection)
 #define MAX_ATTEMPT_LEN	4096	//4kB should be plenty
 string sBuf;
 bool bStop;
+string sRedir;
 class HttpSimpleSocket : public minihttp::HttpSocket
 {
 public:
@@ -74,6 +75,9 @@ public:
 protected:
     virtual void _OnRecv(char *buf, unsigned int size)
     {
+		if(IsRedirecting())
+			sRedir = Hdr("location");
+		
         if(!size)
             return;
 			
@@ -85,14 +89,17 @@ protected:
     }
 };
 
-void getURLTitle(const char* channel, string sURL)
+string getURLTitle(string sURL, string& soutURL)
 {
+	string sRet;
 	bStop = false;
+	sRedir = "";
 	HttpSimpleSocket *ht = new HttpSimpleSocket;
 
     ht->SetKeepAlive(5);
     ht->SetBufsizeIn(MAX_ATTEMPT_LEN);
 	ht->Download(sURL);
+	ht->SetAlwaysHandle(true);
 	minihttp::SocketSet ss;
     ss.add(ht, true);
 	while(ss.size() && !bStop)	//Just spin here
@@ -112,7 +119,8 @@ void getURLTitle(const char* channel, string sURL)
 			for(const char* it = out_end; *it != '<' && it < end; it++)
 				sTemp.push_back(*it);
 			printf("Title: %s\n", sTemp.c_str());
-			say(channel, "[%s]", sTemp.c_str());	//Say what the title is in chat
+			sRet = sTemp;
+			//say(channel, "[%s]", sTemp.c_str());	//Say what the title is in chat
 		}
 		else
 			printf("No title found\n");
@@ -124,4 +132,7 @@ void getURLTitle(const char* channel, string sURL)
 	
 	printf("buf size: %d\n", sBuf.size());
 	sBuf.clear();
+	
+	soutURL = sRedir;
+	return sRet;
 }
