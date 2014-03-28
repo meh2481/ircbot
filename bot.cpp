@@ -245,12 +245,6 @@ int main()
 						size_t pos = sUser.find('!');
 						if(pos != string::npos)
 							sUser.erase(pos);
-						if(tolowercase(sUser) != tolowercase(nick))	//Make sure it wasn't me
-						{
-							//If left more than 60 seconds ago, or if we haven't seen them before, say hi
-							if(!mLastSeen.count(sUser) || difftime(time(NULL), mLastSeen[sUser]) > 60.0)
-								say(channel, "Hi %s!", sUser.c_str());	//Say hi
-						}
 						sNickList.insert(user);	//Add user to current user list
 						sNickListLowercase.insert(sUser);
 						mLastSeen[sUser] = time(NULL);
