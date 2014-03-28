@@ -1,7 +1,8 @@
 OS = $(shell uname -s)
-LIBS = ""
+LIBS = ./dep/lua/liblua.a
 OBJECTS = bot.o parse.o network.o actions.o trex.o minihttp.o
 CXXFLAGS = -Wno-write-strings
+INCLUDE = -I./dep/lua
 CC = g++
 
 TARGET = ircbot
@@ -15,10 +16,10 @@ ifneq (,$(findstring MINGW,$(OS)))
 	TARGET := $(TARGET).exe
 endif
 
-all: $(TARGET)
+all: lua $(TARGET)
 
 %.o: %.cpp
-	$(CC) -g -c -o $@ $< $(CXXFLAGS)
+	$(CC) -g -c -o $@ $< $(CXXFLAGS) $(INCLUDE)
 
 clean: clean-obj clean-bin
 
@@ -27,6 +28,9 @@ clean-obj:
 	
 clean-bin:
 	rm -rf $(TARGET)
+	
+lua:
+	cd dep/lua && make
 	
 $(TARGET): $(OBJECTS)
 	$(CC) -g -o $(TARGET) $(OBJECTS) $(LIBS)
