@@ -39,6 +39,7 @@ using namespace std;
 
 //Global variables
 extern int conn;
+extern time_t starttime;
 extern set<string> sBadWords;
 extern set<string> sBirdWords;
 extern map<string, int> mYellList;

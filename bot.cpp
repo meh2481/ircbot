@@ -1,7 +1,7 @@
 #include "bot.h"
 
 int conn;
-
+time_t starttime;
 set<string> sBadWords;
 set<string> sBirdWords;
 map<string, int> mYellList;
@@ -30,6 +30,7 @@ int main()
 	char buf[513];
 	
 	srand (time(NULL));
+	starttime = time(NULL);
 	readWords();
 	
 	initNetworking();
@@ -118,6 +119,7 @@ int main()
 							if(s.find(tolowercase(nick)) != string::npos)	//Highlighted
 							{
 								string sUser = user;
+								string sMsg = stripRN(s);
 								
 								//Kill command by privileged user
 								if(s.find("cheese curls") != string::npos && sUser.find("Daxar") == 0)	//Password for shutting off
@@ -164,10 +166,16 @@ int main()
 								{
 									action(channel, "sits down and whines");
 								}
+								
+								else if(sMsg[sMsg.size() - 1] == '?')	//Asking immabot a question
+								{
+									//say(channel, "Let me see...");
+									eightball(channel);
+								}
 							}
 							else if(isInside(s, sBadWords))	//Dirty language
 							{
-								if(!mLastSlapped.count(user) || difftime(time(NULL), mLastSlapped[user]) > 60*5)	//5min timeout on slapping
+								if(!mLastSlapped.count(user) || difftime(time(NULL), mLastSlapped[user]) > 60)	//1min timeout on slapping
 								{
 									action(channel, "slaps %s for their foul language", user);
 									mLastSlapped[user] = time(NULL);
@@ -175,7 +183,7 @@ int main()
 							}
 							else if(isInside(s, sBirdWords))	//Birdy language
 							{
-								if(!mLastPecked.count(user) || difftime(time(NULL), mLastPecked[user]) > 60*5)	//5min timeout on pecking
+								if(!mLastPecked.count(user) || difftime(time(NULL), mLastPecked[user]) > 60)	//1min timeout on pecking
 								{
 									action(channel, "pecks %s for their fowl language", user);
 									mLastPecked[user] = time(NULL);
@@ -215,7 +223,11 @@ int main()
 									{
 										string sTemp;
 										for(const char* it = out_begin; it != out_end; it++)
-											sTemp.push_back(*it);
+										{
+											if(sTemp.size() == 4 && *it == 's');	//Convert https: links to http:
+											else
+												sTemp.push_back(*it);
+										}
 										printf("Parse URL: %s\n", sTemp.c_str());
 										string sThrowawayurl;
 										string sFinalTitle = getURLTitle(sTemp, sThrowawayurl);
@@ -304,7 +316,8 @@ int main()
 					}
 					else if(!strncmp(command, "404", 3))	//404 can't send to channel
 					{
-						//join(channel);	//rejoin
+						sleep(60*2);	//Wait 2 minutes
+						join(channel);	//rejoin channel
 					}
 				}
 			}

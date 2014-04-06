@@ -216,6 +216,17 @@ void seen(const char* channel, const char* message)
 	}
 }
 
+void uptime(const char* channel)
+{
+	//Say the length of time we've been online
+	unsigned int diff = (int)(difftime(time(NULL), starttime));
+	unsigned int seconds = diff % 60;
+	unsigned int minutes = (diff / 60) % 60;
+	unsigned int hours = (diff / (60*60)) % 24;
+	unsigned int days = diff / (60*60*24);
+	say(channel, "Uptime: %dd, %dh, %dm, %ds", days, hours, minutes, seconds);
+}
+
 bool bWar = false;
 string sRPSUser1, sRPSUser2;
 string sWeapon1, sWeapon2;
@@ -440,6 +451,8 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 	{
 		join(channel);	//rejoin
 	}
+	else if(sCompare == "uptime")
+		uptime(channel);
 	else if(sCompare.find("addbad") == 0)	
 	{
 		list<string> sList = splitWords(&message[1], true);
