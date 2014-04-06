@@ -8,6 +8,7 @@ map<string, int> mYellList;
 set<string> sNickList;
 set<string> sNickListLowercase;
 map<string, time_t> mLastSeen;
+map<string, string> mLastMessage;
 map<string, time_t> mLastPecked;
 map<string, time_t> mLastSlapped;
 
@@ -175,19 +176,23 @@ int main()
 							}
 							else if(isInside(s, sBadWords))	//Dirty language
 							{
-								if(!mLastSlapped.count(user) || difftime(time(NULL), mLastSlapped[user]) > 60)	//1min timeout on slapping
+								if((!mLastSlapped.count(user)) || difftime(time(NULL), mLastSlapped[user]) > 60.0)	//1min timeout on slapping
 								{
 									action(channel, "slaps %s for their foul language", user);
 									mLastSlapped[user] = time(NULL);
 								}
+								else
+									say("Daxar", "slapped difftime: %f", difftime(time(NULL), mLastSlapped[user]));
 							}
 							else if(isInside(s, sBirdWords))	//Birdy language
 							{
-								if(!mLastPecked.count(user) || difftime(time(NULL), mLastPecked[user]) > 60)	//1min timeout on pecking
+								if((!mLastPecked.count(user)) || difftime(time(NULL), mLastPecked[user]) > 60.0)	//1min timeout on pecking
 								{
 									action(channel, "pecks %s for their fowl language", user);
 									mLastPecked[user] = time(NULL);
 								}
+								else
+									say("Daxar", "pecked difftime: %f", difftime(time(NULL), mLastSlapped[user]));
 							}
 							else if(touppercase(message) == ((string)(message)) && s.length() > 5)	//All uppercase
 							{
@@ -249,6 +254,8 @@ int main()
 						
 						//Mark last time seen this user
 						mLastSeen[tolowercase(user)] = time(NULL);
+						mLastMessage[tolowercase(user)] = "saying ";
+						mLastMessage[tolowercase(user)] += message;
 					}
 					else if(!strncmp(command, "JOIN", 4))	//User joined
 					{
@@ -260,6 +267,7 @@ int main()
 						sNickList.insert(user);	//Add user to current user list
 						sNickListLowercase.insert(sUser);
 						mLastSeen[sUser] = time(NULL);
+						mLastMessage[sUser] = "joining IRC";
 					}
 					else if(!strncmp(command, "PART", 4) ||
 							!strncmp(command, "QUIT", 4))	//User left
@@ -272,6 +280,7 @@ int main()
 						sNickList.erase(sUser);	//Remove user from current user list
 						sNickListLowercase.erase(tolowercase(sUser));
 						mLastSeen[tolowercase(sUser)] = time(NULL);
+						mLastMessage[tolowercase(sUser)] = "leaving IRC";
 					}
 					else if(!strncmp(command, "KICK", 4))	//User kicked from channel
 					{

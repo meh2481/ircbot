@@ -212,7 +212,7 @@ void seen(const char* channel, const char* message)
 		unsigned int minutes = (diff / 60) % 60;
 		unsigned int hours = (diff / (60*60)) % 24;
 		unsigned int days = diff / (60*60*24);
-		say(channel, "User %s was last seen %dd, %dh, %dm, %ds ago", (stripEnd(message)).c_str(), days, hours, minutes, seconds);
+		say(channel, "User %s was last seen %dd, %dh, %dm, %ds ago, %s", (stripEnd(message)).c_str(), days, hours, minutes, seconds, mLastMessage[tolowercase(sPerson)].c_str());
 	}
 }
 

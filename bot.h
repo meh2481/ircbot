@@ -46,6 +46,7 @@ extern map<string, int> mYellList;
 extern set<string> sNickList;
 extern set<string> sNickListLowercase;
 extern map<string, time_t> mLastSeen;
+extern map<string, string> mLastMessage;
 
 //parse.cpp functions
 string forceascii(const char* msg);
