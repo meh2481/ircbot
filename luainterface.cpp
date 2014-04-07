@@ -99,7 +99,7 @@ static void printCallstack(lua_State *L, const char *errmsg = "<unspecified erro
 		os << luaFormatStackInfo(L, level) << "\n";
 		++level;
 	}
-	//SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Callstack", os.str().c_str(), NULL);
+	printf("%s\n", os.str().c_str());
 }
 
 void LuaInterface::lookupFunc(const char *f)
@@ -129,6 +129,25 @@ bool LuaInterface::call(const char *func, const char *a)
 	lookupFunc(func);
 	lua_pushstring(_lua, a);
 	return doCall(1);
+}
+
+bool LuaInterface::call(const char *func, const char *a, const char *b, const char *c, const char *d, const char *e)
+{
+	lookupFunc(func);
+	lua_pushstring(_lua, a);
+	lua_pushstring(_lua, b);
+	lua_pushstring(_lua, c);
+	lua_pushstring(_lua, d);
+	lua_pushstring(_lua, e);
+	return doCall(5);
+}
+
+bool LuaInterface::call(const char *func, const char *a, const char *b)
+{
+	lookupFunc(func);
+	lua_pushstring(_lua, a);
+	lua_pushstring(_lua, b);
+	return doCall(2);
 }
 
 bool LuaInterface::call(const char *func, float f)

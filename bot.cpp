@@ -1,8 +1,8 @@
 #include "bot.h"
-#include "luainterface.h"
 
 int conn;
 time_t starttime;
+LuaInterface* gLua;
 set<string> sBadWords;
 set<string> sBirdWords;
 map<string, int> mYellList;
@@ -16,7 +16,8 @@ map<string, time_t> mLastSlapped;
 
 int main(int argc, char** argv) 
 {	
-	LuaInterface Lua("scripts/init.lua", argc, argv);
+	LuaInterface Lua("lua/init.lua", argc, argv);
+	gLua = &Lua;
 	char sbuf[512];
 #ifdef DEBUG
 	char *nick = "immabot_";
@@ -35,7 +36,7 @@ int main(int argc, char** argv)
 	srand (time(NULL));
 	starttime = time(NULL);
 	Lua.Init();
-	Lua.call("derpface", "imma derp");
+	//Lua.call("dofile", "lua/init.lua");
 	readWords();
 	
 	initNetworking();
@@ -61,7 +62,7 @@ int main(int argc, char** argv)
 				int l = o;
 				o = -1;
 				
-				printf(">> %s", buf);
+				//printf(">> %s", buf);
 				char tempbuf[512];
 				memcpy(tempbuf, buf, strlen(buf));
 				
@@ -112,7 +113,8 @@ int main(int argc, char** argv)
 							user[sep - user] = '\0';
 						if (where[0] == '#' || where[0] == '&' || where[0] == '+' || where[0] == '!') 
 							target = where; else target = user;
-						printf("[from: %s] [reply-with: %s] [where: %s] [reply-to: %s] %s", user, command, where, target, message);
+						//printf("[from: %s] [reply-with: %s] [where: %s] [reply-to: %s] %s", user, command, where, target, message);
+						Lua.call("gotmessage", user, command, where, target, message);
 						
 						if(message[0] == '!')	//bot commands
 						{
@@ -181,7 +183,7 @@ int main(int argc, char** argv)
 							}
 							else if(isInside(s, sBadWords))	//Dirty language
 							{
-								if((!mLastSlapped.count(user)) || difftime(time(NULL), mLastSlapped[user]) > 60.0)	//1min timeout on slapping
+								if((!mLastSlapped.count(user)) || difftime(time(NULL), mLastSlapped[user]) >= 60.0)	//1min timeout on slapping
 								{
 									action(channel, "slaps %s for their foul language", user);
 									mLastSlapped[user] = time(NULL);
@@ -191,13 +193,13 @@ int main(int argc, char** argv)
 							}
 							else if(isInside(s, sBirdWords))	//Birdy language
 							{
-								if((!mLastPecked.count(user)) || difftime(time(NULL), mLastPecked[user]) > 60.0)	//1min timeout on pecking
+								if((!mLastPecked.count(user)) || difftime(time(NULL), mLastPecked[user]) >= 60.0)	//1min timeout on pecking
 								{
 									action(channel, "pecks %s for their fowl language", user);
 									mLastPecked[user] = time(NULL);
 								}
 								else
-									say("Daxar", "pecked difftime: %f", difftime(time(NULL), mLastSlapped[user]));
+									say("Daxar", "pecked difftime: %f", difftime(time(NULL), mLastPecked[user]));
 							}
 							else if(touppercase(message) == ((string)(message)) && s.length() > 5)	//All uppercase
 							{
@@ -238,11 +240,7 @@ int main(int argc, char** argv)
 											else
 												sTemp.push_back(*it);
 										}
-										printf("Parse URL: %s\n", sTemp.c_str());
-										string sThrowawayurl;
-										string sFinalTitle = getURLTitle(sTemp, sThrowawayurl);
-										if(sFinalTitle.size())
-											say(channel, "[%s]", sFinalTitle.c_str());
+										Lua.call("saytitle", channel, sTemp.c_str());
 										out_temp = out_end;
 									}
 									

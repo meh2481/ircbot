@@ -390,11 +390,11 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 {
 	string sCompare = stripEnd(tolowercase(&message[1]));
 	//Process different messages
-	if(sCompare == "beep")
+	/*if(sCompare == "beep")
 	{
 		say(channel, "Imma bot. beep.");
-	}
-	else if(sCompare == "ex")
+	}*/
+	if(sCompare == "ex")
 	{
 		ex(channel, message, nick);
 	}
@@ -402,7 +402,7 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 	{
 		hug(channel, message, user);
 	}
-	else if(sCompare == "roll" ||
+	/*else if(sCompare == "roll" ||
 			sCompare == "dice" ||
 			sCompare == "die" ||
 			sCompare == "d6")	//random number
@@ -423,7 +423,7 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 			say(channel, "It's heads!");
 		else
 			say(channel, "It's tails!");
-	}
+	}*/
 	else if(sCompare == "eightball" ||
 			sCompare == "eight" ||
 			sCompare == "8" ||
@@ -441,6 +441,8 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 	else if(sCompare == "reload")
 	{
 		readWords();
+		printf("Reloading\n");
+		gLua->call("dofile", "lua/init.lua");
 	}
 	else if(sCompare == "seen")
 	{
@@ -454,12 +456,12 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 	{
 		uptime(channel);
 	}
-	else if(sCompare == "bitcoin")
+	/*else if(sCompare == "bitcoin")
 	{
 		string sTemp;
 		string sDifficulty = getURLTitle("http://bitcoindifficulty.com/", sTemp);
 		say(channel, sDifficulty.c_str());
-	}
+	}*/
 	else if(sCompare.find("addbad") == 0)	
 	{
 		list<string> sList = splitWords(&message[1], true);
@@ -482,6 +484,7 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 	else if(sCompare.find("google") == 0 ||
 			sCompare.find("search") == 0)
 	{
+		//TODO: Broken
 		list<string> sList = splitWords(&message[1], true);
 		if(sList.size())
 			sList.erase(sList.begin());	//Remove first word

@@ -17,7 +17,7 @@ void raw(const char *fmt, ...)
 	va_start(ap, fmt);
 	vsnprintf(sbuf, 512, fmt, ap);
 	va_end(ap);
-	printf("<< %s", sbuf);
+	//printf("<< %s", sbuf);
 #ifdef _WIN32
 	send(conn, sbuf, strlen(sbuf), 0);
 #else
@@ -25,6 +25,7 @@ void raw(const char *fmt, ...)
 #endif
 }
 
+//TODO: Remove
 void say(const char* channel, const char* msg, ...)
 {
 	char sbuf[512];
@@ -35,6 +36,7 @@ void say(const char* channel, const char* msg, ...)
 	raw("PRIVMSG %s :%s\r\n", channel, sbuf);
 }
 
+//TODO: Remove
 void action(const char* channel, const char* msg, ...)
 {
 	char sbuf[512];
@@ -45,6 +47,7 @@ void action(const char* channel, const char* msg, ...)
 	raw("PRIVMSG %s :\001ACTION %s\001\r\n", channel, sbuf);
 }
 
+//TODO: Remove
 void join(const char* channel)
 {
 	raw("JOIN %s\r\n", channel);
@@ -63,10 +66,10 @@ void setupConnection(const char* host, const char* port, int* connection)
 }
 
 
-#define MAX_ATTEMPT_LEN	4096	//4kB should be plenty
-string sBuf;
-bool bStop;
-string sRedir;
+/*#define MAX_ATTEMPT_LEN	4096	//4kB should be plenty
+static string sBuf;
+static bool bStop;
+static string sRedir;
 class HttpSimpleSocket : public minihttp::HttpSocket
 {
 public:
@@ -87,11 +90,12 @@ protected:
 			//Shutdown socket; if we haven't hit it by now, we likely won't.
 			bStop = true;
     }
-};
+};*/
 
+//TODO: Remove
 string getURLTitle(string sURL, string& soutURL)
 {
-	string sRet;
+	/*string sRet;
 	bStop = false;
 	sRedir = "";
 	HttpSimpleSocket *ht = new HttpSimpleSocket;
@@ -118,21 +122,21 @@ string getURLTitle(string sURL, string& soutURL)
 			string sTemp;
 			for(const char* it = out_end; *it != '<' && it < end; it++)
 				sTemp.push_back(*it);
-			printf("Title: %s\n", sTemp.c_str());
+			//printf("Title: %s\n", sTemp.c_str());
 			sRet = sTemp;
 			//say(channel, "[%s]", sTemp.c_str());	//Say what the title is in chat
 		}
-		else
-			printf("No title found\n");
+		//else
+		//	printf("No title found\n");
 		
 		trex_free(pRegex);
 	}
-	else
-		printf("2trex error: %s\n", errbuf);
+	//else
+	//	printf("2trex error: %s\n", errbuf);
 	
-	printf("buf size: %d\n", sBuf.size());
+	//printf("buf size: %d\n", sBuf.size());
 	sBuf.clear();
 	
-	soutURL = sRedir;
-	return sRet;
+	soutURL = sRedir;*/
+	return "";
 }

@@ -13,7 +13,9 @@
 
 #ifdef _WIN32
 	#undef UNICODE
-	#define _WIN32_WINNT 0x0501
+	#ifndef _WIN32_WINNT
+		#define _WIN32_WINNT 0x0501
+	#endif
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	#undef _WIN32_WINNT
@@ -26,6 +28,7 @@
 
 #include "trex.h"
 #include "minihttp.h"
+#include "luainterface.h"
 
 #include <string>
 #include <sstream>
@@ -39,6 +42,7 @@ using namespace std;
 
 //Global variables
 extern int conn;
+extern LuaInterface* gLua;
 extern time_t starttime;
 extern set<string> sBadWords;
 extern set<string> sBirdWords;
