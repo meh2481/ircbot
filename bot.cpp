@@ -1,4 +1,5 @@
 #include "bot.h"
+#include "luainterface.h"
 
 int conn;
 time_t starttime;
@@ -13,8 +14,9 @@ map<string, time_t> mLastPecked;
 map<string, time_t> mLastSlapped;
 
 
-int main() 
+int main(int argc, char** argv) 
 {	
+	LuaInterface Lua("scripts/init.lua", argc, argv);
 	char sbuf[512];
 #ifdef DEBUG
 	char *nick = "immabot_";
@@ -32,9 +34,12 @@ int main()
 	
 	srand (time(NULL));
 	starttime = time(NULL);
+	Lua.Init();
+	Lua.call("derpface", "imma derp");
 	readWords();
 	
 	initNetworking();
+	
 	setupConnection(host, port, &conn);	
 	
 	raw("USER %s 0 0 :%s\r\n", nick, nick);

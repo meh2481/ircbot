@@ -1,6 +1,6 @@
 OS = $(shell uname -s)
 LIBS = ./dep/lua/liblua.a
-OBJECTS = bot.o parse.o network.o actions.o trex.o minihttp.o
+OBJECTS = bot.o parse.o network.o actions.o trex.o minihttp.o luainterface.o luafuncs.o
 CXXFLAGS = -Wno-write-strings
 INCLUDE = -I./dep/lua
 CC = g++
@@ -12,7 +12,7 @@ ifeq ($(BUILD),debug)
 endif
 
 ifneq (,$(findstring MINGW,$(OS)))
-    LIBS = -lWs2_32
+    LIBS := $(LIBS) -lWs2_32
 	TARGET := $(TARGET).exe
 endif
 

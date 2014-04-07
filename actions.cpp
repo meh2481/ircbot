@@ -2,7 +2,6 @@
 
 void eightball(const char* channel)
 {
-	action(channel, "shakes the 8-ball");
 	switch(rand() % 20)
 	{
 		case 0:
@@ -452,7 +451,15 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 		join(channel);	//rejoin
 	}
 	else if(sCompare == "uptime")
+	{
 		uptime(channel);
+	}
+	else if(sCompare == "bitcoin")
+	{
+		string sTemp;
+		string sDifficulty = getURLTitle("http://bitcoindifficulty.com/", sTemp);
+		say(channel, sDifficulty.c_str());
+	}
 	else if(sCompare.find("addbad") == 0)	
 	{
 		list<string> sList = splitWords(&message[1], true);
