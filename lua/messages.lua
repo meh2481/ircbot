@@ -12,12 +12,19 @@ local function gotmessage(user, command, where, target, message)
 		doaction(target, botaction, user)
 	end
 	
+	--Update last seen message
 	lastseen[string.lower(user)] = os.clock()
 	message = message:gsub("\001[Aa][Cc][Tt][Ii][Oo][Nn]", user) --Replace \001ACTION with username
 	message = message:gsub("\001", "")	--Remove trailing \001
 	lastmessage[string.lower(user)] = "saying \""..message.."\""
-
-	--TODO: Test for links, bad words, bird words, RPS battle commands, etc
+	
+	--Test for links
+	for w in string.gmatch(message, "https?://%S+") do
+		local title = getURLTitle(w)
+		say(target, "["..title.."]")
+    end
+	
+	--TODO: Test for bad words, bird words, RPS battle commands, yelling
 	
 end
 setglobal("gotmessage", gotmessage)

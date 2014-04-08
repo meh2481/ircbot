@@ -1,5 +1,6 @@
 -- super awesome actions stuff
 
+--TODO store this stuff in database on disk
 local lastseen = {}
 local lastmessage = {}
 local nicks = {}

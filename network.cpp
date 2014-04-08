@@ -25,34 +25,6 @@ void raw(const char *fmt, ...)
 #endif
 }
 
-//TODO: Remove
-void say(const char* channel, const char* msg, ...)
-{
-	char sbuf[512];
-	va_list ap;
-	va_start(ap, msg);
-	vsnprintf(sbuf, 512, msg, ap);
-	va_end(ap);
-	raw("PRIVMSG %s :%s\r\n", channel, sbuf);
-}
-
-//TODO: Remove
-void action(const char* channel, const char* msg, ...)
-{
-	char sbuf[512];
-	va_list ap;
-	va_start(ap, msg);
-	vsnprintf(sbuf, 512, msg, ap);
-	va_end(ap);
-	raw("PRIVMSG %s :\001ACTION %s\001\r\n", channel, sbuf);
-}
-
-//TODO: Remove
-void join(const char* channel)
-{
-	raw("JOIN %s\r\n", channel);
-}
-
 void setupConnection(const char* host, const char* port, int* connection)
 {
 	struct addrinfo hints, *res;

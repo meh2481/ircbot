@@ -1,5 +1,6 @@
 #include "bot.h"
 
+int conn;
 #ifdef DEBUG
 	const char *nick = "immabot_";
 	const char *channel = "#bitbottest";
@@ -8,21 +9,8 @@
 	const char *channel = "#bitblot";
 #endif
 
-int conn;
-//time_t starttime;
-//LuaInterface* gLua;
-set<string> sBadWords;
-set<string> sBirdWords;
-map<string, int> mYellList;
-set<string> sNickList;
-set<string> sNickListLowercase;
-map<string, time_t> mLastSeen;
-map<string, string> mLastMessage;
-map<string, time_t> mLastPecked;
-map<string, time_t> mLastSlapped;
-
 int main(int argc, char** argv) 
-{	
+{
 	LuaInterface Lua("lua/init.lua", argc, argv);
 	//gLua = &Lua;
 	char sbuf[512];
@@ -36,7 +24,7 @@ int main(int argc, char** argv)
 	srand (time(NULL));
 	//starttime = time(NULL);
 	Lua.Init();
-	readWords();
+	//readWords();
 	
 	initNetworking();
 	
@@ -113,7 +101,7 @@ int main(int argc, char** argv)
 						//Check for reload
 						if(!strncmp(message, "!reload", 7))
 						{
-							readWords();
+							//readWords();
 							printf("Reloading\n");
 							Lua.call("dofile", "lua/init.lua");
 							raw("NAMES %s\r\n", channel);	//Ask for name list again
