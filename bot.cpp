@@ -1,5 +1,13 @@
 #include "bot.h"
 
+#ifdef DEBUG
+	const char *nick = "immabot_";
+	const char *channel = "#bitbottest";
+#else
+	const char *nick = "immabot";
+	const char *channel = "#bitblot";
+#endif
+
 int conn;
 time_t starttime;
 LuaInterface* gLua;
@@ -13,19 +21,11 @@ map<string, string> mLastMessage;
 map<string, time_t> mLastPecked;
 map<string, time_t> mLastSlapped;
 
-
 int main(int argc, char** argv) 
 {	
 	LuaInterface Lua("lua/init.lua", argc, argv);
 	gLua = &Lua;
 	char sbuf[512];
-#ifdef DEBUG
-	char *nick = "immabot_";
-	char *channel = "#bitbottest";
-#else
-	char *nick = "immabot";
-	char *channel = "#bitblot";
-#endif
 	char *host = "irc.esper.net";
 	char *port = "6667";
 	

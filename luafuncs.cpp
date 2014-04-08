@@ -2,6 +2,9 @@
 #include "luainterface.h"
 #include "bot.h"
 
+extern const char *nick;
+extern const char *channel;
+
 #define MAX_ATTEMPT_LEN	4096	//4kB should be plenty
 static string sBuf;
 static bool bStop;
@@ -93,6 +96,16 @@ luaFunc(getURLTitle)	//URL
 	luaReturnStrings(sRet.c_str(), sRedir.c_str());
 }
 
+luaFunc(getnick)
+{
+	luaReturnStr(nick);
+}
+
+luaFunc(getchannel)
+{
+	luaReturnStr(channel);
+}
+
 static LuaFunctions s_functab[] =
 {
 	luaRegister(sleep),
@@ -100,6 +113,8 @@ static LuaFunctions s_functab[] =
 	luaRegister(action),
 	luaRegister(join),
 	luaRegister(getURLTitle),
+	luaRegister(getnick),
+	luaRegister(getchannel),
 	{NULL, NULL}
 };
 

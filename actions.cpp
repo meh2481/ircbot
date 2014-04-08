@@ -2,7 +2,7 @@
 
 void eightball(const char* channel)
 {
-	switch(rand() % 20)
+	/*switch(rand() % 20)
 	{
 		case 0:
 			say(channel, "It is certain");
@@ -84,7 +84,7 @@ void eightball(const char* channel)
 			say(channel, "Very doubtful");
 			break;
 			
-	}
+	}*/
 }
 
 void cookie(const char* channel, string user, string sCompare)
@@ -389,54 +389,9 @@ void rpschoose(const char* channel, const char* message, const char* user)
 void botcommand(const char* message, const char* channel, const char* user, const char* nick)
 {
 	string sCompare = stripEnd(tolowercase(&message[1]));
-	//Process different messages
-	/*if(sCompare == "beep")
-	{
-		say(channel, "Imma bot. beep.");
-	}*/
-	if(sCompare == "ex")
-	{
-		ex(channel, message, nick);
-	}
-	else if(sCompare == "hug")
+	if(sCompare == "hug")
 	{
 		hug(channel, message, user);
-	}
-	/*else if(sCompare == "roll" ||
-			sCompare == "dice" ||
-			sCompare == "die" ||
-			sCompare == "d6")	//random number
-	{
-		say(channel, "Rolling a d6...");
-		int randnum = rand() % 6 + 1;
-		say(channel, "You rolled a %d!", randnum);
-	}
-	else if(sCompare == "coin" ||
-			sCompare == "quarter" ||
-			sCompare == "flip" ||
-			sCompare == "nickel" ||
-			sCompare == "dime" ||
-			sCompare == "penny")
-	{
-		action(channel, "flips a coin into the air");
-		if(rand() % 2)
-			say(channel, "It's heads!");
-		else
-			say(channel, "It's tails!");
-	}*/
-	else if(sCompare == "eightball" ||
-			sCompare == "eight" ||
-			sCompare == "8" ||
-			sCompare == "8ball" ||
-			sCompare == "shake")
-	{
-		eightball(channel);
-	}
-	else if(sCompare == "cookie" ||
-			sCompare == "botsnack" ||
-			sCompare == "snack")	//give a bot a cookie
-	{
-		cookie(channel, user, sCompare);
 	}
 	else if(sCompare == "reload")
 	{
@@ -456,12 +411,6 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 	{
 		uptime(channel);
 	}
-	/*else if(sCompare == "bitcoin")
-	{
-		string sTemp;
-		string sDifficulty = getURLTitle("http://bitcoindifficulty.com/", sTemp);
-		say(channel, sDifficulty.c_str());
-	}*/
 	else if(sCompare.find("addbad") == 0)	
 	{
 		list<string> sList = splitWords(&message[1], true);
@@ -479,33 +428,6 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 			if(i != sList.begin())
 				addWord(BIRD_WORD_LIST, *i);
 		}
-	}
-	//Google "I'm Feeling Lucky" search
-	else if(sCompare.find("google") == 0 ||
-			sCompare.find("search") == 0)
-	{
-		//TODO: Broken
-		list<string> sList = splitWords(&message[1], true);
-		if(sList.size())
-			sList.erase(sList.begin());	//Remove first word
-		
-		const char* cGoogleURLStart = "http://www.google.com/search?q=";
-		const char* cGoogleURLEnd = "&btnI";
-		string sGoogleURL = cGoogleURLStart;
-		for(list<string>::iterator i = sList.begin(); i != sList.end(); i++)
-		{
-			sGoogleURL += *i;
-			list<string>::iterator j = i;
-			if(++j != sList.end())
-				sGoogleURL += '+';
-		}
-		sGoogleURL += cGoogleURLEnd;
-		string sURLResult;
-		string sTitle = getURLTitle(sGoogleURL, sURLResult);
-		if(sTitle.size() && sURLResult.size())
-			say(channel, "[%s] - %s", sTitle.c_str(), sURLResult.c_str());
-		else
-			say(channel, "Unable to fetch link.");
 	}
 	//Rock-paper-scissors challenge
 	else if(sCompare.find("rps") == 0 ||

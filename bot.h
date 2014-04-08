@@ -76,7 +76,6 @@ void action(const char* channel, const char* msg, ...);
 void shutdownNetworking();
 void join(const char* channel);
 void setupConnection(const char* host, const char* port, int* connection);
-string getURLTitle(string sURL, string& soutURL);
 
 //actions.cpp functions
 void seen(const char* channel, const char* message);
@@ -91,8 +90,6 @@ void rpschoose(const char* channel, const char* message, const char* user);
 
 #define BAD_WORD_LIST 	"badwords.txt"
 #define BIRD_WORD_LIST	"birdwords.txt"
-
-
 
 
 
