@@ -9,8 +9,8 @@
 #endif
 
 int conn;
-time_t starttime;
-LuaInterface* gLua;
+//time_t starttime;
+//LuaInterface* gLua;
 set<string> sBadWords;
 set<string> sBirdWords;
 map<string, int> mYellList;
@@ -24,7 +24,7 @@ map<string, time_t> mLastSlapped;
 int main(int argc, char** argv) 
 {	
 	LuaInterface Lua("lua/init.lua", argc, argv);
-	gLua = &Lua;
+	//gLua = &Lua;
 	char sbuf[512];
 	char *host = "irc.esper.net";
 	char *port = "6667";
@@ -34,9 +34,8 @@ int main(int argc, char** argv)
 	char buf[513];
 	
 	srand (time(NULL));
-	starttime = time(NULL);
+	//starttime = time(NULL);
 	Lua.Init();
-	//Lua.call("dofile", "lua/init.lua");
 	readWords();
 	
 	initNetworking();
@@ -101,25 +100,29 @@ int main(int argc, char** argv)
 					if (wordcount < 2) 
 						continue;
 					
-					if (!strncmp(command, "001", 3) && channel != NULL) //Connected message
-					{
-						join(channel);
-					} 
-					else if (!strncmp(command, "PRIVMSG", 7) || !strncmp(command, "NOTICE", 6)) //Message from IRC
+					if ((sep = strchr(user, '!')) != NULL) 
+							user[sep - user] = '\0';
+					
+					if (!strncmp(command, "PRIVMSG", 7) || !strncmp(command, "NOTICE", 6)) //Message from IRC
 					{
 						if (where == NULL || message == NULL) 
 							continue;
-						if ((sep = strchr(user, '!')) != NULL) 
-							user[sep - user] = '\0';
 						if (where[0] == '#' || where[0] == '&' || where[0] == '+' || where[0] == '!') 
 							target = where; else target = user;
-						//printf("[from: %s] [reply-with: %s] [where: %s] [reply-to: %s] %s", user, command, where, target, message);
-						Lua.call("gotmessage", user, command, where, target, message);
 						
-						if(message[0] == '!')	//bot commands
+						//Check for reload
+						if(!strncmp(message, "!reload", 7))
 						{
-							botcommand(message, channel, user, nick);
+							readWords();
+							printf("Reloading\n");
+							Lua.call("dofile", "lua/init.lua");
+							raw("NAMES %s\r\n", channel);	//Ask for name list again
 						}
+						else
+							Lua.call("gotmessage", user, command, where, target, message);
+					}
+					/*
+						
 						else	//Other misc. commands
 						{
 							string s = tolowercase(forceascii(message));
@@ -259,77 +262,19 @@ int main(int argc, char** argv)
 						mLastSeen[tolowercase(user)] = time(NULL);
 						mLastMessage[tolowercase(user)] = "saying ";
 						mLastMessage[tolowercase(user)] += message;
-					}
-					else if(!strncmp(command, "JOIN", 4))	//User joined
+					}*/
+					else	//Some other kind of command
 					{
-						//Split user string by hand
-						string sUser = tolowercase(user);
-						size_t pos = sUser.find('!');
-						if(pos != string::npos)
-							sUser.erase(pos);
-						sNickList.insert(user);	//Add user to current user list
-						sNickListLowercase.insert(sUser);
-						mLastSeen[sUser] = time(NULL);
-						mLastMessage[sUser] = "joining IRC";
-					}
-					else if(!strncmp(command, "PART", 4) ||
-							!strncmp(command, "QUIT", 4))	//User left
-					{
-						//Split user string by hand
-						string sUser = user;
-						size_t pos = sUser.find('!');
-						if(pos != string::npos)
-							sUser.erase(pos);
-						sNickList.erase(sUser);	//Remove user from current user list
-						sNickListLowercase.erase(tolowercase(sUser));
-						mLastSeen[tolowercase(sUser)] = time(NULL);
-						mLastMessage[tolowercase(sUser)] = "leaving IRC";
-					}
-					else if(!strncmp(command, "KICK", 4))	//User kicked from channel
-					{
-						say(channel, "Trololol");	//Bask in the glory of a user being kicked
-					}
-					else if(!strncmp(command, "353", 3))	//List of nicks currently in channel (353 for espernet, freenode, efnet, so I'm assuming everywhere else also)
-					{
-						//Search for end of message to avoid overflow
-						for(int i = 0; i < 512; i++)
+						//Remove trailing chars from buffer
+						for(char* k = tempbuf; ; k++)
 						{
-							if(tempbuf[i] == '\r' || tempbuf[i] == '\n')
+							if(*k == '\r' || *k == '\n')
 							{
-								tempbuf[i] = '\0';
+								*k = '\0';
 								break;
 							}
 						}
-						string s = &tempbuf[1];	//Skip over first ':' char
-						size_t pos = s.find(':');
-						if(pos != string::npos)
-						{
-							s.erase(0, pos+1);	//Erase beginning of string, so all we're left with is nicks
-							list<string> sNicks = splitWords(s, false);	//Split into individual nicks, case sensitive
-							for(list<string>::iterator i = sNicks.begin(); i != sNicks.end(); i++)
-							{
-								//Deal with op symbols
-								string sNick = *i;
-								if(sNick[0] == '~' ||
-								   sNick[0] == '&' ||
-								   sNick[0] == '@' ||
-								   sNick[0] == '%' ||
-								   sNick[0] == '+')
-								{
-									sNick.erase(0,1);
-								}
-								if(sNick.size())
-								{
-									sNickList.insert(sNick);
-									sNickListLowercase.insert(tolowercase(sNick));
-								}
-							}
-						}
-					}
-					else if(!strncmp(command, "404", 3))	//404 can't send to channel
-					{
-						sleep(60*2);	//Wait 2 minutes
-						join(channel);	//rejoin channel
+						Lua.call("command", channel, command, user, tempbuf);
 					}
 				}
 			}

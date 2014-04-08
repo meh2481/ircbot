@@ -9,6 +9,7 @@ extern const char *channel;
 static string sBuf;
 static bool bStop;
 static string sRedir;
+//Class for fetching a file from a URL
 class HttpSimpleSocket : public minihttp::HttpSocket
 {
 public:
@@ -71,24 +72,13 @@ luaFunc(getURLTitle)	//URL
 	while(ss.size() && !bStop)	//Just spin here
         ss.update();
 		
-	//Ok, now we have data in sBuf, parse regex
-	char errbuf[512];
-	TRex* pRegex = trex_compile("<title>", (const char**)&errbuf);
-	if(pRegex != NULL)
+	//Ok, now we have data in sBuf, parse for title
+	size_t start = sBuf.find("<title>");
+	if(start != string::npos)
 	{
-		const TRexChar *out_begin,*out_end;
-		const TRexChar *out_temp = sBuf.c_str();
-		const TRexChar *end = out_temp + strlen(out_temp);
-		if(trex_search(pRegex, out_temp, &out_begin, &out_end))
-		{
-			string sTemp;
-			for(const char* it = out_end; *it != '<' && it < end; it++)
-				sTemp.push_back(*it);
-			
-			sRet = sTemp;
-		}
-		
-		trex_free(pRegex);
+		size_t stop = sBuf.find('<', start+1);
+		if(stop != string::npos)
+			sRet = sBuf.substr(start+7, stop-(start+7));
 	}
 	
 	sBuf.clear();

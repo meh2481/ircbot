@@ -142,6 +142,16 @@ bool LuaInterface::call(const char *func, const char *a, const char *b, const ch
 	return doCall(5);
 }
 
+bool LuaInterface::call(const char *func, const char *a, const char *b, const char *c, const char *d)
+{
+	lookupFunc(func);
+	lua_pushstring(_lua, a);
+	lua_pushstring(_lua, b);
+	lua_pushstring(_lua, c);
+	lua_pushstring(_lua, d);
+	return doCall(4);
+}
+
 bool LuaInterface::call(const char *func, const char *a, const char *b)
 {
 	lookupFunc(func);

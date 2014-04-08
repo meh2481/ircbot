@@ -1,6 +1,6 @@
 OS = $(shell uname -s)
 LIBS = ./dep/lua/liblua.a
-OBJECTS = bot.o parse.o network.o actions.o trex.o minihttp.o luainterface.o luafuncs.o
+OBJECTS = bot.o parse.o network.o actions.o minihttp.o luainterface.o luafuncs.o
 CXXFLAGS = -Wno-write-strings
 INCLUDE = -I./dep/lua
 CC = g++

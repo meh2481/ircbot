@@ -26,7 +26,6 @@
 	#define sleep(x) Sleep(x * 1000)
 #endif
 
-#include "trex.h"
 #include "minihttp.h"
 #include "luainterface.h"
 
@@ -42,8 +41,8 @@ using namespace std;
 
 //Global variables
 extern int conn;
-extern LuaInterface* gLua;
-extern time_t starttime;
+//extern LuaInterface* gLua;
+//extern time_t starttime;
 extern set<string> sBadWords;
 extern set<string> sBirdWords;
 extern map<string, int> mYellList;

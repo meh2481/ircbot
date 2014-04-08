@@ -1,5 +1,34 @@
 -- super awesome actions stuff
 
+local lastseen = {}
+local lastmessage = {}
+local nicks = {}
+setglobal("lastseen", lastseen)
+setglobal("lastmessage", lastmessage)
+setglobal("nicks", nicks)
+
+local function seen(channel, user, message)
+	--Get first word
+	local person = string.gsub(message, "(%S+)%s*(%S+)", "%2")
+	if lastseen[string.lower(person)] then
+		local diff = os.clock() - lastseen[string.lower(person)]
+		local seconds = math.floor(diff % 60)
+		local minutes = math.floor(diff / 60) % 60
+		local hours = math.floor(diff / (60*60)) % 24
+		local days = math.floor(diff / (60*60*24))
+		say(channel, "User "..person.." was last seen "..days.."d, "..hours.."h, "..minutes.."m, "..seconds.."s ago, "..lastmessage[string.lower(person)])
+	end
+end
+
+local function uptime(channel)
+	local diff = os.clock()
+	local seconds = math.floor(diff % 60)
+	local minutes = math.floor(diff / 60) % 60
+	local hours = math.floor(diff / (60*60)) % 24
+	local days = math.floor(diff / (60*60*24))
+	say(channel, "Uptime: "..days.."d, "..hours.."h, "..minutes.."m, "..seconds.."s")
+end
+
 local function eightball(channel)
 	local results = {
 		[20] = "It is certain",
@@ -26,10 +55,26 @@ local function eightball(channel)
 	say(channel, results[math.random(20)])
 end
 
-local function hug(channel, message, user)
+local function hug(channel, user, message)
 	say(channel, "Setting phasors to hug.")
-	sleep(math.random(5))
-	
+	--sleep(math.random(5))
+	local person = string.gsub(message, "%S+", "", 1)	--Remove first word
+	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
+	person = string.gsub(person, "%s", "")		--Remove whitespace
+	if string.len(person)>0 then
+		if nicks[string.lower(person)] then	--Person is here
+			action(channel, "hugs "..person.." a little too tightly")
+		else
+			local halfperson = string.sub(person, 0, -math.ceil(string.len(person)/2))
+			action(channel, "hugs "..halfperson.."...")
+			sleep(2)
+			say(channel, person.." isn't here!")
+			sleep(1)
+			action(channel, "flops onto couch and sighs dejectedly")
+		end
+	else
+		action(channel, "hugs "..user.." a little too tightly")
+	end
 end
 
 local function botsnack(channel, act, user)
@@ -90,9 +135,16 @@ local function search(channel, str)
 	end
 end
 
+local function saytitle(channel, url)
+	local title, temp = getURLTitle(url)
+	if string.len(title) > 0 then
+		say(channel, "["..title.."]")
+	end
+end
+
 local function doaction(channel, str, user)
-	local regexp = "%S+"	--Get command all the way until whitespace
-	local act = string.sub(str, string.find(str, regexp));
+	--Get command all the way until whitespace
+	local act = string.sub(str, string.find(str, "%S+"))
 
 	local tab = {
 		["beep"] = 		function(channel) say(channel, "Imma bot. Beep.") end,
@@ -118,6 +170,10 @@ local function doaction(channel, str, user)
 		["botsnack"] = 	function(channel, user) botsnack(channel, act, user) end,
 		["snack"] = 	function(channel, user) botsnack(channel, act, user) end,
 		["ex"] = 		function(channel, user, str) insultex(channel, str, getnick()) end,
+		["uptime"] = 	uptime,
+		["seen"] = 		seen,
+		["hug"] =		hug,
+		--TODO: addbad, addbird, and rps
 	}
 	
 	local f = tab[act]
@@ -126,10 +182,3 @@ local function doaction(channel, str, user)
 	end
 end
 setglobal("doaction", doaction)
-
-local function saytitle(channel, url)
-	local title, temp = getURLTitle(url)
-	if string.len(title) > 0 then
-		say(channel, "["..title.."]")
-	end
-end

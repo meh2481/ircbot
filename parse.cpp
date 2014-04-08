@@ -1,5 +1,10 @@
 #include "bot.h"
 
+
+//TODO: REMOVE ALL
+
+
+
 string forceascii(const char* msg)
 {
 	string s;
