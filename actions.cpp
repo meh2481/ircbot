@@ -403,10 +403,6 @@ void botcommand(const char* message, const char* channel, const char* user, cons
 	{
 		seen(channel, &message[6]);
 	}
-	else if(sCompare == "join")
-	{
-		join(channel);	//rejoin
-	}
 	else if(sCompare == "uptime")
 	{
 		uptime(channel);

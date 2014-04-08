@@ -1,20 +1,5 @@
 -- super awesome actions stuff
 
---From http://lua-users.org/wiki/SwitchStatement
-local function switch(t)
-  t.case = function (self,x)
-    local f=self[x] or self.default
-    if f then
-      if type(f)=="function" then
-        f(x,self)
-      else
-        error("case "..tostring(x).." not a function")
-      end
-    end
-  end
-  return t
-end
-
 local function eightball(channel)
 	local results = {
 		[20] = "It is certain",
@@ -41,6 +26,12 @@ local function eightball(channel)
 	say(channel, results[math.random(20)])
 end
 
+local function hug(channel, message, user)
+	say(channel, "Setting phasors to hug.")
+	sleep(math.random(5))
+	
+end
+
 local function botsnack(channel, act, user)
 	--Some kid's starving in Japan, so just eat it
 	local eatit = {
@@ -60,9 +51,11 @@ local function insultex(channel, message, nick)
 			count = count + 1
 		end
 	end
-	local randomword = words[math.random(#words)]
-	if randomword then
-		say(channel, "Your ex is "..randomword)
+	if count > 0 then
+		local randomword = words[math.random(#words)]
+		if randomword then
+			say(channel, "Your ex is "..randomword)
+		end
 	end
 end
 
@@ -101,34 +94,36 @@ local function doaction(channel, str, user)
 	local regexp = "%S+"	--Get command all the way until whitespace
 	local act = string.sub(str, string.find(str, regexp));
 
-	local a = switch {
-		["beep"] = function() say(channel, "Imma bot. Beep.") end,
-		["d6"] = function() d6(channel) end,
-		["roll"] = function() d6(channel) end,
-		["dice"] = function() d6(channel) end,
-		["die"] = function() d6(channel) end,
-		["coin"] = function() coin(channel) end,
-		["quarter"] = function() coin(channel) end,
-		["flip"] = function() coin(channel) end,
-		["nickel"] = function() coin(channel) end,
-		["dime"] = function() coin(channel) end,
-		["penny"] = function() coin(channel) end,
-		["bitcoin"] = function() getbitcoin(channel) end,
-		["search"] = function() search(channel, str) end,
-		["google"] = function() search(channel, str) end,
-		["8ball"] = function() eightball(channel) end,
-		["eightball"] = function() eightball(channel) end,
-		["eight"] = function() eightball(channel) end,
-		["8"] = function() eightball(channel) end,
-		["shake"] = function() eightball(channel) end,
-		["cookie"] = function() botsnack(channel, act, user) end,
-		["botsnack"] = function() botsnack(channel, act, user) end,
-		["snack"] = function() botsnack(channel, act, user) end,
-		["ex"] = function() insultex(channel, str, getnick()) end,
-		default = function() end,
+	local tab = {
+		["beep"] = 		function(channel) say(channel, "Imma bot. Beep.") end,
+		["d6"] = 		d6,
+		["roll"] = 		d6,
+		["dice"] = 		d6,
+		["die"] = 		d6,
+		["coin"] = 		coin,
+		["quarter"] = 	coin,
+		["flip"] =		coin,
+		["nickel"] = 	coin,
+		["dime"] = 		coin,
+		["penny"] = 	coin,
+		["bitcoin"] = 	getbitcoin,
+		["search"] = 	function(channel, user, str) search(channel, str) end,
+		["google"] = 	function(channel, user, str) search(channel, str) end,
+		["8ball"] = 	eightball,
+		["eightball"] = eightball,
+		["eight"] = 	eightball,
+		["8"] = 		eightball,
+		["shake"] = 	eightball,
+		["cookie"] = 	function(channel, user) botsnack(channel, act, user) end,
+		["botsnack"] = 	function(channel, user) botsnack(channel, act, user) end,
+		["snack"] = 	function(channel, user) botsnack(channel, act, user) end,
+		["ex"] = 		function(channel, user, str) insultex(channel, str, getnick()) end,
 	}
 	
-	a:case(act)
+	local f = tab[act]
+	if f then
+		f(channel, user, str)
+	end
 end
 setglobal("doaction", doaction)
 
