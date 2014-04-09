@@ -22,6 +22,7 @@ local function gotmessage(user, command, where, target, message)
 	
 	--Test for links
 	for w in string.gmatch(message, "https?://%S+") do
+		w = w:gsub("https", "http")
 		local title = getURLTitle(w)
 		if title and string.len(title) > 0 then
 			say(target, "["..title.."]")
@@ -29,6 +30,7 @@ local function gotmessage(user, command, where, target, message)
     end
 	
 	--Test for bad words & bird words
+	--TODO: Timer
 	for w in string.gmatch(message, "%S+") do
 		w = string.lower(w)
 		if badwords[w] then
@@ -62,8 +64,10 @@ local function gotmessage(user, command, where, target, message)
 		yelling[user] = 1
 	end
 	
-	--TODO: Test for RPS battle commands, yelling,
+	--TODO: Test for RPS battle commands,
 	--TODO: hai, bai, good boy, question
+	
+	--TODO: Save now and then
 	
 end
 setglobal("gotmessage", gotmessage)
