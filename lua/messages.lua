@@ -23,7 +23,9 @@ local function gotmessage(user, command, where, target, message)
 	--Test for links
 	for w in string.gmatch(message, "https?://%S+") do
 		local title = getURLTitle(w)
-		say(target, "["..title.."]")
+		if title and string.len(title) > 0 then
+			say(target, "["..title.."]")
+		end
     end
 	
 	--Test for bad words & bird words
