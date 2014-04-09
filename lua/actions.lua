@@ -1,23 +1,60 @@
 -- super awesome actions stuff
 
 --TODO store this stuff in database on disk
-local lastseen = {}
-local lastmessage = {}
-local nicks = {}
+local lastseen = rawget(_G, ".lastseen"); 
+if not lastseen then 
+	lastseen = {}; 
+	setglobal(".lastseen", lastseen) 
+end
+
+local lastmessage = rawget(_G, ".lastmessage"); 
+if not lastmessage then 
+	lastmessage = {}; 
+	setglobal(".lastmessage", lastmessage) 
+end
+
+local nicks = rawget(_G, ".nicks"); 
+if not nicks then 
+	nicks = {}; 
+	setglobal(".nicks", nicks) 
+end
+
+local badwords = rawget(_G, ".badwords"); 
+if not badwords then 
+	badwords = {}; 
+	setglobal(".badwords", badwords) 
+end
+
+local birdwords = rawget(_G, ".birdwords"); 
+if not birdwords then 
+	birdwords = {}; 
+	setglobal(".birdwords", birdwords) 
+end
+
 setglobal("lastseen", lastseen)
 setglobal("lastmessage", lastmessage)
 setglobal("nicks", nicks)
+setglobal("badwords", badwords)
+setglobal("birdwords", birdwords)
+
+local function trim(s)
+  return s:match'^%s*(.*%S)' or ''
+end
 
 local function seen(channel, user, message)
-	--Get first word
-	local person = string.gsub(message, "(%S+)%s*(%S+)", "%2")
-	if lastseen[string.lower(person)] then
+	--Get second word
+	local person = trim(string.gsub(message, "(%S+)%s*(.+)", "%2"))
+	if person == "straight" then
+		say(channel, "I last saw straight... Wait, I can see straight right now, thank you.")
+	elseif lastseen[string.lower(person)] then
 		local diff = os.clock() - lastseen[string.lower(person)]
 		local seconds = math.floor(diff % 60)
 		local minutes = math.floor(diff / 60) % 60
 		local hours = math.floor(diff / (60*60)) % 24
 		local days = math.floor(diff / (60*60*24))
-		say(channel, "User "..person.." was last seen "..days.."d, "..hours.."h, "..minutes.."m, "..seconds.."s ago, "..lastmessage[string.lower(person)])
+		say(channel, "I last saw "..person.." "..days.."d, "..hours.."h, "..minutes.."m, "..seconds.."s ago, "..lastmessage[string.lower(person)])
+	else
+		say(channel, "I haven't seen "..person.." lately.")
 	end
 end
 
@@ -124,6 +161,15 @@ local function getbitcoin(channel)
 	say(channel, diff)
 end
 
+local function quit(channel, user)
+	if user == "Daxar" then
+		saveall()
+		done()
+	else
+		say(channel, "You wish.")
+	end
+end
+
 local function search(channel, str)
 	local searchquery = string.gsub(str, "%S+%s", "", 1)	--Remove first word
 	searchquery = string.gsub(searchquery, "%s", "+")	--Replace all whitespace with +
@@ -133,6 +179,26 @@ local function search(channel, str)
 		say(channel, '['..title..']'..' - '..url)
 	else
 		say(channel, "Unable to fetch link.")
+	end
+end
+
+local function addbad(channel, user, str)
+	for word in str:gmatch("%S+") do 
+		if word ~= "addbad" then
+			badwords[word] = 1
+			badwords[word.."s"] = 1
+			badwords[word.."es"] = 1
+		end
+	end
+end
+
+local function addbird(channel, user, str)
+	for word in str:gmatch("%S+") do 
+		if word ~= "addbird" then
+			birdwords[word] = 1
+			birdwords[word.."s"] = 1
+			birdwords[word.."es"] = 1
+		end
 	end
 end
 
@@ -174,7 +240,12 @@ local function doaction(channel, str, user)
 		["uptime"] = 	uptime,
 		["seen"] = 		seen,
 		["hug"] =		hug,
-		--TODO: addbad, addbird, and rps
+		["quit"] =		quit,
+		["save"] = 		saveall,
+		["restore"] = 	restoreall,
+		["addbad"] =	addbad,
+		["addbird"] = 	addbird,
+		--TODO: rps
 	}
 	
 	local f = tab[act]

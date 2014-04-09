@@ -1,6 +1,7 @@
 #include "bot.h"
 
 int conn;
+bool bDone = false;
 #ifdef DEBUG
 	const char *nick = "immabot_";
 	const char *channel = "#bitbottest";
@@ -32,7 +33,6 @@ int main(int argc, char** argv)
 	
 	raw("USER %s 0 0 :%s\r\n", nick, nick);
 	raw("NICK %s\r\n", nick);
-	bool bDone = false;
 	#ifdef _WIN32
 	while ((sl = recv(conn, sbuf, 512, 0)) && !bDone) 
 	#else
@@ -104,153 +104,10 @@ int main(int argc, char** argv)
 							//readWords();
 							printf("Reloading\n");
 							Lua.call("dofile", "lua/init.lua");
-							raw("NAMES %s\r\n", channel);	//Ask for name list again
 						}
 						else
 							Lua.call("gotmessage", user, command, where, target, message);
 					}
-					/*
-						
-						else	//Other misc. commands
-						{
-							string s = tolowercase(forceascii(message));
-							set<string> words = ssplitWords(message);
-							if(s.find(tolowercase(nick)) != string::npos)	//Highlighted
-							{
-								string sUser = user;
-								string sMsg = stripRN(s);
-								
-								//Kill command by privileged user
-								if(s.find("cheese curls") != string::npos && sUser.find("Daxar") == 0)	//Password for shutting off
-								{
-									raw("PART %s :Quit command invoked by %s\r\n", channel, user);
-									bDone = true;	//Quit
-								}
-								
-								//hai
-								else if(words.count("hi") ||
-										words.count("ohai") ||
-										words.count("hai") ||
-										words.count("hello") ||
-										words.count("hey") ||
-										words.count("sup") ||
-										words.count("morning") ||
-										words.count("mornin"))
-								{
-									hai(channel);
-								}
-								
-								//bai
-								else if(words.count("bye") ||
-										words.count("bai") ||
-										words.count("night") ||
-										words.count("nite") ||
-										words.count("n8") ||
-										words.count("later"))
-								{
-									bai(channel);
-								}
-								
-								//good boy
-								else if(words.count("good") ||
-										words.count("nice"))
-								{
-									action(channel, "wags tail");
-								}
-								
-								//Bad boy
-								else if(words.count("bad") ||
-										words.count("down") ||
-										words.count("sit"))
-								{
-									action(channel, "sits down and whines");
-								}
-								
-								else if(sMsg[sMsg.size() - 1] == '?')	//Asking immabot a question
-								{
-									//say(channel, "Let me see...");
-									eightball(channel);
-								}
-							}
-							else if(isInside(s, sBadWords))	//Dirty language
-							{
-								if((!mLastSlapped.count(user)) || difftime(time(NULL), mLastSlapped[user]) >= 60.0)	//1min timeout on slapping
-								{
-									action(channel, "slaps %s for their foul language", user);
-									mLastSlapped[user] = time(NULL);
-								}
-								else
-									say("Daxar", "slapped difftime: %f", difftime(time(NULL), mLastSlapped[user]));
-							}
-							else if(isInside(s, sBirdWords))	//Birdy language
-							{
-								if((!mLastPecked.count(user)) || difftime(time(NULL), mLastPecked[user]) >= 60.0)	//1min timeout on pecking
-								{
-									action(channel, "pecks %s for their fowl language", user);
-									mLastPecked[user] = time(NULL);
-								}
-								else
-									say("Daxar", "pecked difftime: %f", difftime(time(NULL), mLastPecked[user]));
-							}
-							else if(touppercase(message) == ((string)(message)) && s.length() > 5)	//All uppercase
-							{
-								if(mYellList.count(user))
-								{
-									if(++mYellList[user] > 2)
-									{
-										action(channel, "covers his ears to block out %s's yelling", user);
-										mYellList[user] = 0;
-									}
-								}
-								else
-									mYellList[user] = 1;
-							}
-							else if(touppercase(message) != ((string)(message)))	//Not all uppercase
-							{
-								mYellList[user] = 0;	//Reset yell counter
-							}
-							
-							if(s.size())
-							{
-								//regex
-								char errbuf[512];
-								string sURL = message;
-								//Extremely simple and stupid regex for URLs
-								TRex* pRegex = trex_compile("https?://\\S*", (const char**)&errbuf);
-								if(pRegex != NULL)
-								{
-									memcpy(errbuf, sURL.c_str(), sURL.length());
-									const TRexChar *out_begin,*out_end;
-									const TRexChar *out_temp = sURL.c_str();
-									while(trex_search(pRegex, out_temp, &out_begin, &out_end))
-									{
-										string sTemp;
-										for(const char* it = out_begin; it != out_end; it++)
-										{
-											if(sTemp.size() == 4 && *it == 's');	//Convert https: links to http:
-											else
-												sTemp.push_back(*it);
-										}
-										Lua.call("saytitle", channel, sTemp.c_str());
-										out_temp = out_end;
-									}
-									
-									trex_free(pRegex);
-								}
-								else
-									printf("trex error: %s\n", errbuf);
-								
-							}
-							
-							//Check and see if rps battle
-							rpschoose(channel, message, user);
-						}
-						
-						//Mark last time seen this user
-						mLastSeen[tolowercase(user)] = time(NULL);
-						mLastMessage[tolowercase(user)] = "saying ";
-						mLastMessage[tolowercase(user)] += message;
-					}*/
 					else	//Some other kind of command
 					{
 						//Remove trailing chars from buffer

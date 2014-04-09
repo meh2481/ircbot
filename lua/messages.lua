@@ -24,7 +24,19 @@ local function gotmessage(user, command, where, target, message)
 		say(target, "["..title.."]")
     end
 	
-	--TODO: Test for bad words, bird words, RPS battle commands, yelling
+	--Test for bad words & bird words
+	for w in string.gmatch(message, "%S+") do
+		w = string.lower(w)
+		if badwords[w] then
+			action(target, "slaps "..user.." for their foul language")
+		end
+		if birdwords[w] then
+			action(target, "pecks "..user.." for their fowl language")
+		end
+    end
+	
+	--TODO: Test for RPS battle commands, yelling,
+	--TODO: hai, bai, good boy, question
 	
 end
 setglobal("gotmessage", gotmessage)

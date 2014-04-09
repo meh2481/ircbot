@@ -96,6 +96,13 @@ luaFunc(getchannel)
 	luaReturnStr(channel);
 }
 
+luaFunc(done)
+{
+	bDone = true;
+	raw("PING bai doods\r\n");	//HACK: Our socket waits for input, so ping
+	luaReturnNil();
+}
+
 static LuaFunctions s_functab[] =
 {
 	luaRegister(sleep),
@@ -105,6 +112,7 @@ static LuaFunctions s_functab[] =
 	luaRegister(getURLTitle),
 	luaRegister(getnick),
 	luaRegister(getchannel),
+	luaRegister(done),
 	{NULL, NULL}
 };
 

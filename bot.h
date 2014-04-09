@@ -40,6 +40,7 @@
 using namespace std;
 
 extern int conn;
+extern bool bDone;
 extern const char *nick;
 extern const char *channel;
 
