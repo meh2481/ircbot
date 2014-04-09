@@ -1,5 +1,7 @@
 --Functions for handling incoming messages
 
+local yelling = {}
+
 --Our function that's called whenever we get a message on IRC
 local function gotmessage(user, command, where, target, message)
 	--print("[from: " .. user .. "] [reply-with: " .. command .. "] [where: " .. where .. "] [reply-to: " .. target .. "] ".. message)
@@ -34,6 +36,29 @@ local function gotmessage(user, command, where, target, message)
 			action(target, "pecks "..user.." for their fowl language")
 		end
     end
+	
+	--See if yelling
+	local allupper = true
+	for w in string.gmatch(message, "%S+") do
+		local test = string.upper(w)
+		if test ~= w then
+			allupper = false
+			break
+		end
+	end
+	if allupper and string.len(message) > 3 then
+		if yelling[user] then
+			if yelling[user] > 2 then
+				action(target, "covers his ears to block out "..user.."\'s yelling")
+				yelling[user] = 0
+			end
+			yelling[user] = yelling[user] + 1
+		else 
+			yelling[user] = 2
+		end
+	else
+		yelling[user] = 1
+	end
 	
 	--TODO: Test for RPS battle commands, yelling,
 	--TODO: hai, bai, good boy, question
