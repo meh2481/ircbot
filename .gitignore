@@ -2,3 +2,5 @@ ircbot
 *.o
 ircbot.exe
 ircbot_test.exe
+lastseen.txt
+lastmessage.txt

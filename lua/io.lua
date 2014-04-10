@@ -16,6 +16,8 @@ end
 local function saveall()
 	savetable(birdwords, "birdwords.txt")
 	savetable(badwords, "badwords.txt")
+	savetable(lastseen, "lastseen.txt")
+	savetable(lastmessage, "lastmessage.txt")
 end
 setglobal("saveall", saveall)
 
@@ -31,6 +33,14 @@ end
 local function restoreall()
 	birdwords = loadtable("birdwords.txt")
 	badwords = loadtable("badwords.txt")
+	local tmpmsg = loadtable("lastseen.txt")
+	if tmpmsg then
+		lastseen = tmpmsg
+	end
+	tmpmsg = loadtable("lastmessage.txt")
+	if tmpmsg then
+		lastmessage = tmpmsg
+	end
+	
 end
 setglobal("restoreall", restoreall)
---[15:10:32] <fgenesis> and later just do local s = loadfile("file.txt"); if s then tab = serialize_restore(s) end

@@ -3,31 +3,31 @@
 --TODO store this stuff in database on disk
 local lastseen = rawget(_G, ".lastseen"); 
 if not lastseen then 
-	lastseen = {}; 
+	lastseen = {}
 	setglobal(".lastseen", lastseen) 
 end
 
-local lastmessage = rawget(_G, ".lastmessage"); 
+local lastmessage = rawget(_G, ".lastmessage")
 if not lastmessage then 
-	lastmessage = {}; 
+	lastmessage = {}
 	setglobal(".lastmessage", lastmessage) 
 end
 
-local nicks = rawget(_G, ".nicks"); 
+local nicks = rawget(_G, ".nicks")
 if not nicks then 
-	nicks = {}; 
+	nicks = {}
 	setglobal(".nicks", nicks) 
 end
 
-local badwords = rawget(_G, ".badwords"); 
+local badwords = rawget(_G, ".badwords")
 if not badwords then 
-	badwords = {}; 
+	badwords = {}
 	setglobal(".badwords", badwords) 
 end
 
-local birdwords = rawget(_G, ".birdwords"); 
+local birdwords = rawget(_G, ".birdwords")
 if not birdwords then 
-	birdwords = {}; 
+	birdwords = {}
 	setglobal(".birdwords", birdwords) 
 end
 
@@ -45,25 +45,25 @@ local function seen(channel, user, message)
 	--Get second word
 	local person = trim(string.gsub(message, "(%S+)%s*(.+)", "%2"))
 	if person == "straight" then
-		say(channel, "I last saw straight... Wait, I can see straight right now, thank you.")
-	elseif lastseen[string.lower(person)] then
-		local diff = os.clock() - lastseen[string.lower(person)]
+		say(channel, "The last time I saw straight was... Hey! I can see perfectly fine, thank you.")
+	elseif rawget(_G, "lastseen")[string.lower(person)] then
+		local diff = os.time() - rawget(_G, "lastseen")[string.lower(person)]
 		local seconds = math.floor(diff % 60)
 		local minutes = math.floor(diff / 60) % 60
 		local hours = math.floor(diff / (60*60)) % 24
 		local days = math.floor(diff / (60*60*24))
-		say(channel, "I last saw "..person.." "..days.."d, "..hours.."h, "..minutes.."m, "..seconds.."s ago, "..lastmessage[string.lower(person)])
+		say(channel, "I last saw "..person.." "..days.."d, "..hours.."h, "..minutes.."m, "..seconds.."s ago, "..rawget(_G, "lastmessage")[string.lower(person)])
 	else
 		say(channel, "I haven't seen "..person.." lately.")
 	end
 end
 
 local function uptime(channel)
-	local diff = os.clock()
-	local seconds = math.floor(diff % 60)
-	local minutes = math.floor(diff / 60) % 60
-	local hours = math.floor(diff / (60*60)) % 24
-	local days = math.floor(diff / (60*60*24))
+	local upsec = os.clock()
+	local seconds = math.floor(upsec % 60)
+	local minutes = math.floor(upsec / 60) % 60
+	local hours = math.floor(upsec / (60*60)) % 24
+	local days = math.floor(upsec / (60*60*24))
 	say(channel, "Uptime: "..days.."d, "..hours.."h, "..minutes.."m, "..seconds.."s")
 end
 

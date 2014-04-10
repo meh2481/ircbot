@@ -15,14 +15,14 @@ local function gotmessage(user, command, where, target, message)
 	end
 	
 	--Update last seen message
-	lastseen[string.lower(user)] = os.clock()
+	lastseen[string.lower(user)] = os.time()
 	message = message:gsub("\001[Aa][Cc][Tt][Ii][Oo][Nn]", user) --Replace \001ACTION with username
 	message = message:gsub("\001", "")	--Remove trailing \001
 	lastmessage[string.lower(user)] = "saying \""..message.."\""
 	
 	--Test for links
 	for w in string.gmatch(message, "https?://%S+") do
-		w = w:gsub("https", "http")
+		w = w:gsub("https", "http", 1)
 		local title = getURLTitle(w)
 		if title and string.len(title) > 0 then
 			say(target, "["..title.."]")
@@ -78,20 +78,20 @@ local function rejoin(channel)
 end
 
 local function joined(channel, user)
-	lastseen[string.lower(user)] = os.clock()
+	lastseen[string.lower(user)] = os.time()
 	lastmessage[string.lower(user)] = "joining IRC"
 	nicks[string.lower(user)] = 1;
 end
 
 local function left(channel, user)
-	lastseen[string.lower(user)] = os.clock()
+	lastseen[string.lower(user)] = os.time()
 	lastmessage[string.lower(user)] = "leaving IRC"
 	nicks[string.lower(user)] = nil
 end
 
 local function kicked(channel, user)
 	say(channel, "Trololol")
-	lastseen[string.lower(user)] = os.clock()
+	lastseen[string.lower(user)] = os.time()
 	lastmessage[string.lower(user)] = "being kicked from IRC"
 	nicks[string.lower(user)] = nil
 end
@@ -107,8 +107,8 @@ local function changenick(channel, user, buf)
 	buf = string.gsub(buf, ":.+:", "")	--Remove all but message
 	nicks[string.lower(user)] = nil
 	nicks[string.lower(buf)] = 1
-	lastseen[string.lower(user)] = os.clock()
-	lastseen[string.lower(buf)] = os.clock()
+	lastseen[string.lower(user)] = os.time()
+	lastseen[string.lower(buf)] = os.time()
 	lastmessage[string.lower(user)] = "changing nick to "..buf 
 	lastmessage[string.lower(buf)] = "changing nick from "..user
 end
