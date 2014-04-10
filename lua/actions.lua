@@ -202,10 +202,49 @@ local function addbird(channel, user, str)
 	end
 end
 
-local function saytitle(channel, url)
-	local title, temp = getURLTitle(url)
-	if string.len(title) > 0 then
-		say(channel, "["..title.."]")
+local function getresult(cmd)
+  local f = io.popen(cmd)
+  if f then
+	local s = f:read('*all')
+	local rc = {f:close()}
+	if rc then 
+		return rc[3]
+	end
+  end
+  return nil
+end
+
+local function heartbleed(channel, user, str)
+	if channel ~= getchannel() then
+		say(channel, "Please use this command on the main channel")
+		return
+	end
+	local execline = string.gsub(str, "%S+%s", "", 1)	--Remove first word
+	execline = string.gsub(execline, "(%S+).*", "%1")	--Remove trailing words
+	execline = string.gsub(execline, "%s", "")			--Remove whitespace
+	execline = string.gsub(execline, "https?://", "")	--Remove beginning of links
+	execline = string.gsub(execline, "www%.", "")
+	local safe = nil
+	for test in string.gmatch(execline, "[%a%d:%.-]+") do 
+		safe = test
+		break
+	end
+	if safe and string.len(safe) > 0 then
+		say(channel, "Testing "..safe.." for Heartbleed vulnerability")
+		local result = getresult('Heartbleed \"'..safe..'\"')
+		if result then 
+			if result == 1 then
+				say(channel, safe.." is at risk")
+			elseif result == 2 then
+				say(channel, "Unable to test "..safe)
+			elseif result == 0 then
+				say(channel, safe.." is safe")
+			else
+				print("Err: Unexpected result "..result)
+			end
+		else
+			print("Err: Unable to test "..safe)
+		end
 	end
 end
 
@@ -245,6 +284,9 @@ local function doaction(channel, str, user)
 		["restore"] = 	restoreall,
 		["addbad"] =	addbad,
 		["addbird"] = 	addbird,
+		["heartbleed"] = heartbleed,
+		["bleed"] = 	heartbleed,
+		["safe"] =		heartbleed,
 		--TODO: rps
 	}
 	
