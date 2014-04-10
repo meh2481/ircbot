@@ -65,9 +65,9 @@
 
 
 #else				/* }{ */
-
-#define lua_popen(L,c,m)		((void)((void)c, m),  \
-		luaL_error(L, LUA_QL("popen") " not supported"), (FILE*)0)
+#define lua_popen(L,c,m)	((void)L, fflush(NULL), popen(c,m))
+//#define lua_popen(L,c,m)		((void)((void)c, m),  \
+//		luaL_error(L, LUA_QL("popen") " not supported"), (FILE*)0)
 #define lua_pclose(L,file)		((void)((void)L, file), -1)
 
 
