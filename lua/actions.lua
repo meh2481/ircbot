@@ -202,8 +202,8 @@ local function addbird(channel, user, str)
 	end
 end
 
-local function getresult(cmd)
-  local f = io.popen(cmd)
+--[[local function getresult(cmd)
+  local f = io.popen(cmd, 'r')
   if f then
 	local s = f:read('*all')
 	local rc = {f:close()}
@@ -246,7 +246,7 @@ local function heartbleed(channel, user, str)
 			print("Err: Unable to test "..safe)
 		end
 	end
-end
+end--]]
 
 local function doaction(channel, str, user)
 	--Get command all the way until whitespace
@@ -284,9 +284,9 @@ local function doaction(channel, str, user)
 		["restore"] = 	restoreall,
 		["addbad"] =	addbad,
 		["addbird"] = 	addbird,
-		["heartbleed"] = heartbleed,
+		--[[["heartbleed"] = heartbleed,
 		["bleed"] = 	heartbleed,
-		["safe"] =		heartbleed,
+		["safe"] =		heartbleed,--]]
 		--TODO: rps
 	}
 	
