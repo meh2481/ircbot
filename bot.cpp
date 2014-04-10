@@ -13,7 +13,6 @@ bool bDone = false;
 int main(int argc, char** argv) 
 {
 	LuaInterface Lua("lua/init.lua", argc, argv);
-	//gLua = &Lua;
 	char sbuf[512];
 	char *host = "irc.esper.net";
 	char *port = "6667";
@@ -23,9 +22,7 @@ int main(int argc, char** argv)
 	char buf[513];
 	
 	srand (time(NULL));
-	//starttime = time(NULL);
 	Lua.Init();
-	//readWords();
 	
 	initNetworking();
 	
@@ -102,7 +99,8 @@ int main(int argc, char** argv)
 						if(!strncmp(message, "!reload", 7))
 						{
 							//readWords();
-							printf("Reloading\n");
+							//printf("Reloading\n");
+							Lua.call("saveall");
 							Lua.call("dofile", "lua/init.lua");
 						}
 						else
