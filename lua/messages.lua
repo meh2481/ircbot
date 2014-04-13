@@ -32,7 +32,7 @@ local function gotmessage(user, command, where, target, message)
 	--Test for bad words & bird words
 	--TODO: Timer
 	for w in string.gmatch(message, "%S+") do
-		w = string.lower(w)
+		w = string.lower(w):gsub("%W","");
 		if badwords[w] then
 			action(target, "slaps "..user.." for their foul language")
 		end
