@@ -31,11 +31,18 @@ if not birdwords then
 	setglobal(".birdwords", birdwords) 
 end
 
+local starttime = rawget(_G, ".starttime")
+if not starttime then
+	starttime = os.time()
+	setglobal(".starttime", starttime)
+end
+
 setglobal("lastseen", lastseen)
 setglobal("lastmessage", lastmessage)
 setglobal("nicks", nicks)
 setglobal("badwords", badwords)
 setglobal("birdwords", birdwords)
+setglobal("starttime", starttime)
 
 local function trim(s)
   return s:match'^%s*(.*%S)' or ''
@@ -59,7 +66,7 @@ local function seen(channel, user, message)
 end
 
 local function uptime(channel)
-	local upsec = os.clock()
+	local upsec = math.floor(os.time() - rawget(_G, "starttime"))
 	local seconds = math.floor(upsec % 60)
 	local minutes = math.floor(upsec / 60) % 60
 	local hours = math.floor(upsec / (60*60)) % 24
