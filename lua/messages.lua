@@ -23,7 +23,7 @@ local function gotmessage(user, command, where, target, message)
 	--Test for links
 	for w in string.gmatch(message, "https?://%S+") do
 		w = w:gsub("https", "http", 1)
-		local title = getURLTitle(w)
+		local title = gettitle(w)
 		if title and string.len(title) > 0 then
 			say(target, "["..title.."]")
 		end

@@ -156,8 +156,20 @@ local function coin(channel)
 	end
 end
 
+local function gettitle(url)
+	local unformatted,page = getURLTitle(url)
+	unformatted = trim(unformatted:gsub("\r",""):gsub("\n",""))	--Remove whitespace and newlines
+	local formatted = unformatted
+	for special in unformatted:gmatch("&#%d+;") do	--Parse &#nnnn; numbers back to characters (TODO: HTML-special characters also)
+		local val = string.gsub(special, "&#(%d+);", "%1")
+		formatted = formatted:gsub(special, string.char(val))
+	end
+	return formatted,page
+end
+setglobal("gettitle", gettitle)
+
 local function getbitcoin(channel)
-	local diff, temp = getURLTitle("http://bitcoindifficulty.com/")
+	local diff, temp = gettitle("http://bitcoindifficulty.com/")
 	say(channel, diff)
 end
 
@@ -173,7 +185,7 @@ end
 local function search(channel, str)
 	local searchquery = string.gsub(str, "%S+%s", "", 1)	--Remove first word
 	searchquery = string.gsub(searchquery, "%s", "+")	--Replace all whitespace with +
-	local title,url = getURLTitle("http://www.google.com/search?q="..searchquery.."&btnI")	--Grab the URL and page title
+	local title,url = gettitle("http://www.google.com/search?q="..searchquery.."&btnI")	--Grab the URL and page title
 	--Display both, or error if can't fetch
 	if string.len(title) > 0 and string.len(url) > 0 then
 		say(channel, '['..title..']'..' - '..url)
