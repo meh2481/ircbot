@@ -100,7 +100,7 @@ local function hug(channel, user, message)
 	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
 	person = string.gsub(person, "%s", "")		--Remove whitespace
 	if string.len(person)>0 then
-		if nicks[string.lower(person)] then	--Person is here
+		if rawget(_G, "nicks")[string.lower(person)] then	--Person is here
 			action(channel, "hugs "..person.." a little too tightly")
 		else
 			local halfperson = string.sub(person, 0, -math.ceil(string.len(person)/2))
@@ -185,9 +185,9 @@ end
 local function addbad(channel, user, str)
 	for word in str:gmatch("%S+") do 
 		if word ~= "addbad" then
-			badwords[word] = 1
-			badwords[word.."s"] = 1
-			badwords[word.."es"] = 1
+			rawget(_G, "badwords")[word] = 1
+			rawget(_G, "badwords")[word.."s"] = 1
+			rawget(_G, "badwords")[word.."es"] = 1
 		end
 	end
 end
@@ -195,9 +195,9 @@ end
 local function addbird(channel, user, str)
 	for word in str:gmatch("%S+") do 
 		if word ~= "addbird" then
-			birdwords[word] = 1
-			birdwords[word.."s"] = 1
-			birdwords[word.."es"] = 1
+			rawget(_G, "birdwords")[word] = 1
+			rawget(_G, "birdwords")[word.."s"] = 1
+			rawget(_G, "birdwords")[word.."es"] = 1
 		end
 	end
 end
@@ -248,6 +248,26 @@ local function heartbleed(channel, user, str)
 	end
 end--]]
 
+local function removeword(channel, user, str)
+	if user ~= "Daxar" or channel ~= getchannel() then
+		say(channel, "Nope, not gonna do it.")
+		--TODO: Log
+		return
+	end
+	for word in str:gmatch("%S+") do 
+		if word ~= "removeword" and word ~= "rmword" then
+			--print("Removing "..word)
+			rawget(_G, "badwords")[word] = nil
+			rawget(_G, "badwords")[word.."s"] = nil
+			rawget(_G, "badwords")[word.."es"] = nil
+			rawget(_G, "birdwords")[word] = nil
+			rawget(_G, "birdwords")[word.."s"] = nil
+			rawget(_G, "birdwords")[word.."es"] = nil
+			--print("word:",badwords[word])
+		end
+	end
+end
+
 local function doaction(channel, str, user)
 	--Get command all the way until whitespace
 	local act = string.sub(str, string.find(str, "%S+"))
@@ -284,6 +304,8 @@ local function doaction(channel, str, user)
 		["restore"] = 	restoreall,
 		["addbad"] =	addbad,
 		["addbird"] = 	addbird,
+		["removeword"] = removeword,
+		["rmword"] = 	removeword,
 		--[[["heartbleed"] = heartbleed,
 		["bleed"] = 	heartbleed,
 		["safe"] =		heartbleed,--]]
