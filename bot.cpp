@@ -1,14 +1,29 @@
 #include "bot.h"
+#include <stdint.h>
+#ifndef _WIN32
+#include <time.h>
+#endif
 
 int conn;
 bool bDone = false;
 #ifdef DEBUG
-	const char *nick = "immabot_";
-	const char *channel = "#bitbottest";
+const char *nick = "immabot_";
+const char *channel = "#bitbottest";
 #else
-	const char *nick = "immabot";
-	const char *channel = "#bitblot";
+const char *nick = "immabot";
+const char *channel = "#bitblot";
 #endif
+
+uint32_t getTicks()
+{
+#ifdef _WIN32
+	return GetTickCount();
+#else
+    struct timespec spec;
+    clock_gettime(CLOCK_REALTIME, &spec);
+    return((spec.tv_nsec / 1.0e6) + (spec.tv_sec * 1000));
+#endif
+}
 
 int main(int argc, char** argv) 
 {
@@ -17,6 +32,7 @@ int main(int argc, char** argv)
 	char *host = "irc.esper.net";
 	char *port = "6667";
 	bool timingOut = false;
+	uint32_t curTime = getTicks();
 	
 	char *user, *command, *where, *message, *sep, *target;
 	int sl, o = -1, start, wordcount;
@@ -32,22 +48,29 @@ int main(int argc, char** argv)
 	raw("USER %s 0 0 :%s\r\n", nick, nick);
 	raw("NICK %s\r\n", nick);
 	while(!bDone)
-	{	
-		//Select loop so we can tell if we've timeouted
+	{
+		//Save every five minutes
+		if(getTicks() > curTime + 5*60*1000)
+		{
+			curTime = getTicks();
+			#ifdef DEBUG
+			printf("Saving all...\n");
+			#endif
+			Lua.call("saveall");
+		}
+		
+		//Select loop so we can tell if we've timed out
 		fd_set set;
 		struct timeval timeout;
-		FD_ZERO (&set);
-		FD_SET (conn, &set);
-		timeout.tv_sec = 30;	//30 second timeout
+		FD_ZERO(&set);
+		FD_SET(conn, &set);
+		timeout.tv_sec = 60;	//1-minute timeout
 		timeout.tv_usec = 0;
 
-		// select returns 0 if timeout, 1 if input available, -1 if error.
+		//select returns 0 if timeout, 1 if input available, -1 if error.
 		int canread = select(FD_SETSIZE, &set, NULL, NULL, &timeout);
 		if(canread != 1)
 		{
-			#ifdef DEBUG
-			printf("More than 30 secs\n");
-			#endif
 			if(timingOut)
 			{
 				//We've already pinged the server, and gotten nothing back. Reconnect
@@ -76,9 +99,6 @@ int main(int argc, char** argv)
 			if(sl < 1)
 			{
 				timingOut = true;
-				#ifdef DEBUG
-				printf("closed on recv()\n");
-				#endif
 				close(conn);
 				while(!setupConnection(host, port, &conn)) sleep(10);
 				raw("USER %s 0 0 :%s\r\n", nick, nick);
