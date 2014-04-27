@@ -175,6 +175,7 @@ int main(int argc, char** argv)
 			}
 		}
 	}
+	close(conn);
 	shutdownNetworking();
 	return 0;
 }

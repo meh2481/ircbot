@@ -99,7 +99,7 @@ luaFunc(getchannel)
 luaFunc(done)
 {
 	bDone = true;
-	raw("PING bai doods\r\n");	//HACK: Our socket waits for input, so ping
+	raw("QUIT\r\n");	//Tell the server we're done
 	luaReturnNil();
 }
 
