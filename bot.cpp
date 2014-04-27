@@ -16,6 +16,7 @@ int main(int argc, char** argv)
 	char sbuf[512];
 	char *host = "irc.esper.net";
 	char *port = "6667";
+	bool timingOut = false;
 	
 	char *user, *command, *where, *message, *sep, *target;
 	int sl, o = -1, start, wordcount;
@@ -26,16 +27,65 @@ int main(int argc, char** argv)
 	
 	initNetworking();
 	
-	setupConnection(host, port, &conn);	
+	while(!setupConnection(host, port, &conn)) sleep(10);	//Spin here and wait for connection	
 	
 	raw("USER %s 0 0 :%s\r\n", nick, nick);
 	raw("NICK %s\r\n", nick);
-	#ifdef _WIN32
-	while ((sl = recv(conn, sbuf, 512, 0)) && !bDone) 
-	#else
-	while ((sl = read(conn, sbuf, 512)) && !bDone) 
-	#endif
-	{
+	while(!bDone)
+	{	
+		//Select loop so we can tell if we've timeouted
+		fd_set set;
+		struct timeval timeout;
+		FD_ZERO (&set);
+		FD_SET (conn, &set);
+		timeout.tv_sec = 30;	//30 second timeout
+		timeout.tv_usec = 0;
+
+		// select returns 0 if timeout, 1 if input available, -1 if error.
+		int canread = select(FD_SETSIZE, &set, NULL, NULL, &timeout);
+		if(canread != 1)
+		{
+			#ifdef DEBUG
+			printf("More than 30 secs\n");
+			#endif
+			if(timingOut)
+			{
+				//We've already pinged the server, and gotten nothing back. Reconnect
+				#ifdef DEBUG
+				printf("Reconnecting...\n");
+				#endif
+				close(conn);
+				while(!setupConnection(host, port, &conn)) sleep(10);
+				raw("USER %s 0 0 :%s\r\n", nick, nick);
+				raw("NICK %s\r\n", nick);
+				continue;
+			}
+			raw("PING :%s\r\n", "immabotbeep");
+			timingOut = true;
+			continue;	//Break out here and select for input again
+		}
+		sl = 0;
+		if(canread == 1)
+		{
+			#ifdef _WIN32
+			sl = recv(conn, sbuf, 512, 0);
+			#else
+			sl = read(conn, sbuf, 512);
+			#endif
+			timingOut = false;	//Got stuff; we're good
+			if(sl < 1)
+			{
+				timingOut = true;
+				#ifdef DEBUG
+				printf("closed on recv()\n");
+				#endif
+				close(conn);
+				while(!setupConnection(host, port, &conn)) sleep(10);
+				raw("USER %s 0 0 :%s\r\n", nick, nick);
+				raw("NICK %s\r\n", nick);
+				continue;
+			}
+		}
 		for (int i = 0; i < sl; i++) 
 		{
 			o++;
@@ -46,7 +96,9 @@ int main(int argc, char** argv)
 				int l = o;
 				o = -1;
 				
-				//printf(">> %s", buf);
+				#ifdef DEBUG
+				printf(">> %s", buf);
+				#endif
 				char tempbuf[512];
 				memcpy(tempbuf, buf, strlen(buf));
 				
@@ -54,7 +106,7 @@ int main(int argc, char** argv)
 				{
 					buf[1] = 'O';
 					raw(buf);
-				} 
+				}
 				else if (buf[0] == ':') //Message
 				{
 					wordcount = 0;

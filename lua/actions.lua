@@ -325,6 +325,8 @@ local function doaction(channel, str, user)
 		["addbird"] = 	addbird,
 		["removeword"] = removeword,
 		["rmword"] = 	removeword,
+		["ping"] = 		function(channel) say(channel, "pong") end,
+		["pong"] = 		function(channel) say(channel, "ping") end,
 		--[[["heartbleed"] = heartbleed,
 		["bleed"] = 	heartbleed,
 		["safe"] =		heartbleed,--]]

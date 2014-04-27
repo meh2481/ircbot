@@ -48,7 +48,7 @@ extern const char *channel;
 void initNetworking();
 void raw(const char *fmt, ...);
 void shutdownNetworking();
-void setupConnection(const char* host, const char* port, int* connection);
+bool setupConnection(const char* host, const char* port, int* connection);
 
 
 #endif	//BOT_H

@@ -35,9 +35,11 @@ local function gotmessage(user, command, where, target, message)
 		w = w:lower():gsub("%W","");	--Convert to lowercase and remove punctuation
 		if badwords[w] then
 			action(target, "slaps "..user.." for their foul language")
+			break
 		end
 		if birdwords[w] then
 			action(target, "pecks "..user.." for their fowl language")
+			break
 		end
     end
 	
