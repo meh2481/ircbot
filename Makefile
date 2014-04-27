@@ -14,6 +14,8 @@ endif
 ifneq (,$(findstring MINGW,$(OS)))
     LIBS := $(LIBS) -lWs2_32
 	TARGET := $(TARGET).exe
+else
+    LIBS := $(LIBS) -lrt
 endif
 
 all: lua $(TARGET)
