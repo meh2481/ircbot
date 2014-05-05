@@ -1,6 +1,5 @@
 -- super awesome actions stuff
 
---TODO store this stuff in database on disk
 local lastseen = rawget(_G, ".lastseen"); 
 if not lastseen then 
 	lastseen = {}
@@ -102,7 +101,6 @@ end
 
 local function hug(channel, user, message)
 	say(channel, "Setting phasors to hug.")
-	--sleep(math.random(5))
 	local person = string.gsub(message, "%S+", "", 1)	--Remove first word
 	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
 	person = string.gsub(person, "%s", "")		--Remove whitespace
@@ -221,119 +219,118 @@ local function addbird(channel, user, str)
 	end
 end
 
---[[local function getresult(cmd)
-  local f = io.popen(cmd, 'r')
-  if f then
-	local s = f:read('*all')
-	local rc = {f:close()}
-	if rc then 
-		return rc[3]
-	end
-  end
-  return nil
-end
-
-local function heartbleed(channel, user, str)
-	if channel ~= getchannel() then
-		say(channel, "Please use this command on the main channel")
-		return
-	end
-	local execline = string.gsub(str, "%S+%s", "", 1)	--Remove first word
-	execline = string.gsub(execline, "(%S+).*", "%1")	--Remove trailing words
-	execline = string.gsub(execline, "%s", "")			--Remove whitespace
-	execline = string.gsub(execline, "https?://", "")	--Remove beginning of links
-	execline = string.gsub(execline, "www%.", "")
-	local safe = nil
-	for test in string.gmatch(execline, "[%a%d:%.-]+") do 
-		safe = test
-		break
-	end
-	if safe and string.len(safe) > 0 then
-		say(channel, "Testing "..safe.." for Heartbleed vulnerability")
-		local result = getresult('Heartbleed \"'..safe..'\"')
-		if result then 
-			if result == 1 then
-				say(channel, safe.." is at risk")
-			elseif result == 2 then
-				say(channel, "Unable to test "..safe)
-			elseif result == 0 then
-				say(channel, safe.." is safe")
-			else
-				print("Err: Unexpected result "..result)
-			end
-		else
-			print("Err: Unable to test "..safe)
-		end
-	end
-end--]]
-
 local function removeword(channel, user, str)
 	if user ~= "Daxar" or channel ~= getchannel() then
 		say(channel, "Nope, not gonna do it.")
-		--TODO: Log
 		return
 	end
 	for word in str:gmatch("%S+") do 
 		if word ~= "removeword" and word ~= "rmword" then
-			--print("Removing "..word)
 			rawget(_G, "badwords")[word] = nil
 			rawget(_G, "badwords")[word.."s"] = nil
 			rawget(_G, "badwords")[word.."es"] = nil
 			rawget(_G, "birdwords")[word] = nil
 			rawget(_G, "birdwords")[word.."s"] = nil
 			rawget(_G, "birdwords")[word.."es"] = nil
-			--print("word:",badwords[word])
 		end
 	end
+end
+
+local function updates(channel)
+	say(channel, "Get your unofficial update packs right here! http://www.bit-blot.com/forum/index.php?topic=4313.0");
+end
+
+local help
+
+local functab = {
+	["beep"] = 		function(channel) say(channel, "Imma bot. Beep.") end,
+	["d6"] = 		d6,
+	["roll"] = 		d6,
+	["dice"] = 		d6,
+	["die"] = 		d6,
+	["coin"] = 		coin,
+	["quarter"] = 	coin,
+	["flip"] =		coin,
+	["nickel"] = 	coin,
+	["dime"] = 		coin,
+	["penny"] = 	coin,
+	["bitcoin"] = 	getbitcoin,
+	["search"] = 	function(channel, user, str) search(channel, str) end,
+	["google"] = 	function(channel, user, str) search(channel, str) end,
+	["8ball"] = 	eightball,
+	["eightball"] = eightball,
+	["eight"] = 	eightball,
+	["8"] = 		eightball,
+	["shake"] = 	eightball,
+	["cookie"] = 	function(channel, user) botsnack(channel, "cookie", user) end,
+	["botsnack"] = 	function(channel, user) botsnack(channel, "botsnack", user) end,
+	["snack"] = 	function(channel, user) botsnack(channel, "snack", user) end,
+	["ex"] = 		function(channel, user, str) insultex(channel, str, getnick()) end,
+	["uptime"] = 	uptime,
+	["seen"] = 		seen,
+	["hug"] =		hug,
+	["quit"] =		quit,
+	["save"] = 		saveall,
+	["restore"] = 	restoreall,
+	["addbad"] =	addbad,
+	["addbird"] = 	addbird,
+	["removeword"] = removeword,
+	["rmword"] = 	removeword,
+	["ping"] = 		function(channel) say(channel, "pong") end,
+	["pong"] = 		function(channel) say(channel, "ping") end,
+	["updates"] = 	updates,
+	["update"] = 	updates,
+	["help"] = 		function(channel) help(channel) end,
+}
+
+help = function(channel)
+	say(channel, "Supported commands are:")
+	local num = 1				--Number of commands we're printing this loop
+	local maxnum = 6			--Maximum number of commands to print in a single loop
+	local length = 0			--How many items total are in the table
+	local longestcommand = 0	--Longest command
+	local printstr = ""			--String to print this loop
+	
+	--Sort function table by name
+	local ordered_functab = {}
+	for k in pairs(functab) do
+		table.insert(ordered_functab, k)
+		if k:len() > longestcommand then
+			longestcommand = k:len()
+		end
+		length = length + 1
+	end
+	table.sort(ordered_functab)
+	
+	--Iterate over sorted table
+	for i = 1, length do
+		local funcname = ordered_functab[i]
+		printstr = printstr..funcname
+		for i = funcname:len(), longestcommand + 1 do	--Force tab sorta thing by hand
+			printstr = printstr.." "
+		end
+		num = num + 1
+		--If we're long enough, go ahead and print
+		if num > maxnum then
+			say(channel, printstr)
+			num = 1
+			printstr = ""
+		end
+	end
+	
+	--Print any leftover commands
+	if printstr:len() then
+		say(channel, printstr)
+	end
+	
+	--TODO: Help for particular command
 end
 
 local function doaction(channel, str, user)
 	--Get command all the way until whitespace
 	local act = string.sub(str, string.find(str, "%S+"))
-
-	local tab = {
-		["beep"] = 		function(channel) say(channel, "Imma bot. Beep.") end,
-		["d6"] = 		d6,
-		["roll"] = 		d6,
-		["dice"] = 		d6,
-		["die"] = 		d6,
-		["coin"] = 		coin,
-		["quarter"] = 	coin,
-		["flip"] =		coin,
-		["nickel"] = 	coin,
-		["dime"] = 		coin,
-		["penny"] = 	coin,
-		["bitcoin"] = 	getbitcoin,
-		["search"] = 	function(channel, user, str) search(channel, str) end,
-		["google"] = 	function(channel, user, str) search(channel, str) end,
-		["8ball"] = 	eightball,
-		["eightball"] = eightball,
-		["eight"] = 	eightball,
-		["8"] = 		eightball,
-		["shake"] = 	eightball,
-		["cookie"] = 	function(channel, user) botsnack(channel, act, user) end,
-		["botsnack"] = 	function(channel, user) botsnack(channel, act, user) end,
-		["snack"] = 	function(channel, user) botsnack(channel, act, user) end,
-		["ex"] = 		function(channel, user, str) insultex(channel, str, getnick()) end,
-		["uptime"] = 	uptime,
-		["seen"] = 		seen,
-		["hug"] =		hug,
-		["quit"] =		quit,
-		["save"] = 		saveall,
-		["restore"] = 	restoreall,
-		["addbad"] =	addbad,
-		["addbird"] = 	addbird,
-		["removeword"] = removeword,
-		["rmword"] = 	removeword,
-		["ping"] = 		function(channel) say(channel, "pong") end,
-		["pong"] = 		function(channel) say(channel, "ping") end,
-		--[[["heartbleed"] = heartbleed,
-		["bleed"] = 	heartbleed,
-		["safe"] =		heartbleed,--]]
-		--TODO: rps
-	}
 	
-	local f = tab[act]
+	local f = functab[act]
 	if f then
 		f(channel, user, str)
 	end

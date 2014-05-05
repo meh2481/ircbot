@@ -30,7 +30,6 @@ local function gotmessage(user, command, where, target, message)
     end
 	
 	--Test for bad words & bird words
-	--TODO: Timer
 	for w in string.gmatch(message, "%S+") do
 		w = w:lower():gsub("%W","");	--Convert to lowercase and remove punctuation
 		if badwords[w] then
@@ -66,11 +65,7 @@ local function gotmessage(user, command, where, target, message)
 		yelling[user] = 1
 	end
 	
-	--TODO: Test for RPS battle commands,
 	--TODO: hai, bai, good boy, question
-	
-	--TODO: Save now and then
-	
 end
 setglobal("gotmessage", gotmessage)
 
