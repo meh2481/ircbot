@@ -104,7 +104,7 @@ local function hug(channel, user, message)
 	local person = string.gsub(message, "%S+", "", 1)	--Remove first word
 	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
 	person = string.gsub(person, "%s", "")		--Remove whitespace
-	if string.len(person)>0 then
+	if string.len(person) > 0 then
 		if rawget(_G, "nicks")[string.lower(person)] then	--Person is here
 			action(channel, "hugs "..person.." a little too tightly")
 		else
@@ -280,50 +280,104 @@ local functab = {
 	["pong"] = 		function(channel) say(channel, "ping") end,
 	["updates"] = 	updates,
 	["update"] = 	updates,
-	["help"] = 		function(channel) help(channel) end,
+	["help"] = 		function(channel, user, str) help(channel, str) end,
 }
 
-help = function(channel)
-	say(channel, "Supported commands are:")
-	local num = 1				--Number of commands we're printing this loop
-	local maxnum = 6			--Maximum number of commands to print in a single loop
-	local length = 0			--How many items total are in the table
-	local longestcommand = 0	--Longest command
-	local printstr = ""			--String to print this loop
-	
-	--Sort function table by name
-	local ordered_functab = {}
-	for k in pairs(functab) do
-		table.insert(ordered_functab, k)
-		if k:len() > longestcommand then
-			longestcommand = k:len()
+local funchelp = {
+	["beep"] = 		'displays a beep message',
+	["d6"] = 		'rolls a 6-sided die and displays the result',
+	["roll"] = 		'rolls a 6-sided die and displays the result',
+	["dice"] = 		'rolls a 6-sided die and displays the result',
+	["die"] = 		'rolls a 6-sided die and displays the result',
+	["coin"] = 		'flips a coin and says heads or tails',
+	["quarter"] = 	'flips a coin and says heads or tails',
+	["flip"] =		'flips a coin and says heads or tails',
+	["nickel"] = 	'flips a coin and says heads or tails',
+	["dime"] = 		'flips a coin and says heads or tails',
+	["penny"] = 	'flips a coin and says heads or tails',
+	["bitcoin"] = 	'returns the current bitcoin mining complexity',
+	["search"] = 	'searches Google for the given search query and returns the first result (\"I\'m Feeling Lucky\" search)',
+	["google"] = 	'searches Google for the given search query and returns the first result (\"I\'m Feeling Lucky\" search)',
+	["8ball"] = 	'shakes a Magic 8-ball and says the result',
+	["eightball"] = 'shakes a Magic 8-ball and says the result',
+	["eight"] = 	'shakes a Magic 8-ball and says the result',
+	["8"] = 		'shakes a Magic 8-ball and says the result',
+	["shake"] = 	'shakes a Magic 8-ball and says the result',
+	["cookie"] = 	'feeds the bot a cookie',
+	["botsnack"] = 	'feeds the bot a botsnack',
+	["snack"] = 	'feeds the bot a snack',
+	["ex"] = 		'picks a random \"Your ex\" joke from the given input',
+	["uptime"] = 	'displays how long the bot has been running',
+	["seen"] = 		'says the last time I saw a particular user (Usage: \"!seen [user]\")',
+	["hug"] =		'hugs you or a particular user (Usage: \"!hug [user]\")',
+	["quit"] =		'tells the bot to leave (ADMIN ONLY)',
+	["addbad"] =	'adds a word to the curse word filter (ADMIN ONLY)',
+	["addbird"] = 	'adds a bird to the bird word filter (ADMIN ONLY)',
+	["removeword"] = 'removes a word from the bad and bird word filters (ADMIN ONLY)',
+	["rmword"] = 	'removes a word from the bad and bird word filters (ADMIN ONLY)',
+	["ping"] = 		'pongs if you\'re online',
+	["pong"] = 		'pings if you\'re online',
+	["updates"] = 	'links you to Aquaria\'s unofficial update packs',
+	["update"] = 	'links you to Aquaria\'s unofficial update packs',
+	["help"] = 		'displays this message',
+}
+
+help = function(channel, str)
+	local helptopic = string.gsub(str, "%S+", "", 1)	--Remove first word
+	helptopic = string.gsub(helptopic, "(%S+).*", "%1")	--Remove trailing words
+	helptopic = string.gsub(helptopic, "%s", "")		--Remove whitespace
+	if helptopic:len() > 0 then
+		--Help for a particular command
+		local cmdhelp = funchelp[helptopic]
+		if cmdhelp then
+			say(channel, "The \"!"..helptopic.."\" command "..cmdhelp)
+		else
+			say(channel, "\"!"..helptopic.."\" isn't a command I recognize, sorry.")
 		end
-		length = length + 1
-	end
-	table.sort(ordered_functab)
-	
-	--Iterate over sorted table
-	for i = 1, length do
-		local funcname = ordered_functab[i]
-		printstr = printstr..funcname
-		for i = funcname:len(), longestcommand + 1 do	--Force tab sorta thing by hand
-			printstr = printstr.." "
+	else
+
+		--Print supported commands
+		say(channel, "Supported commands are:")
+		local num = 1				--Number of commands we're printing this loop
+		local maxnum = 6			--Maximum number of commands to print in a single loop
+		local length = 0			--How many items total are in the table
+		local longestcommand = 0	--Longest command
+		local printstr = ""			--String to print this loop
+		
+		--Sort function table by name
+		local ordered_functab = {}
+		for k in pairs(funchelp) do
+			table.insert(ordered_functab, k)
+			if k:len() > longestcommand then
+				longestcommand = k:len()
+			end
+			length = length + 1
 		end
-		num = num + 1
-		--If we're long enough, go ahead and print
-		if num > maxnum then
+		table.sort(ordered_functab)
+		
+		--Iterate over sorted table
+		for i = 1, length do
+			local funcname = ordered_functab[i]
+			printstr = printstr..funcname
+			for i = funcname:len(), longestcommand + 1 do	--Force tab sorta thing by hand
+				printstr = printstr.." "
+			end
+			num = num + 1
+			--If we're long enough, go ahead and print
+			if num > maxnum then
+				say(channel, printstr)
+				num = 1
+				printstr = ""
+			end
+		end
+		
+		--Print any leftover commands
+		if printstr:len() then
 			say(channel, printstr)
-			num = 1
-			printstr = ""
 		end
+		
+		say(channel, "Type \"!help [command]\" for an explanation of a particular command");
 	end
-	
-	--Print any leftover commands
-	if printstr:len() then
-		say(channel, printstr)
-	end
-	
-	--TODO: Help for particular command
 end
 
 local function doaction(channel, str, user)

@@ -3,7 +3,7 @@
 local yelling = {}
 
 --Our function that's called whenever we get a message on IRC
-local function gotmessage(user, command, where, target, message)
+local function gotmessage(user, cmd, where, target, message)
 	--print("[from: " .. user .. "] [reply-with: " .. command .. "] [where: " .. where .. "] [reply-to: " .. target .. "] ".. message)
 	
 	message = message:gsub("\r", "")	--Strip off \r\n

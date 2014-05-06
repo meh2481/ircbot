@@ -1,10 +1,5 @@
 --Functions for dealing with file I/O
 
-local function readbad()
-	
-end
-setglobal("readbad", readbad)
-
 local function savetable(tab, filename)
 	local file = io.open(filename, "w")
 	if file then
