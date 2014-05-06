@@ -280,7 +280,7 @@ local functab = {
 	["pong"] = 		function(channel) say(channel, "ping") end,
 	["updates"] = 	updates,
 	["update"] = 	updates,
-	["help"] = 		function(channel, user, str) help(channel, str) end,
+	["help"] = 		function(channel, user, str) help(user, str) end,
 }
 
 local funchelp = {
