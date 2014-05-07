@@ -15,10 +15,12 @@ local function gotmessage(user, cmd, where, target, message)
 	end
 	
 	--Update last seen message
-	lastseen[string.lower(user)] = os.time()
-	message = message:gsub("\001[Aa][Cc][Tt][Ii][Oo][Nn]", user) --Replace \001ACTION with username
-	message = message:gsub("\001", "")	--Remove trailing \001
-	lastmessage[string.lower(user)] = "saying \""..message.."\""
+	if where == getchannel() then	--Keep PM's private
+		lastseen[string.lower(user)] = os.time()
+		message = message:gsub("\001[Aa][Cc][Tt][Ii][Oo][Nn]", user) --Replace \001ACTION with username
+		message = message:gsub("\001", "")	--Remove trailing \001
+		lastmessage[string.lower(user)] = "saying \""..message.."\""
+	end
 	
 	--Test for links
 	for w in string.gmatch(message, "https?://%S+") do
