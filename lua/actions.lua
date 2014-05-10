@@ -157,12 +157,17 @@ end
 
 local function insult(channel, message)
 	local insultee = string.gsub(message, "%S+%s", "", 1)
+	if insultee == "insult" then
+		insultee = "Thou art"
+	else
+		insultee = insultee.." is"
+	end
 	local adj1 = GetRandomElement(rawget(_G, "insultadj1"))
 	local adj2 = GetRandomElement(rawget(_G, "insultadj2"))
 	local noun = GetRandomElement(rawget(_G, "insultnoun"))
-	local pt1 = " is a "
+	local pt1 = " a "
 	if string.find("aeiou", adj1:sub(1,1)) then
-		pt1 = " is an "	--If first adjective starts with vowel, use proper grammar
+		pt1 = " an "	--If first adjective starts with vowel, use proper grammar
 	end
 	say(channel, insultee..pt1..adj1..", "..adj2.." "..noun)
 end
@@ -343,7 +348,7 @@ local funchelp = {
 	["botsnack"] = 	'feeds me a botsnack',
 	["snack"] = 	'feeds me a snack',
 	["ex"] = 		'insults thy ex in a Shakespearean manner',
-	["insult"] = 	'insults anyone or anything in a Shakespearean manner (Usage: \"!insult [thing]\")',
+	["insult"] = 	'insults anyone or anything in a Shakespearean manner (Usage: \"!insult [thing]\", or just \"!insult\" for thou)',
 	["uptime"] = 	'displays how long I\'ve been running',
 	["seen"] = 		'says the last time I saw a particular user (Usage: \"!seen [user]\")',
 	["hug"] =		'hugs you or a particular user (Usage: \"!hug [user]\")',
