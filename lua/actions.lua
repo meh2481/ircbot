@@ -36,12 +36,33 @@ if not starttime then
 	setglobal(".starttime", starttime)
 end
 
+local insultadj1 = rawget(_G, ".insultadj1")
+if not insultadj1 then
+	insultadj1 = {}
+	setglobal(".insultadj1", insultadj1)
+end
+
+local insultadj2 = rawget(_G, ".insultadj2")
+if not insultadj2 then
+	insultadj2 = {}
+	setglobal(".insultadj2", insultadj2)
+end
+
+local insultnoun = rawget(_G, ".insultnoun")
+if not insultnoun then
+	insultnoun = {}
+	setglobal(".insultnoun", insultnoun)
+end
+
 setglobal("lastseen", lastseen)
 setglobal("lastmessage", lastmessage)
 setglobal("nicks", nicks)
 setglobal("badwords", badwords)
 setglobal("birdwords", birdwords)
 setglobal("starttime", starttime)
+setglobal("insultadj1", insultadj1)
+setglobal("insultadj2", insultadj2)
+setglobal("insultnoun", insultnoun)
 
 local function trim(s)
   return s:match'^%s*(.*%S)' or ''
@@ -130,21 +151,20 @@ local function botsnack(channel, act, user)
 	action(channel, eatit[math.random(3)])
 end
 
-local function insultex(channel, message, nick)
-	local words = {}
-	local count = 0
-	for word in message:gmatch("%w+") do 
-		if word ~= nick and word ~= "\001action" and string.len(word) >= 4 then
-			table.insert(words, word)
-			count = count + 1
-		end
+local function GetRandomElement(a)
+    return a[math.random(#a)]
+end
+
+local function insult(channel, message)
+	local insultee = string.gsub(message, "%S+%s", "", 1)
+	local adj1 = GetRandomElement(rawget(_G, "insultadj1"))
+	local adj2 = GetRandomElement(rawget(_G, "insultadj2"))
+	local noun = GetRandomElement(rawget(_G, "insultnoun"))
+	local pt1 = " is a "
+	if string.find("aeiou", adj1:sub(1,1)) then
+		pt1 = " is an "	--If first adjective starts with vowel, use proper grammar
 	end
-	if count > 0 then
-		local randomword = words[math.random(#words)]
-		if randomword then
-			say(channel, "Your ex is "..randomword)
-		end
-	end
+	say(channel, insultee..pt1..adj1..", "..adj2.." "..noun)
 end
 
 local function d6(channel)
@@ -178,8 +198,15 @@ local function getbitcoin(channel)
 	say(channel, diff)
 end
 
-local function quit(channel, user)
+local function isadmin(user)
 	if user == "Daxar" then
+		return true	--TODO: Admin list
+	end
+	return false
+end
+
+local function quit(channel, user)
+	if isadmin(user) then
 		saveall()
 		done()
 	else
@@ -200,6 +227,10 @@ local function search(channel, str)
 end
 
 local function addbad(channel, user, str)
+	if not isadmin(user) then
+		say(channel, "Nope, not gonna do it.")
+		return
+	end
 	for word in str:gmatch("%S+") do 
 		if word ~= "addbad" then
 			rawget(_G, "badwords")[word] = 1
@@ -210,6 +241,10 @@ local function addbad(channel, user, str)
 end
 
 local function addbird(channel, user, str)
+	if not isadmin(user) then
+		say(channel, "Nope, not gonna do it.")
+		return
+	end
 	for word in str:gmatch("%S+") do 
 		if word ~= "addbird" then
 			rawget(_G, "birdwords")[word] = 1
@@ -220,7 +255,7 @@ local function addbird(channel, user, str)
 end
 
 local function removeword(channel, user, str)
-	if user ~= "Daxar" or channel ~= getchannel() then
+	if not isadmin(user) then
 		say(channel, "Nope, not gonna do it.")
 		return
 	end
@@ -265,7 +300,8 @@ local functab = {
 	["cookie"] = 	function(channel, user) botsnack(channel, "cookie", user) end,
 	["botsnack"] = 	function(channel, user) botsnack(channel, "botsnack", user) end,
 	["snack"] = 	function(channel, user) botsnack(channel, "snack", user) end,
-	["ex"] = 		function(channel, user, str) insultex(channel, str, getnick()) end,
+	["ex"] = 		function(channel) insult(channel, "derp Thy ex") end,
+	["insult"] = 	function(channel, user, str) insult(channel, str) end,
 	["uptime"] = 	uptime,
 	["seen"] = 		seen,
 	["hug"] =		hug,
@@ -306,7 +342,8 @@ local funchelp = {
 	["cookie"] = 	'feeds me a cookie',
 	["botsnack"] = 	'feeds me a botsnack',
 	["snack"] = 	'feeds me a snack',
-	["ex"] = 		'picks a random \"Your ex\" joke from the given input',
+	["ex"] = 		'insults thy ex in a Shakespearean manner',
+	["insult"] = 	'insults anyone or anything in a Shakespearean manner (Usage: \"!insult [thing]\")',
 	["uptime"] = 	'displays how long I\'ve been running',
 	["seen"] = 		'says the last time I saw a particular user (Usage: \"!seen [user]\")',
 	["hug"] =		'hugs you or a particular user (Usage: \"!hug [user]\")',
