@@ -170,8 +170,18 @@ int main(int argc, char** argv)
 						//Check for reload
 						if(!strncmp(message, "!reload", 7))
 						{
-							//readWords();
-							//printf("Reloading\n");
+							#ifdef DEBUG
+							printf("Reloading\n");
+							#endif
+							Lua.call("saveall");
+							Lua.call("dofile", "lua/init.lua");
+						}
+						else if(!strncmp(message, "!greload", 8) && !strncmp(user, "Daxar", 5))
+						{
+							#ifdef DEBUG
+							printf("Reloading\n");
+							#endif
+							system("git pull");
 							Lua.call("saveall");
 							Lua.call("dofile", "lua/init.lua");
 						}

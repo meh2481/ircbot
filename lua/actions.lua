@@ -231,6 +231,12 @@ local function search(channel, str)
 	end
 end
 
+local function lmgtfy(channel, user, str)
+	local searchquery = string.gsub(str, "%S+%s", "", 1)	--Remove first word
+	searchquery = string.gsub(searchquery, "%s", "+")	--Replace all whitespace with +
+	say(channel, "http://lmgtfy.com/?q="..searchquery)	--Say the URL
+end
+
 local function addbad(channel, user, str)
 	if not isadmin(user) then
 		say(channel, "Nope, not gonna do it.")
@@ -280,6 +286,39 @@ local function updates(channel)
 	say(channel, "Get your unofficial update packs right here! http://www.bit-blot.com/forum/index.php?topic=4313.0");
 end
 
+local function sayline(channel, user, str)
+	if not isadmin(user) then
+		say(channel, "You don't have the privileges for this command.")
+	else
+		local phrase = string.gsub(str, "%S+%s", "", 1)
+		say(getchannel(), phrase)
+	end
+end
+
+local function sayact(channel, user, str)
+	if not isadmin(user) then
+		say(channel, "You don't have the privileges for this command.")
+	else
+		local phrase = string.gsub(str, "%S+%s", "", 1)
+		action(getchannel(), phrase)
+	end
+end
+
+local function randxkcd(channel)
+	local title,url = gettitle("http://dynamic.xkcd.com/random/comic/")	--Grab the URL and page title of a random xkcd comic
+	--Display both, or error if can't fetch
+	if string.len(url) > 0 then
+		local xtitle = gettitle(url)	--For some reason, the title breaks, so fetch again
+		if string.len(xtitle) > 0 then
+			say(channel, '['..xtitle..']'..' - '..url)
+		else
+			say(channel, "Unable to fetch link.")
+		end
+	else
+		say(channel, "Unable to fetch link.")
+	end
+end
+
 local help
 
 local functab = {
@@ -322,6 +361,12 @@ local functab = {
 	["updates"] = 	updates,
 	["update"] = 	updates,
 	["help"] = 		function(channel, user, str) help(user, str) end,
+	["say"] =		sayline,
+	["me"] =		sayact,
+	["act"] =		sayact,
+	["action"] =	sayact,
+	["xkcd"] =		randxkcd,
+	["lmgtfy"] = 	lmgtfy,
 }
 
 local funchelp = {
@@ -357,11 +402,17 @@ local funchelp = {
 	["addbird"] = 	'adds a bird to the bird word filter (ADMIN ONLY)',
 	["removeword"] = 'removes a word from the bad and bird word filters (ADMIN ONLY)',
 	["rmword"] = 	'removes a word from the bad and bird word filters (ADMIN ONLY)',
+	["say"] =		'makes me say something (ADMIN ONLY)',
+	["me"] =		'makes me say something (ADMIN ONLY)',
+	["act"] =		'makes me say something (ADMIN ONLY)',
+	["action"] =	'makes me say something (ADMIN ONLY)',
 	["ping"] = 		'pongs if you\'re online',
 	["pong"] = 		'pings if you\'re online',
 	["updates"] = 	'links you to Aquaria\'s unofficial update packs',
 	["update"] = 	'links you to Aquaria\'s unofficial update packs',
 	["help"] = 		'displays this message',
+	["xkcd"] =		'displays a random xkcd comic',
+	["lmgtfy"] = 	'lets me google that for you',
 }
 
 help = function(channel, str)
@@ -377,7 +428,6 @@ help = function(channel, str)
 			say(channel, "\"!"..helptopic.."\" isn't a command I recognize, sorry.")
 		end
 	else
-
 		--Print supported commands
 		say(channel, "Supported commands are:")
 		local num = 1				--Number of commands we're printing this loop
