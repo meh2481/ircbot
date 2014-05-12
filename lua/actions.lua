@@ -362,12 +362,12 @@ local function addrss(channel, user, str)
 	if not isadmin(user) then
 		say(channel, "You don't have the privileges for this command.")
 	else
-		local feedurl = string.gsub(str, "%S+", "", 1)	--Remove first word
-		feedurl = string.gsub(feedurl, "(%S+).*", "%1")	--Remove trailing words
-		feedurl = string.gsub(feedurl, "%s", "")		--Remove whitespace
-		local title = gettitle(feedurl)
-		if title and title:len() > 0 then	--Make sure title is valid
-			rawget(_G, "rssfeeds")[feedurl] = 1
+		local feedurl = string.gsub(str, "%S+", "", 1)			--Remove first word
+		feedurl = string.gsub(feedurl, "(%S+).*", "%1")			--Remove trailing words
+		feedurl = string.gsub(feedurl, "%s", "")				--Remove whitespace
+		local feedtitle,itemtitle,url = getLatestRSS(feedurl)	--Make sure this feed is valid
+		if feedtitle and itemtitle and url and feedtitle:len() > 0 and itemtitle:len() > 0 and url:len() > 0 then
+			rawget(_G, "rssfeeds")[feedurl] = "["..feedtitle.."] "..itemtitle.." -- "..url
 		else
 			say(channel, "Invalid feed URL")
 		end
