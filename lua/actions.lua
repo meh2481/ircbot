@@ -53,6 +53,9 @@ local function seen(channel, user, message)
 	local person = trim(string.gsub(message, "(%S+)%s*(.+)", "%2"))
 	if person == "straight" then
 		say(channel, "The last time I saw straight was... Hey! I can see perfectly fine, thank you.")
+	elseif person == getnick() then
+		action(channel, "finds mirror")
+		say(channel, "Oh, who IS that good-looking bot I see?")
 	elseif G_LASTSEEN[string.lower(person)] then
 		local diff = os.time() - G_LASTSEEN[string.lower(person)]
 		local seconds = math.floor(diff % 60)
