@@ -1,6 +1,6 @@
 -- super awesome actions stuff
 
-local lastseen = rawget(_G, ".lastseen"); 
+local lastseen = rawget(_G, ".lastseen")
 if not lastseen then 
 	lastseen = {}
 	setglobal(".lastseen", lastseen) 
@@ -290,7 +290,7 @@ local function removeword(channel, user, str)
 end
 
 local function updates(channel)
-	say(channel, "Get your unofficial update packs right here! http://www.bit-blot.com/forum/index.php?topic=4313.0");
+	say(channel, "Get your unofficial update packs right here! http://www.bit-blot.com/forum/index.php?topic=4313.0")
 end
 
 local function sayline(channel, user, str)
@@ -343,22 +343,6 @@ local function settelluser(channel, user, str)
 	end
 end
 
-local function rnicks(channel, user, str)
-	for key,value in pairs(rawget(_G, ".nicks")) do 
-		rawget(_G, ".nicks")[key] = nil
-		key = string.gsub(key, "[@&%%%+~]", "")
-		rawget(_G, ".nicks")[key] = value
-	end
-end
-
-local function saynicks(channel, user, str)
-	local result = ""
-	for key in pairs(rawget(_G, ".nicks")) do 
-		result = result..key.." "
-	end
-	say(channel, result) 
-end
-
 local help
 
 local functab = {
@@ -408,8 +392,6 @@ local functab = {
 	["xkcd"] =		randxkcd,
 	["lmgtfy"] = 	lmgtfy,
 	["tell"] =		settelluser,
-	["rnicks"] = 	rnicks,
-	["saynicks"] = 	saynicks,
 }
 
 local funchelp = {
@@ -512,7 +494,7 @@ help = function(channel, str)
 			say(channel, printstr)
 		end
 		
-		say(channel, "Type \"!help [command]\" for an explanation of a particular command");
+		say(channel, "Type \"!help [command]\" for an explanation of a particular command")
 	end
 end
 

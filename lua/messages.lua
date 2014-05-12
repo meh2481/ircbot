@@ -33,7 +33,7 @@ local function gotmessage(user, cmd, where, target, message)
 	
 	--Test for bad words & bird words
 	for w in string.gmatch(message, "%S+") do
-		w = w:lower():gsub("%W","");	--Convert to lowercase and remove punctuation
+		w = w:lower():gsub("%W","")	--Convert to lowercase and remove punctuation
 		if badwords[w] then
 			action(target, "slaps "..user.." for their foul language")
 			break
@@ -87,8 +87,8 @@ end
 local function joined(channel, user)
 	lastseen[string.lower(user)] = os.time()
 	lastmessage[string.lower(user)] = "joining IRC"
-	nicks[string.lower(user)] = 1;
-	tellnow(channel, user)
+	nicks[string.lower(user)] = 1
+	tellnow(channel, user)	--Tell the user any pending messages they have
 end
 
 local function left(channel, user)
