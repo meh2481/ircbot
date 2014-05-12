@@ -16,10 +16,10 @@ local function gotmessage(user, cmd, where, target, message)
 	
 	--Update last seen message
 	if where == getchannel() then	--Keep PM's private
-		lastseen[string.lower(user)] = os.time()
+		G_LASTSEEN[string.lower(user)] = os.time()
 		message = message:gsub("\001[Aa][Cc][Tt][Ii][Oo][Nn]", user) --Replace \001ACTION with username
 		message = message:gsub("\001", "")	--Remove trailing \001
-		lastmessage[string.lower(user)] = "saying \""..message.."\""
+		G_LASTMESSAGE[string.lower(user)] = "saying \""..message.."\""
 	end
 	
 	--Test for links
@@ -34,11 +34,12 @@ local function gotmessage(user, cmd, where, target, message)
 	--Test for bad words & bird words
 	for w in string.gmatch(message, "%S+") do
 		w = w:lower():gsub("%W","")	--Convert to lowercase and remove punctuation
-		if badwords[w] then
+		if G_BADWORDS[w] then
+			print(G_BADWORDS[w])
 			action(target, "slaps "..user.." for their foul language")
 			break
 		end
-		if birdwords[w] then
+		if G_BIRDWORDS[w] then
 			action(target, "pecks "..user.." for their fowl language")
 			break
 		end
@@ -78,48 +79,48 @@ end
 
 local function tellnow(channel, user)
 	user = user:lower()
-	if totell[user] then
-		say(channel, totell[user])
-		totell[user] = nil	--Wipe this message from inbox
+	if G_TOTELL[user] then
+		say(channel, G_TOTELL[user])
+		G_TOTELL[user] = nil	--Wipe this message from inbox
 	end
 end
 
 local function joined(channel, user)
-	lastseen[string.lower(user)] = os.time()
-	lastmessage[string.lower(user)] = "joining IRC"
-	nicks[string.lower(user)] = 1
+	G_LASTSEEN[string.lower(user)] = os.time()
+	G_LASTMESSAGE[string.lower(user)] = "joining IRC"
+	G_NICKS[string.lower(user)] = 1
 	tellnow(channel, user)	--Tell the user any pending messages they have
 end
 
 local function left(channel, user)
-	lastseen[string.lower(user)] = os.time()
-	lastmessage[string.lower(user)] = "leaving IRC"
-	nicks[string.lower(user)] = nil
+	G_LASTSEEN[string.lower(user)] = os.time()
+	G_LASTMESSAGE[string.lower(user)] = "leaving IRC"
+	G_NICKS[string.lower(user)] = nil
 end
 
 local function kicked(channel, user)
 	say(channel, "Trololol")
-	lastseen[string.lower(user)] = os.time()
-	lastmessage[string.lower(user)] = "being kicked from IRC"
-	nicks[string.lower(user)] = nil
+	G_LASTSEEN[string.lower(user)] = os.time()
+	G_LASTMESSAGE[string.lower(user)] = "being kicked from IRC"
+	G_NICKS[string.lower(user)] = nil
 end
 
 local function nicklist(channel, user, buf)
 	buf = string.gsub(buf, ":.+:", "")
 	buf = string.gsub(buf, "[@&%%%+~]", "")	--Get rid of nick op symbols and such (TODO: Save who the ops are)
 	for n in string.gmatch(buf, "%S+") do 
-		nicks[string.lower(n)] = 1
+		G_NICKS[string.lower(n)] = 1
 	end
 end
 
 local function changenick(channel, user, buf)
 	buf = string.gsub(buf, ":.+:", "")	--Remove all but message
-	nicks[string.lower(user)] = nil
-	nicks[string.lower(buf)] = 1
-	lastseen[string.lower(user)] = os.time()
-	lastseen[string.lower(buf)] = os.time()
-	lastmessage[string.lower(user)] = "changing nick to "..buf 
-	lastmessage[string.lower(buf)] = "changing nick from "..user
+	G_NICKS[string.lower(user)] = nil
+	G_NICKS[string.lower(buf)] = 1
+	G_LASTSEEN[string.lower(user)] = os.time()
+	G_LASTSEEN[string.lower(buf)] = os.time()
+	G_LASTMESSAGE[string.lower(user)] = "changing nick to "..buf 
+	G_LASTMESSAGE[string.lower(buf)] = "changing nick from "..user
 end
 
 local function command(channel, cmd, user, buf)

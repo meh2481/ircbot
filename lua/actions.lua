@@ -1,82 +1,48 @@
 -- super awesome actions stuff
 
-local lastseen = rawget(_G, ".lastseen")
-if not lastseen then 
-	lastseen = {}
-	setglobal(".lastseen", lastseen) 
+if not G_LASTSEEN then 
+	G_LASTSEEN = {}
 end
 
-local lastmessage = rawget(_G, ".lastmessage")
-if not lastmessage then 
-	lastmessage = {}
-	setglobal(".lastmessage", lastmessage) 
+if not G_LASTMESSAGE then 
+	G_LASTMESSAGE = {}
 end
 
-local nicks = rawget(_G, ".nicks")
-if not nicks then 
-	nicks = {}
-	setglobal(".nicks", nicks) 
+if not G_NICKS then 
+	G_NICKS = {}
 end
 
-local badwords = rawget(_G, ".badwords")
-if not badwords then 
-	badwords = {}
-	setglobal(".badwords", badwords) 
+if not G_BADWORDS then 
+	G_BADWORDS = {}
 end
 
-local birdwords = rawget(_G, ".birdwords")
-if not birdwords then 
-	birdwords = {}
-	setglobal(".birdwords", birdwords) 
+if not G_BIRDWORDS then 
+	G_BIRDWORDS = {}
 end
 
-local starttime = rawget(_G, ".starttime")
-if not starttime then
-	starttime = os.time()
-	setglobal(".starttime", starttime)
+if not G_STARTTIME then
+	G_STARTTIME = os.time()
 end
 
-local insultadj1 = rawget(_G, ".insultadj1")
-if not insultadj1 then
-	insultadj1 = {}
-	setglobal(".insultadj1", insultadj1)
+if not G_INSULTADJ1 then
+	G_INSULTADJ1 = {}
 end
 
-local insultadj2 = rawget(_G, ".insultadj2")
-if not insultadj2 then
-	insultadj2 = {}
-	setglobal(".insultadj2", insultadj2)
+if not G_INSULTADJ2 then
+	G_INSULTADJ2 = {}
 end
 
-local insultnoun = rawget(_G, ".insultnoun")
-if not insultnoun then
-	insultnoun = {}
-	setglobal(".insultnoun", insultnoun)
+if not G_INSULTNOUN then
+	G_INSULTNOUN = {}
 end
 
-local totell = rawget(_G, ".totell")
-if not totell then
-	totell = {}
-	setglobal(".totell", totell)
+if not G_TOTELL then
+	G_TOTELL = {}
 end
 
-local rssfeeds = rawget(_G, ".rssfeeds")
-if not rssfeeds then
-	rssfeeds = {}
-	setglobal(".rssfeeds", rssfeeds)
+if not G_RSSFEEDS then
+	G_RSSFEEDS = {}
 end
-
-setglobal("lastseen", lastseen)
-setglobal("lastmessage", lastmessage)
-setglobal("nicks", nicks)
-setglobal("badwords", badwords)
-setglobal("birdwords", birdwords)
-setglobal("starttime", starttime)
-setglobal("insultadj1", insultadj1)
-setglobal("insultadj2", insultadj2)
-setglobal("insultnoun", insultnoun)
-setglobal("totell", totell)
-setglobal("rssfeeds", rssfeeds)
 
 local function trim(s)
   return s:match'^%s*(.*%S)' or ''
@@ -87,20 +53,20 @@ local function seen(channel, user, message)
 	local person = trim(string.gsub(message, "(%S+)%s*(.+)", "%2"))
 	if person == "straight" then
 		say(channel, "The last time I saw straight was... Hey! I can see perfectly fine, thank you.")
-	elseif rawget(_G, "lastseen")[string.lower(person)] then
-		local diff = os.time() - rawget(_G, "lastseen")[string.lower(person)]
+	elseif G_LASTSEEN[string.lower(person)] then
+		local diff = os.time() - G_LASTSEEN[string.lower(person)]
 		local seconds = math.floor(diff % 60)
 		local minutes = math.floor(diff / 60) % 60
 		local hours = math.floor(diff / (60*60)) % 24
 		local days = math.floor(diff / (60*60*24))
-		say(channel, "I last saw "..person.." "..days.."d, "..hours.."h, "..minutes.."m, "..seconds.."s ago, "..rawget(_G, "lastmessage")[string.lower(person)])
+		say(channel, "I last saw "..person.." "..days.."d, "..hours.."h, "..minutes.."m, "..seconds.."s ago, "..G_LASTMESSAGE[string.lower(person)])
 	else
 		say(channel, "I haven't seen "..person.." lately.")
 	end
 end
 
 local function uptime(channel)
-	local upsec = math.floor(os.time() - rawget(_G, "starttime"))
+	local upsec = math.floor(os.time() - G_STARTTIME)
 	local seconds = math.floor(upsec % 60)
 	local minutes = math.floor(upsec / 60) % 60
 	local hours = math.floor(upsec / (60*60)) % 24
@@ -140,7 +106,7 @@ local function hug(channel, user, message)
 	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
 	person = string.gsub(person, "%s", "")		--Remove whitespace
 	if string.len(person) > 0 then
-		if rawget(_G, "nicks")[string.lower(person)] then	--Person is here
+		if G_NICKS[string.lower(person)] then	--Person is here
 			action(channel, "hugs "..person.." a little too tightly")
 		else
 			local halfperson = string.sub(person, 0, -math.ceil(string.len(person)/2))
@@ -176,9 +142,9 @@ local function insult(channel, message)
 	else
 		insultee = insultee.." is"
 	end
-	local adj1 = GetRandomElement(rawget(_G, "insultadj1"))
-	local adj2 = GetRandomElement(rawget(_G, "insultadj2"))
-	local noun = GetRandomElement(rawget(_G, "insultnoun"))
+	local adj1 = GetRandomElement(G_INSULTADJ1)
+	local adj2 = GetRandomElement(G_INSULTADJ2)
+	local noun = GetRandomElement(G_INSULTNOUN)
 	local pt1 = " a "
 	if string.find("aeiou", adj1:sub(1,1)) then
 		pt1 = " an "	--If first adjective starts with vowel, use proper grammar
@@ -262,9 +228,9 @@ local function addbad(channel, user, str)
 	end
 	for word in str:gmatch("%S+") do 
 		if word ~= "addbad" then
-			rawget(_G, "badwords")[word] = 1
-			rawget(_G, "badwords")[word.."s"] = 1
-			rawget(_G, "badwords")[word.."es"] = 1
+			G_BADWORDS[word] = 1
+			G_BADWORDS[word.."s"] = 1
+			G_BADWORDS[word.."es"] = 1
 		end
 	end
 end
@@ -276,9 +242,9 @@ local function addbird(channel, user, str)
 	end
 	for word in str:gmatch("%S+") do 
 		if word ~= "addbird" then
-			rawget(_G, "birdwords")[word] = 1
-			rawget(_G, "birdwords")[word.."s"] = 1
-			rawget(_G, "birdwords")[word.."es"] = 1
+			G_BIRDWORDS[word] = 1
+			G_BIRDWORDS[word.."s"] = 1
+			G_BIRDWORDS[word.."es"] = 1
 		end
 	end
 end
@@ -290,12 +256,13 @@ local function removeword(channel, user, str)
 	end
 	for word in str:gmatch("%S+") do 
 		if word ~= "removeword" and word ~= "rmword" then
-			rawget(_G, "badwords")[word] = nil
-			rawget(_G, "badwords")[word.."s"] = nil
-			rawget(_G, "badwords")[word.."es"] = nil
-			rawget(_G, "birdwords")[word] = nil
-			rawget(_G, "birdwords")[word.."s"] = nil
-			rawget(_G, "birdwords")[word.."es"] = nil
+			G_BADWORDS[word] = nil
+			print(G_BADWORDS[word])
+			G_BADWORDS[word.."s"] = nil
+			G_BADWORDS[word.."es"] = nil
+			G_BIRDWORDS[word] = nil
+			G_BIRDWORDS[word.."s"] = nil
+			G_BIRDWORDS[word.."es"] = nil
 		end
 	end
 end
@@ -341,15 +308,15 @@ local function settelluser(channel, user, str)
 	local person = string.gsub(str, "%S+", "", 1)	--Remove first word
 	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
 	person = string.gsub(person, "%s", "")		--Remove whitespace
-	if rawget(_G, "nicks")[person:lower()] then
+	if G_NICKS[person:lower()] then
 		say(channel, "Tell them yourself.")
 	else
 		local whattosay = string.gsub(str, "%S+%s+%S+%s+", "", 1)
-		local curstatement = rawget(_G, "totell")[person:lower()]
+		local curstatement = G_TOTELL[person:lower()]
 		if curstatement then	--If someone already said something, tack onto end of message
-			rawget(_G, "totell")[person:lower()] = curstatement..", and "..user.." says "..whattosay
+			G_TOTELL[person:lower()] = curstatement..", and "..user.." says "..whattosay
 		else
-			rawget(_G, "totell")[person:lower()] = person..": "..user.." says "..whattosay
+			G_TOTELL[person:lower()] = person..": "..user.." says "..whattosay
 		end
 	end
 end
@@ -367,7 +334,7 @@ local function addrss(channel, user, str)
 		feedurl = string.gsub(feedurl, "%s", "")				--Remove whitespace
 		local feedtitle,itemtitle,url = getLatestRSS(feedurl)	--Make sure this feed is valid
 		if feedtitle and itemtitle and url and feedtitle:len() > 0 and itemtitle:len() > 0 and url:len() > 0 then
-			rawget(_G, "rssfeeds")[feedurl] = "["..feedtitle.."] "..itemtitle.." -- "..url
+			G_RSSFEEDS[feedurl] = "["..feedtitle.."] "..itemtitle.." -- "..url
 		else
 			say(channel, "Invalid feed URL")
 		end
@@ -375,12 +342,12 @@ local function addrss(channel, user, str)
 end
 
 local function checkrss()
-	for key, val in pairs(rawget(_G, "rssfeeds")) do
+	for key, val in pairs(G_RSSFEEDS) do
 		local feedtitle,itemtitle,url = getLatestRSS(key)
 		if feedtitle and itemtitle and url and feedtitle:len() > 0 and itemtitle:len() > 0 and url:len() > 0 then
 			local result = "["..feedtitle.."] "..itemtitle.." -- "..url
 			if result ~= val then
-				rawget(_G, "rssfeeds")[key] = result
+				G_RSSFEEDS[key] = result
 				say(getchannel(), result)	--New feed update; say so
 			end
 		end

@@ -26,7 +26,9 @@ rawset(_G, "msgbox", msgbox_bt)
 local gmeta = {
 
     __index = function(t, k)
-        msgbox_bt("WARNING: Access to undefined global variable '" .. tostring(k) .. "'\n", 3)
+		if not looksLikeGlobal(k) then
+			msgbox_bt("WARNING: Access to undefined global variable '" .. tostring(k) .. "'\n", 3)
+		end
     end,
     
     __newindex = function(t, k, v)

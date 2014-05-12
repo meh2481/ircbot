@@ -9,12 +9,12 @@ local function savetable(tab, filename)
 end
 
 local function saveall()
-	savetable(birdwords, "birdwords.txt")
-	savetable(badwords, "badwords.txt")
-	savetable(lastseen, "lastseen.txt")
-	savetable(lastmessage, "lastmessage.txt")
-	savetable(totell, "txt/totell.txt")
-	savetable(rssfeeds, "txt/rssfeeds.txt")
+	savetable(G_BIRDWORDS, "birdwords.txt")
+	savetable(G_BADWORDS, "badwords.txt")
+	savetable(G_LASTSEEN, "lastseen.txt")
+	savetable(G_LASTMESSAGE, "lastmessage.txt")
+	savetable(G_TOTELL, "txt/totell.txt")
+	savetable(G_RSSFEEDS, "txt/rssfeeds.txt")
 end
 setglobal("saveall", saveall)
 
@@ -28,26 +28,26 @@ local function loadtable(filename)
 end
 
 local function restoreall()
-	birdwords = loadtable("birdwords.txt")
-	badwords = loadtable("badwords.txt")
+	G_BIRDWORDS = loadtable("birdwords.txt")
+	G_BADWORDS = loadtable("badwords.txt")
 	local tmpmsg = loadtable("lastseen.txt")
 	if tmpmsg then
-		lastseen = tmpmsg
+		G_LASTSEEN = tmpmsg
 	end
 	tmpmsg = loadtable("lastmessage.txt")
 	if tmpmsg then
-		lastmessage = tmpmsg
+		G_LASTMESSAGE = tmpmsg
 	end
-	insultadj1 = loadtable("txt/insult_adj1.txt")
-	insultadj2 = loadtable("txt/insult_adj2.txt")
-	insultnoun = loadtable("txt/insult_noun.txt")
+	G_INSULTADJ1 = loadtable("txt/insult_adj1.txt")
+	G_INSULTADJ2 = loadtable("txt/insult_adj2.txt")
+	G_INSULTNOUN = loadtable("txt/insult_noun.txt")
 	local ttell = loadtable("txt/totell.txt")
 	if ttell then
-		totell = ttell
+		G_TOTELL = ttell
 	end
 	local rfeeds = loadtable("txt/rssfeeds.txt")
 	if rfeeds then
-		rssfeeds = rfeeds
+		G_RSSFEEDS = rfeeds
 	end
 end
 setglobal("restoreall", restoreall)
