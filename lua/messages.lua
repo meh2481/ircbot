@@ -99,11 +99,16 @@ local function left(channel, user)
 	G_NICKS[string.lower(user)] = nil
 end
 
-local function kicked(channel, user)
-	say(channel, "Trololol")
-	G_LASTSEEN[string.lower(user)] = os.time()
-	G_LASTMESSAGE[string.lower(user)] = "being kicked from IRC"
-	G_NICKS[string.lower(user)] = nil
+local function kicked(channel, user, buf)
+	local userkicked = buf:gsub("(%S+)%s+(%S+)%s+(%S+)%s+(%S+)%s+(%S+).*", "%4")
+	if userkicked == getnick() then
+		rejoin(channel)				--If I've gotten kicked, rejoin in 2 mins
+	else
+		say(channel, "Trololol")	--Bask in the hilarity of another user getting kicked
+		G_LASTSEEN[string.lower(user)] = os.time()
+		G_LASTMESSAGE[string.lower(user)] = "being kicked from IRC"
+		G_NICKS[string.lower(user)] = nil
+	end
 end
 
 local function nicklist(channel, user, buf)
