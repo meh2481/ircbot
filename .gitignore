@@ -5,6 +5,7 @@ ircbot_test.exe
 lastseen.txt
 lastmessage.txt
 txt/totell.txt
+txt/rssfeeds.txt
 Heartbleed.exe
 Heartbleed
 *.a

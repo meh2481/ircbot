@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 	raw("NICK %s\r\n", nick);
 	while(!bDone)
 	{
-		//Save every five minutes
+		//Save & check RSS feeds every five minutes
 		if(getTicks() > curTime + 5*60*1000)
 		{
 			curTime = getTicks();
@@ -57,6 +57,7 @@ int main(int argc, char** argv)
 			printf("Saving all...\n");
 			#endif
 			Lua.call("saveall");
+			Lua.call("checkrss");
 		}
 		
 		//Select loop so we can tell if we've timed out

@@ -1,19 +1,20 @@
 #include "luafuncs.h"
 #include "luainterface.h"
 #include "bot.h"
+#include "tinyxml2.h"
 
 extern const char *nick;
 extern const char *channel;
 
-#define MAX_ATTEMPT_LEN	4096	//4kB should be plenty
+#define MAX_TITLE_ATTEMPT_LEN	4096	//4kB should be plenty
 static string sBuf;
 static bool bStop;
 static string sRedir;
-//Class for fetching a file from a URL
-class HttpSimpleSocket : public minihttp::HttpSocket
+//Class for fetching just the title of a page from a URL
+class HttpTitleSearch : public minihttp::HttpSocket
 {
 public:
-    virtual ~HttpSimpleSocket() {}
+    virtual ~HttpTitleSearch() {}
 
 protected:
     virtual void _OnRecv(char *buf, unsigned int size)
@@ -26,11 +27,51 @@ protected:
 			
         for(char* i = buf; i < buf+size; i++)
 			sBuf.push_back(*i);
-		if(sBuf.size() >= MAX_ATTEMPT_LEN || sBuf.find("</title>") != string::npos)
+		if(sBuf.size() >= MAX_TITLE_ATTEMPT_LEN || sBuf.find("</title>") != string::npos)
 			//Shutdown socket; if we haven't hit it by now, we likely won't.
 			bStop = true;
     }
 };
+
+#define MAX_DOWNLOAD_SIZE 1048576	//1 MB oughta be plenty
+class HttpGet : public minihttp::HttpSocket
+{
+public:
+    virtual ~HttpGet() {}
+
+protected:
+    virtual void _OnRecv(char *buf, unsigned int size)
+    {
+		if(IsRedirecting())
+			sRedir = Hdr("location");
+		
+        if(!size)
+            return;
+			
+        for(char* i = buf; i < buf+size; i++)
+			sBuf.push_back(*i);
+		if(sBuf.size() >= MAX_DOWNLOAD_SIZE)
+			bStop = true;
+    }
+};
+
+string HTTPGet(string sURL)
+{
+	sBuf.clear();
+	bStop = false;
+	HttpGet *ht = new HttpGet;
+
+    ht->SetKeepAlive(5);
+    ht->SetBufsizeIn(MAX_TITLE_ATTEMPT_LEN);
+	ht->Download(sURL);
+	ht->SetAlwaysHandle(true);
+	minihttp::SocketSet ss;
+    ss.add(ht, true);
+	while(ss.size() && !bStop)	//Just spin here
+        ss.update();
+	
+	return sBuf;
+}
 
 luaFunc(sleep)	//seconds
 {
@@ -57,14 +98,15 @@ luaFunc(join)	//channel
 
 luaFunc(getURLTitle)	//URL
 {
+	sBuf.clear();
 	string sURL = lua_tostring(L,1);
 	string sRet;
 	bStop = false;
 	sRedir.clear();
-	HttpSimpleSocket *ht = new HttpSimpleSocket;
+	HttpTitleSearch *ht = new HttpTitleSearch;
 
     ht->SetKeepAlive(5);
-    ht->SetBufsizeIn(MAX_ATTEMPT_LEN);
+    ht->SetBufsizeIn(MAX_TITLE_ATTEMPT_LEN);
 	ht->Download(sURL);
 	ht->SetAlwaysHandle(true);
 	minihttp::SocketSet ss;
@@ -81,9 +123,66 @@ luaFunc(getURLTitle)	//URL
 			sRet = sBuf.substr(start+7, stop-(start+7));
 	}
 	
-	sBuf.clear();
-	
-	luaReturnStrings(sRet.c_str(), sRedir.c_str());
+	luaReturn2Strings(sRet.c_str(), sRedir.c_str());
+}
+
+luaFunc(getLatestRSS)
+{
+	string sURL = lua_tostring(L,1);
+	string sResult = HTTPGet(sURL);
+	if(!sResult.size())
+		luaReturnNil();
+	tinyxml2::XMLDocument* doc = new tinyxml2::XMLDocument;
+	tinyxml2::XMLError err = doc->Parse(sResult.c_str());	//Parse this as XML document
+	if(err != tinyxml2::XML_NO_ERROR)
+	{
+		delete doc;
+		luaReturnNil();
+	}
+	string feedtitle, itemtitle, url;
+	tinyxml2::XMLElement* root = doc->RootElement();
+	if(root != NULL)
+	{
+		tinyxml2::XMLElement* channel = root->FirstChildElement("channel");
+		if(channel != NULL)
+		{
+			tinyxml2::XMLElement* ftitle = channel->FirstChildElement("title");
+			const char* cTitle = ftitle->GetText();
+			if(cTitle != NULL)
+				feedtitle = cTitle;
+			tinyxml2::XMLElement* item = channel->FirstChildElement("item");
+			if(item != NULL)
+			{
+				tinyxml2::XMLElement* ititle = item->FirstChildElement("title");
+				if(ititle != NULL)
+				{
+					const char* cTitle2 = ititle->GetText();
+					if(cTitle2 != NULL)
+						itemtitle = cTitle2;
+				}
+				tinyxml2::XMLElement* link = item->FirstChildElement("link");
+				if(link != NULL)
+				{
+					const char* cLink = link->GetText();
+					if(cLink != NULL)
+						url = cLink;
+				}
+				else	//Infiniteammo.ca special case: seems to slap it all into an "enclosure" tag
+				{
+					tinyxml2::XMLElement* enclosure = item->FirstChildElement("enclosure");
+					if(enclosure != NULL)
+					{
+						const char* cURL = enclosure->Attribute("url");
+						if(cURL != NULL)
+							url = cURL;
+					}
+				}
+			}
+		}
+	}
+	//Done; clear it all out
+	delete doc;
+	luaReturn3Strings(feedtitle.c_str(), itemtitle.c_str(), url.c_str());
 }
 
 luaFunc(getnick)
@@ -113,6 +212,7 @@ static LuaFunctions s_functab[] =
 	luaRegister(getnick),
 	luaRegister(getchannel),
 	luaRegister(done),
+	luaRegister(getLatestRSS),
 	{NULL, NULL}
 };
 

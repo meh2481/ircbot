@@ -1,8 +1,8 @@
 OS = $(shell uname -s)
-LIBS = ./dep/lua/liblua.a
+LIBS = ./dep/lua/liblua.a ./dep/tinyxml2/libtinyxml2.a
 OBJECTS = bot.o network.o minihttp.o luainterface.o luafuncs.o
 CXXFLAGS = -Wno-write-strings
-INCLUDE = -I./dep/lua
+INCLUDE = -I./dep/lua -I./dep/tinyxml2
 CC = g++
 
 TARGET = ircbot
@@ -18,7 +18,7 @@ else
     LIBS := $(LIBS) -lrt
 endif
 
-all: lua $(TARGET)
+all: lua tinyxml2 $(TARGET)
 
 %.o: %.cpp
 	$(CC) -g -c -o $@ $< $(CXXFLAGS) $(INCLUDE)
@@ -33,6 +33,9 @@ clean-bin:
 	
 lua:
 	cd dep/lua && make
+	
+tinyxml2:
+	cd dep/tinyxml2 && make
 	
 $(TARGET): $(OBJECTS)
 	$(CC) -g -o $(TARGET) $(OBJECTS) $(LIBS)

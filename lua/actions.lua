@@ -60,6 +60,12 @@ if not totell then
 	setglobal(".totell", totell)
 end
 
+local rssfeeds = rawget(_G, ".rssfeeds")
+if not rssfeeds then
+	rssfeeds = {}
+	setglobal(".rssfeeds", rssfeeds)
+end
+
 setglobal("lastseen", lastseen)
 setglobal("lastmessage", lastmessage)
 setglobal("nicks", nicks)
@@ -70,6 +76,7 @@ setglobal("insultadj1", insultadj1)
 setglobal("insultadj2", insultadj2)
 setglobal("insultnoun", insultnoun)
 setglobal("totell", totell)
+setglobal("rssfeeds", rssfeeds)
 
 local function trim(s)
   return s:match'^%s*(.*%S)' or ''
@@ -318,7 +325,7 @@ end
 local function randxkcd(channel)
 	local title,url = gettitle("http://dynamic.xkcd.com/random/comic/")	--Grab the URL and page title of a random xkcd comic
 	--Display both, or error if can't fetch
-	if string.len(url) > 0 then
+	if url and string.len(url) > 0 then
 		local xtitle = gettitle(url)	--For some reason, the title breaks, so fetch again
 		if string.len(xtitle) > 0 then
 			say(channel, '['..xtitle..']'..' - '..url)
@@ -334,15 +341,15 @@ local function settelluser(channel, user, str)
 	local person = string.gsub(str, "%S+", "", 1)	--Remove first word
 	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
 	person = string.gsub(person, "%s", "")		--Remove whitespace
-	if rawget(_G, ".nicks")[person:lower()] then
+	if rawget(_G, "nicks")[person:lower()] then
 		say(channel, "Tell them yourself.")
 	else
 		local whattosay = string.gsub(str, "%S+%s+%S+%s+", "", 1)
-		local curstatement = rawget(_G, ".totell")[person:lower()]
+		local curstatement = rawget(_G, "totell")[person:lower()]
 		if curstatement then	--If someone already said something, tack onto end of message
-			rawget(_G, ".totell")[person:lower()] = curstatement..", and "..user.." says "..whattosay
+			rawget(_G, "totell")[person:lower()] = curstatement..", and "..user.." says "..whattosay
 		else
-			rawget(_G, ".totell")[person:lower()] = person..": "..user.." says "..whattosay
+			rawget(_G, "totell")[person:lower()] = person..": "..user.." says "..whattosay
 		end
 	end
 end
@@ -350,6 +357,36 @@ end
 local function wikisearch(channel, user, str)
 	search(channel, str, "http://en.wikipedia.org/wiki/Special:Search?search=", "&go=Go")
 end
+
+local function addrss(channel, user, str)
+	if not isadmin(user) then
+		say(channel, "You don't have the privileges for this command.")
+	else
+		local feedurl = string.gsub(str, "%S+", "", 1)	--Remove first word
+		feedurl = string.gsub(feedurl, "(%S+).*", "%1")	--Remove trailing words
+		feedurl = string.gsub(feedurl, "%s", "")		--Remove whitespace
+		local title = gettitle(feedurl)
+		if title and title:len() > 0 then	--Make sure title is valid
+			rawget(_G, "rssfeeds")[feedurl] = 1
+		else
+			say(channel, "Invalid feed URL")
+		end
+	end
+end
+
+local function checkrss()
+	for key, val in pairs(rawget(_G, "rssfeeds")) do
+		local feedtitle,itemtitle,url = getLatestRSS(key)
+		if feedtitle and itemtitle and url and feedtitle:len() > 0 and itemtitle:len() > 0 and url:len() > 0 then
+			local result = "["..feedtitle.."] "..itemtitle.." -- "..url
+			if result ~= val then
+				rawget(_G, "rssfeeds")[key] = result
+				say(getchannel(), result)	--New feed update; say so
+			end
+		end
+	end
+end
+setglobal("checkrss", checkrss)
 
 local help
 
@@ -401,6 +438,8 @@ local functab = {
 	["lmgtfy"] = 	lmgtfy,
 	["tell"] =		settelluser,
 	["wp"] = 		wikisearch,
+	["addrss"] = 	addrss,
+	["checkrss"] = 	checkrss,
 }
 
 local funchelp = {
@@ -448,7 +487,9 @@ local funchelp = {
 	["help"] = 		'displays this message',
 	["xkcd"] =		'displays a random xkcd comic',
 	["lmgtfy"] = 	'lets me google that for you',
-	["tell"] = 		'gives a user a message next time they join (Usage: \"!tell [nick] [message]\")'
+	["tell"] = 		'gives a user a message next time they join (Usage: \"!tell [nick] [message]\")',
+	["addrss"] =	'adds a feed to the RSS reader (ADMIN ONLY)',
+	["checkrss"] = 	'forces a check of all RSS feeds (happens automatically every 5 minutes)',
 }
 
 help = function(channel, str)

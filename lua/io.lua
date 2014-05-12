@@ -14,6 +14,7 @@ local function saveall()
 	savetable(lastseen, "lastseen.txt")
 	savetable(lastmessage, "lastmessage.txt")
 	savetable(totell, "txt/totell.txt")
+	savetable(rssfeeds, "txt/rssfeeds.txt")
 end
 setglobal("saveall", saveall)
 
@@ -43,6 +44,10 @@ local function restoreall()
 	local ttell = loadtable("txt/totell.txt")
 	if ttell then
 		totell = ttell
+	end
+	local rfeeds = loadtable("txt/rssfeeds.txt")
+	if rfeeds then
+		rssfeeds = rfeeds
 	end
 end
 setglobal("restoreall", restoreall)
