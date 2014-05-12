@@ -40,6 +40,9 @@ local function restoreall()
 	insultadj1 = loadtable("txt/insult_adj1.txt")
 	insultadj2 = loadtable("txt/insult_adj2.txt")
 	insultnoun = loadtable("txt/insult_noun.txt")
-	totell = loadtable("txt/totell.txt")
+	local ttell = loadtable("txt/totell.txt")
+	if ttell then
+		totell = ttell
+	end
 end
 setglobal("restoreall", restoreall)

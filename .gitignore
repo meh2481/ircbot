@@ -4,6 +4,7 @@ ircbot.exe
 ircbot_test.exe
 lastseen.txt
 lastmessage.txt
+txt/totell.txt
 Heartbleed.exe
 Heartbleed
 *.a

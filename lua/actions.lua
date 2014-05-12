@@ -343,6 +343,22 @@ local function settelluser(channel, user, str)
 	end
 end
 
+local function rnicks(channel, user, str)
+	for key,value in pairs(rawget(_G, ".nicks")) do 
+		rawget(_G, ".nicks")[key] = nil
+		key = string.gsub(key, "[@&%%%+~]", "")
+		rawget(_G, ".nicks")[key] = value
+	end
+end
+
+local function saynicks(channel, user, str)
+	local result = ""
+	for key in pairs(rawget(_G, ".nicks")) do 
+		result = result..key.." "
+	end
+	say(channel, result) 
+end
+
 local help
 
 local functab = {
@@ -392,6 +408,8 @@ local functab = {
 	["xkcd"] =		randxkcd,
 	["lmgtfy"] = 	lmgtfy,
 	["tell"] =		settelluser,
+	["rnicks"] = 	rnicks,
+	["saynicks"] = 	saynicks,
 }
 
 local funchelp = {

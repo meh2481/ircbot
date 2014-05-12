@@ -106,6 +106,7 @@ end
 
 local function nicklist(channel, user, buf)
 	buf = string.gsub(buf, ":.+:", "")
+	buf = string.gsub(buf, "[@&%%%+~]", "")	--Get rid of nick op symbols and such (TODO: Save who the ops are)
 	for n in string.gmatch(buf, "%S+") do 
 		nicks[string.lower(n)] = 1
 	end
