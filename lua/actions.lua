@@ -186,6 +186,19 @@ local function getbitcoin(channel)
 	say(channel, diff)
 end
 
+local function nickservget(cmd, msg)
+	if cmd == "NOTICE" then
+		local person = trim(msg:gsub("(%S+)%s*(%S+)%s*(%S+).*", "%1"))	--Get person (First field)
+		local acc = trim(msg:gsub("(%S+)%s*(%S+)%s*(%S+).*", "%2"))		--Get second field (Should be "ACC")
+		local val = trim(msg:gsub("(%S+)%s*(%S+)%s*(%S+).*", "%3"))		--Get value to see if user is registered or not
+		
+		say(getchannel(), "|"..person.."|"..acc.."|"..val.."|")
+		if acc == "ACC" and val == "3" then
+			
+		end
+	end
+end
+
 local function isadmin(user)
 	if user == "Daxar" then
 		return true	--TODO: Admin list
@@ -260,7 +273,6 @@ local function removeword(channel, user, str)
 	for word in str:gmatch("%S+") do 
 		if word ~= "removeword" and word ~= "rmword" then
 			G_BADWORDS[word] = nil
-			print(G_BADWORDS[word])
 			G_BADWORDS[word.."s"] = nil
 			G_BADWORDS[word.."es"] = nil
 			G_BIRDWORDS[word] = nil
@@ -358,6 +370,19 @@ local function checkrss()
 end
 setglobal("checkrss", checkrss)
 
+local function joinchannel(channel, user, str)
+	if not isadmin(user) then
+		say(channel, "You don't have the privileges for this command.")
+	else
+		local chan = trim(str:gsub("%S+", "", 1))	--Remove first word
+		join(chan)
+	end
+end
+
+local function testfunc(channel, user, str)
+	raw("PRIVMSG NickServ :acc Daxar\r\n")
+end
+
 local help
 
 local functab = {
@@ -410,6 +435,8 @@ local functab = {
 	["wp"] = 		wikisearch,
 	["addrss"] = 	addrss,
 	["checkrss"] = 	checkrss,
+	["test"] = 		testfunc,
+	["join"] =		joinchannel,
 }
 
 local funchelp = {

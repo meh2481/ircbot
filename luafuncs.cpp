@@ -91,6 +91,12 @@ luaFunc(action)	//channel, msg
 	luaReturnNil();
 }
 
+luaFunc(raw)
+{
+	raw(lua_tostring(L,1));
+	luaReturnNil();
+}
+
 luaFunc(join)	//channel
 {
 	raw("JOIN %s\r\n", lua_tostring(L,1));
@@ -207,6 +213,7 @@ static LuaFunctions s_functab[] =
 	luaRegister(sleep),
 	luaRegister(say),
 	luaRegister(action),
+	luaRegister(raw),
 	luaRegister(join),
 	luaRegister(getURLTitle),
 	luaRegister(getnick),
