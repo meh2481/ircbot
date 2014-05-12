@@ -13,6 +13,7 @@ local function saveall()
 	savetable(badwords, "badwords.txt")
 	savetable(lastseen, "lastseen.txt")
 	savetable(lastmessage, "lastmessage.txt")
+	savetable(totell, "txt/totell.txt")
 end
 setglobal("saveall", saveall)
 
@@ -39,5 +40,6 @@ local function restoreall()
 	insultadj1 = loadtable("txt/insult_adj1.txt")
 	insultadj2 = loadtable("txt/insult_adj2.txt")
 	insultnoun = loadtable("txt/insult_noun.txt")
+	totell = loadtable("txt/totell.txt")
 end
 setglobal("restoreall", restoreall)

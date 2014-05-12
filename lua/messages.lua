@@ -76,10 +76,19 @@ local function rejoin(channel)
 	join(channel)
 end
 
+local function tellnow(channel, user)
+	user = user:lower()
+	if totell[user] then
+		say(channel, totell[user])
+		totell[user] = nil	--Wipe this message from inbox
+	end
+end
+
 local function joined(channel, user)
 	lastseen[string.lower(user)] = os.time()
 	lastmessage[string.lower(user)] = "joining IRC"
 	nicks[string.lower(user)] = 1;
+	tellnow(channel, user)
 end
 
 local function left(channel, user)

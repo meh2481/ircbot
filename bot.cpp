@@ -168,7 +168,7 @@ int main(int argc, char** argv)
 							target = where; else target = user;
 						
 						//Check for reload
-						if(!strncmp(message, "!reload", 7))
+						if(!strncmp(message, "!reload", 7) && !strncmp(user, "Daxar", 5))
 						{
 							#ifdef DEBUG
 							printf("Reloading\n");

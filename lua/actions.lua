@@ -54,6 +54,12 @@ if not insultnoun then
 	setglobal(".insultnoun", insultnoun)
 end
 
+local totell = rawget(_G, ".totell")
+if not totell then
+	totell = {}
+	setglobal(".totell", totell)
+end
+
 setglobal("lastseen", lastseen)
 setglobal("lastmessage", lastmessage)
 setglobal("nicks", nicks)
@@ -63,6 +69,7 @@ setglobal("starttime", starttime)
 setglobal("insultadj1", insultadj1)
 setglobal("insultadj2", insultadj2)
 setglobal("insultnoun", insultnoun)
+setglobal("totell", totell)
 
 local function trim(s)
   return s:match'^%s*(.*%S)' or ''
@@ -144,11 +151,11 @@ end
 local function botsnack(channel, act, user)
 	--Some kid's starving in Japan, so just eat it
 	local eatit = {
-		[1] = "happily grabs "..act.." from "..user.." and runs away to bury it",
-		[2] = "grabs "..act.." and scarfs it down hungrily",
-		[3] = "goes om nom nom",
+		"happily grabs "..act.." from "..user.." and runs away to bury it",
+		"grabs "..act.." and scarfs it down hungrily",
+		"goes om nom nom",
 	}
-	action(channel, eatit[math.random(3)])
+	action(channel, eatit[math.random(#eatit)])
 end
 
 local function GetRandomElement(a)
@@ -319,6 +326,23 @@ local function randxkcd(channel)
 	end
 end
 
+local function settelluser(channel, user, str)
+	local person = string.gsub(str, "%S+", "", 1)	--Remove first word
+	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
+	person = string.gsub(person, "%s", "")		--Remove whitespace
+	if rawget(_G, ".nicks")[person:lower()] then
+		say(channel, "Tell them yourself.")
+	else
+		local whattosay = string.gsub(str, "%S+%s+%S+%s+", "", 1)
+		local curstatement = rawget(_G, ".totell")[person:lower()]
+		if curstatement then	--If someone already said something, tack onto end of message
+			rawget(_G, ".totell")[person:lower()] = curstatement..", and "..user.." says "..whattosay
+		else
+			rawget(_G, ".totell")[person:lower()] = person..": "..user.." says "..whattosay
+		end
+	end
+end
+
 local help
 
 local functab = {
@@ -367,6 +391,7 @@ local functab = {
 	["action"] =	sayact,
 	["xkcd"] =		randxkcd,
 	["lmgtfy"] = 	lmgtfy,
+	["tell"] =		settelluser,
 }
 
 local funchelp = {
@@ -413,6 +438,7 @@ local funchelp = {
 	["help"] = 		'displays this message',
 	["xkcd"] =		'displays a random xkcd comic',
 	["lmgtfy"] = 	'lets me google that for you',
+	["tell"] = 		'gives a user a message next time they join (Usage: \"!tell [nick] [message]\")'
 }
 
 help = function(channel, str)
