@@ -226,16 +226,20 @@ local function quit(channel, user)
 	end
 end
 
-local function search(channel, str)
-	local searchquery = string.gsub(str, "%S+%s", "", 1)	--Remove first word
-	searchquery = string.gsub(searchquery, "%s", "+")	--Replace all whitespace with +
-	local title,url = gettitle("http://www.google.com/search?q="..searchquery.."&btnI")	--Grab the URL and page title
+local function search(channel, str, startstr, endstr)
+	local searchquery = string.gsub(str, "%S+%s", "", 1)		--Remove first word
+	searchquery = string.gsub(searchquery, "%s", "+")			--Replace all whitespace with +
+	local title,url = gettitle(startstr..searchquery..endstr)	--Grab the URL and page title
 	--Display both, or error if can't fetch
 	if string.len(title) > 0 and string.len(url) > 0 then
 		say(channel, '['..title..']'..' - '..url)
 	else
 		say(channel, "Unable to fetch link.")
 	end
+end
+
+local function googlesearch(channel, user, str)
+	search(channel, str, "http://www.google.com/search?q=", "&btnI")
 end
 
 local function lmgtfy(channel, user, str)
@@ -343,6 +347,10 @@ local function settelluser(channel, user, str)
 	end
 end
 
+local function wikisearch(channel, user, str)
+	search(channel, str, "http://en.wikipedia.org/wiki/Special:Search?search=", "&go=Go")
+end
+
 local help
 
 local functab = {
@@ -358,8 +366,8 @@ local functab = {
 	["dime"] = 		coin,
 	["penny"] = 	coin,
 	["bitcoin"] = 	getbitcoin,
-	["search"] = 	function(channel, user, str) search(channel, str) end,
-	["google"] = 	function(channel, user, str) search(channel, str) end,
+	["search"] = 	googlesearch,
+	["google"] = 	googlesearch,
 	["8ball"] = 	eightball,
 	["eightball"] = eightball,
 	["eight"] = 	eightball,
@@ -392,6 +400,7 @@ local functab = {
 	["xkcd"] =		randxkcd,
 	["lmgtfy"] = 	lmgtfy,
 	["tell"] =		settelluser,
+	["wp"] = 		wikisearch,
 }
 
 local funchelp = {
@@ -409,6 +418,7 @@ local funchelp = {
 	["bitcoin"] = 	'returns the current bitcoin mining complexity',
 	["search"] = 	'searches Google for the given search query and returns the first result (\"I\'m Feeling Lucky\" search)',
 	["google"] = 	'searches Google for the given search query and returns the first result (\"I\'m Feeling Lucky\" search)',
+	["wp"] =		'searches Wikipedia for the given search query',
 	["8ball"] = 	'shakes a Magic 8-ball and says the result',
 	["eightball"] = 'shakes a Magic 8-ball and says the result',
 	["eight"] = 	'shakes a Magic 8-ball and says the result',
