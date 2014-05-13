@@ -1,6 +1,8 @@
 dofile("lua/globaltest.lua")
+dofile("lua/globals.lua")
 dofile("lua/serialize.lua")
 dofile("lua/io.lua")
+dofile("lua/adminactions.lua")
 dofile("lua/actions.lua")
 dofile("lua/messages.lua")
 
