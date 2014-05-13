@@ -50,6 +50,10 @@ if not G_ADMINS then
 	G_ADMINS = {["daxar"]=true,}
 end
 
+if not LOGFILE then
+	LOGFILE = assert(io.open("txt/log.txt", "a"))
+end
+
 local function trim(s)
   return s:match'^%s*(.*%S)' or ''
 end
@@ -234,6 +238,7 @@ local function quit(channel, user, str, admin)
 	if admin~=nil then
 		if admin == true then
 			saveall()
+			LOGFILE:close()
 			done()
 		else
 			say(channel, "You wish.")

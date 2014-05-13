@@ -9,6 +9,11 @@ local function gotmessage(user, cmd, where, target, message)
 	message = message:gsub("\r", "")	--Strip off \r\n
 	message = message:gsub("\n", "")
 	
+	--Write out to our log
+	if LOGFILE then
+		LOGFILE:write(where..": <"..user.."> "..message.."\n")
+	end
+	
 	if user == "NickServ" then
 		nickservget(cmd, message)
 	else
