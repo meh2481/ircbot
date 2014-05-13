@@ -12,6 +12,7 @@ local function gotmessage(user, cmd, where, target, message)
 	--Write out to our log
 	if LOGFILE then
 		LOGFILE:write(where..": <"..user.."> "..message.."\n")
+		LOGFILE:flush()	--Go ahead and write out to the file now
 	end
 	
 	if user == "NickServ" then
