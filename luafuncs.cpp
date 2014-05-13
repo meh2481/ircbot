@@ -3,9 +3,6 @@
 #include "bot.h"
 #include "tinyxml2.h"
 
-extern const char *nick;
-extern const char *channel;
-
 #define MAX_TITLE_ATTEMPT_LEN	4096	//4kB should be plenty
 static string sBuf;
 static bool bStop;
@@ -67,7 +64,8 @@ string HTTPGet(string sURL)
 	ht->SetAlwaysHandle(true);
 	minihttp::SocketSet ss;
     ss.add(ht, true);
-	while(ss.size() && !bStop)	//Just spin here
+	uint32_t startTicks = getTicks();
+	while(ss.size() && !bStop && getTicks() < startTicks + 1000*10)	//Just spin here (for a maximum of 10 seconds)
         ss.update();
 	
 	return sBuf;
@@ -117,7 +115,8 @@ luaFunc(getURLTitle)	//URL
 	ht->SetAlwaysHandle(true);
 	minihttp::SocketSet ss;
     ss.add(ht, true);
-	while(ss.size() && !bStop)	//Just spin here
+	uint32_t startTicks = getTicks();
+	while(ss.size() && !bStop && getTicks() < startTicks + 1000*5)	//Just spin here for a maximum of 5 seconds
         ss.update();
 		
 	//Ok, now we have data in sBuf, parse for title
@@ -193,7 +192,15 @@ luaFunc(getLatestRSS)
 
 luaFunc(getnick)
 {
-	luaReturnStr(nick);
+	luaReturnStr(nick.c_str());
+}
+
+luaFunc(newnick)
+{
+	nick = nick + "_";	//Tack underscore onto end
+	raw("USER %s 0 0 :%s\r\n", nick.c_str(), nick.c_str());
+	raw("NICK %s\r\n", nick.c_str());
+	luaReturnNil();
 }
 
 luaFunc(getchannel)
@@ -227,6 +234,7 @@ static LuaFunctions s_functab[] =
 	luaRegister(done),
 	luaRegister(reload),
 	luaRegister(getLatestRSS),
+	luaRegister(newnick),
 	{NULL, NULL}
 };
 

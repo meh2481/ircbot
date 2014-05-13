@@ -7,11 +7,10 @@
 int conn;
 bool bDone = false;
 bool bShouldReload = false;
+string nick = "immabot";
 #ifdef DEBUG
-const char *nick = "immabot_";
 const char *channel = "#bitbottest";
 #else
-const char *nick = "immabot";
 const char *channel = "#bitblot";
 #endif
 
@@ -46,8 +45,8 @@ int main(int argc, char** argv)
 	
 	while(!setupConnection(host, port, &conn)) sleep(10);	//Spin here and wait for connection	
 	
-	raw("USER %s 0 0 :%s\r\n", nick, nick);
-	raw("NICK %s\r\n", nick);
+	raw("USER %s 0 0 :%s\r\n", nick.c_str(), nick.c_str());
+	raw("NICK %s\r\n", nick.c_str());
 	while(!bDone)
 	{
 		if(bShouldReload)
@@ -92,8 +91,8 @@ int main(int argc, char** argv)
 				#endif
 				close(conn);
 				while(!setupConnection(host, port, &conn)) sleep(10);
-				raw("USER %s 0 0 :%s\r\n", nick, nick);
-				raw("NICK %s\r\n", nick);
+				raw("USER %s 0 0 :%s\r\n", nick.c_str(), nick.c_str());
+				raw("NICK %s\r\n", nick.c_str());
 				continue;
 			}
 			raw("PING :%s\r\n", "immabotbeep");
@@ -114,8 +113,8 @@ int main(int argc, char** argv)
 				timingOut = true;
 				close(conn);
 				while(!setupConnection(host, port, &conn)) sleep(10);
-				raw("USER %s 0 0 :%s\r\n", nick, nick);
-				raw("NICK %s\r\n", nick);
+				raw("USER %s 0 0 :%s\r\n", nick.c_str(), nick.c_str());
+				raw("NICK %s\r\n", nick.c_str());
 				continue;
 			}
 		}

@@ -42,8 +42,11 @@ using namespace std;
 extern int conn;
 extern bool bDone;
 extern bool bShouldReload;
-extern const char *nick;
+extern string nick;
 extern const char *channel;
+
+//bot.cpp functions
+uint32_t getTicks();
 
 //network.cpp functions
 void initNetworking();

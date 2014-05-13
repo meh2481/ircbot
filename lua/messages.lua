@@ -144,6 +144,7 @@ local function command(channel, cmd, user, buf)
 		["KICK"] = kicked,
 		["353"] = nicklist,
 		["404"] = rejoin,
+		["433"] = newnick,
 		["NICK"] = changenick,
 	}
 	

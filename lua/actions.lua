@@ -12,7 +12,7 @@ local function seen(channel, user, message)
 		say(channel, "The last time I saw straight was... Hey! I can see perfectly fine, thank you.")
 	elseif person == getnick() then
 		action(channel, "finds mirror")
-		say(channel, "Oh, who IS that good-looking bot I see?")
+		say(channel, "Oh, who IS that handsome fellow?")
 	elseif G_LASTSEEN[string.lower(person)] then
 		local diff = os.time() - G_LASTSEEN[string.lower(person)]
 		local seconds = math.floor(diff % 60)
@@ -163,7 +163,6 @@ end
 
 local function randxkcd(channel)
 	local title,url = gettitle("http://dynamic.xkcd.com/random/comic/")	--Grab the URL and page title of a random xkcd comic
-	--Display both, or error if can't fetch
 	if url and string.len(url) > 0 then
 		local xtitle = gettitle(url)	--For some reason, the title breaks, so fetch again
 		if string.len(xtitle) > 0 then
@@ -179,7 +178,7 @@ end
 local function settelluser(channel, user, str)
 	local person = string.gsub(str, "%S+", "", 1)	--Remove first word
 	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
-	person = string.gsub(person, "%s", "")		--Remove whitespace
+	person = string.gsub(person, "%s", "")			--Remove whitespace
 	if G_NICKS[person:lower()] then
 		say(channel, "Tell them yourself.")
 	else
