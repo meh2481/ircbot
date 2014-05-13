@@ -41,6 +41,7 @@ using namespace std;
 
 extern int conn;
 extern bool bDone;
+extern bool bShouldReload;
 extern const char *nick;
 extern const char *channel;
 

@@ -1,5 +1,7 @@
 -- super awesome actions stuff
 
+G_DEV = "daxar"
+
 if not G_LASTSEEN then 
 	G_LASTSEEN = {}
 end
@@ -42,6 +44,10 @@ end
 
 if not G_RSSFEEDS then
 	G_RSSFEEDS = {}
+end
+
+if not G_ADMINS then
+	G_ADMINS = {["daxar"]=true,}
 end
 
 local function trim(s)
@@ -186,32 +192,54 @@ local function getbitcoin(channel)
 	say(channel, diff)
 end
 
+local l_f
+local l_c
+local l_u
+local l_s
+
 local function nickservget(cmd, msg)
 	if cmd == "NOTICE" then
 		local person = trim(msg:gsub("(%S+)%s*(%S+)%s*(%S+).*", "%1"))	--Get person (First field)
 		local acc = trim(msg:gsub("(%S+)%s*(%S+)%s*(%S+).*", "%2"))		--Get second field (Should be "ACC")
 		local val = trim(msg:gsub("(%S+)%s*(%S+)%s*(%S+).*", "%3"))		--Get value to see if user is registered or not
 		
-		say(getchannel(), "|"..person.."|"..acc.."|"..val.."|")
-		if acc == "ACC" and val == "3" then
-			
+		if l_f and acc == "ACC" then
+			if val == "3" then
+				l_f(l_c, l_u, l_s, true)
+			else
+				l_f(l_c, l_u, l_s, false)
+			end
+			l_f = nil
+			l_c = nil
+			l_u = nil
+			l_s = nil
 		end
 	end
 end
+setglobal("nickservget", nickservget)
 
-local function isadmin(user)
-	if user == "Daxar" then
-		return true	--TODO: Admin list
+local function isadmin(channel, user, str, func)
+	if G_ADMINS[user:lower()] then
+		say("NickServ", "acc "..user)
+		l_f = func
+		l_c = channel
+		l_u = user
+		l_s = str
+	else
+		func(channel, user, str, false)	--Not on our admin list
 	end
-	return false
 end
 
-local function quit(channel, user)
-	if isadmin(user) then
-		saveall()
-		done()
+local function quit(channel, user, str, admin)
+	if admin~=nil then
+		if admin == true then
+			saveall()
+			done()
+		else
+			say(channel, "You wish.")
+		end
 	else
-		say(channel, "You wish.")
+		isadmin(channel, user, str, quit)
 	end
 end
 
@@ -237,48 +265,60 @@ local function lmgtfy(channel, user, str)
 	say(channel, "http://lmgtfy.com/?q="..searchquery)	--Say the URL
 end
 
-local function addbad(channel, user, str)
-	if not isadmin(user) then
-		say(channel, "Nope, not gonna do it.")
-		return
-	end
-	for word in str:gmatch("%S+") do 
-		if word ~= "addbad" then
-			G_BADWORDS[word] = 1
-			G_BADWORDS[word.."s"] = 1
-			G_BADWORDS[word.."es"] = 1
+local function addbad(channel, user, str, admin)
+	if admin~=nil then
+		if not admin then
+			say(channel, "Nope, not gonna do it.")
+			return
 		end
+		for word in str:gmatch("%S+") do 
+			if word ~= "addbad" then
+				G_BADWORDS[word] = 1
+				G_BADWORDS[word.."s"] = 1
+				G_BADWORDS[word.."es"] = 1
+			end
+		end
+	else
+		isadmin(channel, user, str, addbad)
 	end
 end
 
-local function addbird(channel, user, str)
-	if not isadmin(user) then
-		say(channel, "Nope, not gonna do it.")
-		return
-	end
-	for word in str:gmatch("%S+") do 
-		if word ~= "addbird" then
-			G_BIRDWORDS[word] = 1
-			G_BIRDWORDS[word.."s"] = 1
-			G_BIRDWORDS[word.."es"] = 1
+local function addbird(channel, user, str, admin)
+	if admin~=nil then
+		if not admin then
+			say(channel, "Nope, not gonna do it.")
+			return
 		end
+		for word in str:gmatch("%S+") do 
+			if word ~= "addbird" then
+				G_BIRDWORDS[word] = 1
+				G_BIRDWORDS[word.."s"] = 1
+				G_BIRDWORDS[word.."es"] = 1
+			end
+		end
+	else
+		isadmin(channel, user, str, addbird)
 	end
 end
 
-local function removeword(channel, user, str)
-	if not isadmin(user) then
-		say(channel, "Nope, not gonna do it.")
-		return
-	end
-	for word in str:gmatch("%S+") do 
-		if word ~= "removeword" and word ~= "rmword" then
-			G_BADWORDS[word] = nil
-			G_BADWORDS[word.."s"] = nil
-			G_BADWORDS[word.."es"] = nil
-			G_BIRDWORDS[word] = nil
-			G_BIRDWORDS[word.."s"] = nil
-			G_BIRDWORDS[word.."es"] = nil
+local function removeword(channel, user, str, admin)
+	if admin~=nil then
+		if not admin then
+			say(channel, "Nope, not gonna do it.")
+			return
 		end
+		for word in str:gmatch("%S+") do 
+			if word ~= "removeword" and word ~= "rmword" then
+				G_BADWORDS[word] = nil
+				G_BADWORDS[word.."s"] = nil
+				G_BADWORDS[word.."es"] = nil
+				G_BIRDWORDS[word] = nil
+				G_BIRDWORDS[word.."s"] = nil
+				G_BIRDWORDS[word.."es"] = nil
+			end
+		end
+	else
+		isadmin(channel, user, str, removeword)
 	end
 end
 
@@ -286,21 +326,29 @@ local function updates(channel)
 	say(channel, "Get your unofficial update packs right here! http://www.bit-blot.com/forum/index.php?topic=4313.0")
 end
 
-local function sayline(channel, user, str)
-	if not isadmin(user) then
-		say(channel, "You don't have the privileges for this command.")
+local function sayline(channel, user, str, admin)
+	if admin~=nil then
+		if not admin then
+			say(channel, "You don't have the privileges for this command.")
+		else
+			local phrase = string.gsub(str, "%S+%s", "", 1)
+			say(getchannel(), phrase)
+		end
 	else
-		local phrase = string.gsub(str, "%S+%s", "", 1)
-		say(getchannel(), phrase)
+		isadmin(channel, user, str, sayline)
 	end
 end
 
-local function sayact(channel, user, str)
-	if not isadmin(user) then
-		say(channel, "You don't have the privileges for this command.")
+local function sayact(channel, user, str, admin)
+	if admin~=nil then
+		if not admin then
+			say(channel, "You don't have the privileges for this command.")
+		else
+			local phrase = string.gsub(str, "%S+%s", "", 1)
+			action(getchannel(), phrase)
+		end
 	else
-		local phrase = string.gsub(str, "%S+%s", "", 1)
-		action(getchannel(), phrase)
+		isadmin(channel, user, str, sayact)
 	end
 end
 
@@ -340,19 +388,23 @@ local function wikisearch(channel, user, str)
 	search(channel, str, "http://en.wikipedia.org/wiki/Special:Search?search=", "&go=Go")
 end
 
-local function addrss(channel, user, str)
-	if not isadmin(user) then
-		say(channel, "You don't have the privileges for this command.")
-	else
-		local feedurl = string.gsub(str, "%S+", "", 1)			--Remove first word
-		feedurl = string.gsub(feedurl, "(%S+).*", "%1")			--Remove trailing words
-		feedurl = string.gsub(feedurl, "%s", "")				--Remove whitespace
-		local feedtitle,itemtitle,url = getLatestRSS(feedurl)	--Make sure this feed is valid
-		if feedtitle and itemtitle and url and feedtitle:len() > 0 and itemtitle:len() > 0 and url:len() > 0 then
-			G_RSSFEEDS[feedurl] = "["..feedtitle.."] "..itemtitle.." -- "..url
+local function addrss(channel, user, str, admin)
+	if admin~=nil then
+		if not admin then
+			say(channel, "You don't have the privileges for this command.")
 		else
-			say(channel, "Invalid feed URL")
+			local feedurl = string.gsub(str, "%S+", "", 1)			--Remove first word
+			feedurl = string.gsub(feedurl, "(%S+).*", "%1")			--Remove trailing words
+			feedurl = string.gsub(feedurl, "%s", "")				--Remove whitespace
+			local feedtitle,itemtitle,url = getLatestRSS(feedurl)	--Make sure this feed is valid
+			if feedtitle and itemtitle and url and feedtitle:len() > 0 and itemtitle:len() > 0 and url:len() > 0 then
+				G_RSSFEEDS[feedurl] = "["..feedtitle.."] "..itemtitle.." -- "..url
+			else
+				say(channel, "Invalid feed URL")
+			end
 		end
+	else
+		isadmin(channel, user, str, addrss)
 	end
 end
 
@@ -370,17 +422,63 @@ local function checkrss()
 end
 setglobal("checkrss", checkrss)
 
-local function joinchannel(channel, user, str)
-	if not isadmin(user) then
-		say(channel, "You don't have the privileges for this command.")
+local function joinchannel(channel, user, str, admin)
+	if admin~=nil then
+		if not admin then
+			say(channel, "You don't have the privileges for this command.")
+		else
+			local chan = trim(str:gsub("%S+", "", 1))	--Remove first word
+			join(chan)
+		end
 	else
-		local chan = trim(str:gsub("%S+", "", 1))	--Remove first word
-		join(chan)
+		isadmin(channel, user, str, joinchannel)
+	end
+end
+
+local function addadmin(channel, user, str, admin)
+	if admin~=nil then
+		local admintoadd = trim(str:gsub("%S+", "", 1))
+		if not admin then
+			say(channel, "As if.")
+		else
+			G_ADMINS[admintoadd:lower()] = true		--Add admin to our list
+			say(channel, "Added.")
+		end
+	else
+		isadmin(channel, user, str, addadmin)
+	end
+end
+
+local function rmadmin(channel, user, str, admin)
+	if admin~=nil then
+		local admintoremove = trim(str:gsub("%S+", "", 1))
+		if not admin or admintoremove == G_DEV then
+			say(channel, "As if.")
+		else
+			G_ADMINS[admintoremove:lower()] = nil	--Remove admin from list
+			say(channel, "Removed.")
+		end
+	else
+		isadmin(channel, user, str, rmadmin)
 	end
 end
 
 local function testfunc(channel, user, str)
-	raw("PRIVMSG NickServ :acc Daxar\r\n")
+	for item,val in pairs(G_ADMINS) do
+		print(item,val)
+	end
+end
+
+local function reloadlater(channel, user, str, admin)
+	if admin~=nil then
+		if not admin then
+			say(channel, "You don't have access to that command.")
+		else
+			reload()
+		end
+	else
+		isadmin(channel, user, str, reloadlater)
+	end
 end
 
 local help
@@ -437,6 +535,9 @@ local functab = {
 	["checkrss"] = 	checkrss,
 	["test"] = 		testfunc,
 	["join"] =		joinchannel,
+	["+admin"] =	addadmin,
+	["-admin"] =	rmadmin,
+	["reload"] =	reloadlater,
 }
 
 local funchelp = {
@@ -487,6 +588,9 @@ local funchelp = {
 	["tell"] = 		'gives a user a message next time they join (Usage: \"!tell [nick] [message]\")',
 	["addrss"] =	'adds a feed to the RSS reader (ADMIN ONLY)',
 	["checkrss"] = 	'forces a check of all RSS feeds (happens automatically every 5 minutes)',
+	["+admin"] =	'adds an admin to the admin list (ADMIN ONLY)',
+	["-admin"] =	'removes an admin from the admin list (ADMIN ONLY)',
+	["reload"] =	'does a git pull and reloads all scripts (ADMIN ONLY)',
 }
 
 help = function(channel, str)
@@ -552,7 +656,7 @@ local function doaction(channel, str, user)
 	
 	local f = functab[act]
 	if f then
-		f(channel, user, str)
+		f(channel, user, str, nil)
 	end
 end
 setglobal("doaction", doaction)

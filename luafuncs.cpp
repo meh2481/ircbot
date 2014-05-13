@@ -208,6 +208,12 @@ luaFunc(done)
 	luaReturnNil();
 }
 
+luaFunc(reload)
+{
+	bShouldReload = true;
+	luaReturnNil();
+}
+
 static LuaFunctions s_functab[] =
 {
 	luaRegister(sleep),
@@ -219,6 +225,7 @@ static LuaFunctions s_functab[] =
 	luaRegister(getnick),
 	luaRegister(getchannel),
 	luaRegister(done),
+	luaRegister(reload),
 	luaRegister(getLatestRSS),
 	{NULL, NULL}
 };

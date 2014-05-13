@@ -15,6 +15,7 @@ local function saveall()
 	savetable(G_LASTMESSAGE, "lastmessage.txt")
 	savetable(G_TOTELL, "txt/totell.txt")
 	savetable(G_RSSFEEDS, "txt/rssfeeds.txt")
+	savetable(G_ADMINS, "txt/admins.txt")
 end
 setglobal("saveall", saveall)
 
@@ -48,6 +49,10 @@ local function restoreall()
 	local rfeeds = loadtable("txt/rssfeeds.txt")
 	if rfeeds then
 		G_RSSFEEDS = rfeeds
+	end
+	local admins = loadtable("txt/admins.txt")
+	if admins then
+		G_ADMINS = admins
 	end
 end
 setglobal("restoreall", restoreall)

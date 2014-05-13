@@ -6,6 +6,7 @@
 
 int conn;
 bool bDone = false;
+bool bShouldReload = false;
 #ifdef DEBUG
 const char *nick = "immabot_";
 const char *channel = "#bitbottest";
@@ -49,6 +50,17 @@ int main(int argc, char** argv)
 	raw("NICK %s\r\n", nick);
 	while(!bDone)
 	{
+		if(bShouldReload)
+		{
+			#ifdef DEBUG
+			printf("Reloading\n");
+			#endif
+			system("git pull");
+			Lua.call("saveall");
+			Lua.call("dofile", "lua/init.lua");
+			bShouldReload = false;
+		}
+		
 		//Save & check RSS feeds every five minutes
 		if(getTicks() > curTime + 5*60*1000)
 		{
@@ -168,26 +180,7 @@ int main(int argc, char** argv)
 						if (where[0] == '#' || where[0] == '&' || where[0] == '+' || where[0] == '!') 
 							target = where; else target = user;
 						
-						//Check for reload
-						if(!strncmp(message, "!reload", 7) && !strncmp(user, "Daxar", 5))
-						{
-							#ifdef DEBUG
-							printf("Reloading\n");
-							#endif
-							Lua.call("saveall");
-							Lua.call("dofile", "lua/init.lua");
-						}
-						else if(!strncmp(message, "!greload", 8) && !strncmp(user, "Daxar", 5))
-						{
-							#ifdef DEBUG
-							printf("Reloading\n");
-							#endif
-							system("git pull");
-							Lua.call("saveall");
-							Lua.call("dofile", "lua/init.lua");
-						}
-						else
-							Lua.call("gotmessage", user, command, where, target, message);
+						Lua.call("gotmessage", user, command, where, target, message);
 					}
 					else	//Some other kind of command
 					{
