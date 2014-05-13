@@ -481,28 +481,44 @@ local function reloadlater(channel, user, str, admin)
 	end
 end
 
+local function rmrss(channel, user, str, admin)
+	if admin ~= nil then
+		if not admin then
+			say(channel, "Not gonna do it.")
+		else
+			local feedurl = string.gsub(str, "%S+", "", 1)			--Remove first word
+			feedurl = string.gsub(feedurl, "(%S+).*", "%1")			--Remove trailing words
+			feedurl = string.gsub(feedurl, "%s", "")				--Remove whitespace
+			G_RSSFEEDS[feedurl] = nil
+		end
+	else
+		isadmin(channel, user, str, rmrss)
+	end
+end
+
+local function partchannel(channel, user, str, admin)
+	if admin ~= nil then
+		if not admin then
+			say(channel, "Not gonna do it.")
+		else
+			raw("PART "..channel.."\r\n");
+		end
+	else
+		isadmin(channel, user, str, partchannel)
+	end
+end
+
 local help
 
 local functab = {
 	["beep"] = 		function(channel) say(channel, "Imma bot. Beep.") end,
 	["d6"] = 		d6,
-	["roll"] = 		d6,
 	["dice"] = 		d6,
-	["die"] = 		d6,
 	["coin"] = 		coin,
-	["quarter"] = 	coin,
-	["flip"] =		coin,
-	["nickel"] = 	coin,
-	["dime"] = 		coin,
-	["penny"] = 	coin,
 	["bitcoin"] = 	getbitcoin,
 	["search"] = 	googlesearch,
 	["google"] = 	googlesearch,
 	["8ball"] = 	eightball,
-	["eightball"] = eightball,
-	["eight"] = 	eightball,
-	["8"] = 		eightball,
-	["shake"] = 	eightball,
 	["cookie"] = 	function(channel, user) botsnack(channel, "cookie", user) end,
 	["botsnack"] = 	function(channel, user) botsnack(channel, "botsnack", user) end,
 	["snack"] = 	function(channel, user) botsnack(channel, "snack", user) end,
@@ -516,7 +532,6 @@ local functab = {
 	["restore"] = 	restoreall,
 	["addbad"] =	addbad,
 	["addbird"] = 	addbird,
-	["removeword"] = removeword,
 	["rmword"] = 	removeword,
 	["ping"] = 		function(channel) say(channel, "pong") end,
 	["pong"] = 		function(channel) say(channel, "ping") end,
@@ -532,9 +547,11 @@ local functab = {
 	["tell"] =		settelluser,
 	["wp"] = 		wikisearch,
 	["addrss"] = 	addrss,
+	["rmrss"] =		rmrss,
 	["checkrss"] = 	checkrss,
 	["test"] = 		testfunc,
 	["join"] =		joinchannel,
+	["part"] = 		partchannel,
 	["+admin"] =	addadmin,
 	["-admin"] =	rmadmin,
 	["reload"] =	reloadlater,
@@ -543,24 +560,13 @@ local functab = {
 local funchelp = {
 	["beep"] = 		'displays a beep message',
 	["d6"] = 		'rolls a 6-sided die and displays the result',
-	["roll"] = 		'rolls a 6-sided die and displays the result',
 	["dice"] = 		'rolls a 6-sided die and displays the result',
-	["die"] = 		'rolls a 6-sided die and displays the result',
 	["coin"] = 		'flips a coin and says heads or tails',
-	["quarter"] = 	'flips a coin and says heads or tails',
-	["flip"] =		'flips a coin and says heads or tails',
-	["nickel"] = 	'flips a coin and says heads or tails',
-	["dime"] = 		'flips a coin and says heads or tails',
-	["penny"] = 	'flips a coin and says heads or tails',
 	["bitcoin"] = 	'returns the current bitcoin mining complexity',
 	["search"] = 	'searches Google for the given search query and returns the first result (\"I\'m Feeling Lucky\" search)',
 	["google"] = 	'searches Google for the given search query and returns the first result (\"I\'m Feeling Lucky\" search)',
 	["wp"] =		'searches Wikipedia for the given search query',
 	["8ball"] = 	'shakes a Magic 8-ball and says the result',
-	["eightball"] = 'shakes a Magic 8-ball and says the result',
-	["eight"] = 	'shakes a Magic 8-ball and says the result',
-	["8"] = 		'shakes a Magic 8-ball and says the result',
-	["shake"] = 	'shakes a Magic 8-ball and says the result',
 	["cookie"] = 	'feeds me a cookie',
 	["botsnack"] = 	'feeds me a botsnack',
 	["snack"] = 	'feeds me a snack',
@@ -572,7 +578,6 @@ local funchelp = {
 	["quit"] =		'tells me to leave (ADMIN ONLY)',
 	["addbad"] =	'adds a word to the curse word filter (ADMIN ONLY)',
 	["addbird"] = 	'adds a bird to the bird word filter (ADMIN ONLY)',
-	["removeword"] = 'removes a word from the bad and bird word filters (ADMIN ONLY)',
 	["rmword"] = 	'removes a word from the bad and bird word filters (ADMIN ONLY)',
 	["say"] =		'makes me say something (ADMIN ONLY)',
 	["me"] =		'makes me say something (ADMIN ONLY)',
@@ -587,10 +592,13 @@ local funchelp = {
 	["lmgtfy"] = 	'lets me google that for you',
 	["tell"] = 		'gives a user a message next time they join (Usage: \"!tell [nick] [message]\")',
 	["addrss"] =	'adds a feed to the RSS reader (ADMIN ONLY)',
+	["rmrss"] =		'removes a feed from the RSS reader (ADMIN ONLY)',
 	["checkrss"] = 	'forces a check of all RSS feeds (happens automatically every 5 minutes)',
 	["+admin"] =	'adds an admin to the admin list (ADMIN ONLY)',
 	["-admin"] =	'removes an admin from the admin list (ADMIN ONLY)',
 	["reload"] =	'does a git pull and reloads all scripts (ADMIN ONLY)',
+	["join"] =		'makes me join a channel (ADMIN ONLY)',
+	["part"] = 		'makes me leave a channel (ADMIN ONLY)',
 }
 
 help = function(channel, str)
