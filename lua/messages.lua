@@ -129,7 +129,7 @@ end
 
 local function nicklist(channel, user, buf)
 	buf = buf:gsub(":.+:", "")
-	buf = bufgsub("[@&%%%+~]", "")	--Get rid of nick op symbols and such (TODO: Save who the ops are)
+	buf = buf:gsub("[@&%%%+~]", "")	--Get rid of nick op symbols and such (TODO: Save who the ops are)
 	for n in buf:gmatch("%S+") do 
 		G_NICKS[n:lower()] = 1
 	end
