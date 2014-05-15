@@ -33,6 +33,7 @@ local function gotmessage(user, cmd, where, target, message)
 				G_NUMLINES[user:lower()] = G_NUMLINES[user:lower()] + 1
 			else
 				G_NUMLINES[user:lower()] = 1
+			end
 		end
 		
 		--Test for links

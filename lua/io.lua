@@ -9,10 +9,10 @@ local function savetable(tab, filename)
 end
 
 local function saveall()
-	savetable(G_BIRDWORDS, "birdwords.txt")
-	savetable(G_BADWORDS, "badwords.txt")
-	savetable(G_LASTSEEN, "lastseen.txt")
-	savetable(G_LASTMESSAGE, "lastmessage.txt")
+	savetable(G_BIRDWORDS, "txt/birdwords.txt")
+	savetable(G_BADWORDS, "txt/badwords.txt")
+	savetable(G_LASTSEEN, "txt/lastseen.txt")
+	savetable(G_LASTMESSAGE, "txt/lastmessage.txt")
 	savetable(G_TOTELL, "txt/totell.txt")
 	savetable(G_RSSFEEDS, "txt/rssfeeds.txt")
 	savetable(G_ADMINS, "txt/admins.txt")
@@ -31,13 +31,18 @@ local function loadtable(filename)
 end
 
 local function restoreall()
-	G_BIRDWORDS = loadtable("birdwords.txt")
-	G_BADWORDS = loadtable("badwords.txt")
-	local tmpmsg = loadtable("lastseen.txt")
+	G_BIRDWORDS = loadtable("txt/birdwords.txt")
+	G_BADWORDS = loadtable("txt/badwords.txt")
+	for key,val in pairs(G_BADWORDS) do
+		if key:find(" ") then
+			G_BADWORDS[key] = nil
+		end
+	end
+	local tmpmsg = loadtable("txt/lastseen.txt")
 	if tmpmsg then
 		G_LASTSEEN = tmpmsg
 	end
-	tmpmsg = loadtable("lastmessage.txt")
+	tmpmsg = loadtable("txt/lastmessage.txt")
 	if tmpmsg then
 		G_LASTMESSAGE = tmpmsg
 	end
