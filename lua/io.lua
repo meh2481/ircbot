@@ -16,6 +16,8 @@ local function saveall()
 	savetable(G_TOTELL, "txt/totell.txt")
 	savetable(G_RSSFEEDS, "txt/rssfeeds.txt")
 	savetable(G_ADMINS, "txt/admins.txt")
+	savetable(G_CURSERS, "txt/cursers.txt")
+	savetable(G_NUMLINES, "txt/numlines.txt")
 end
 setglobal("saveall", saveall)
 
@@ -53,6 +55,14 @@ local function restoreall()
 	local admins = loadtable("txt/admins.txt")
 	if admins then
 		G_ADMINS = admins
+	end
+	local cursers = loadtable("txt/cursers.txt")
+	if cursers then
+		G_CURSERS = cursers
+	end
+	local numlines = loadtable("txt/numlines.txt")
+	if numlines then
+		G_NUMLINES = numlines
 	end
 end
 setglobal("restoreall", restoreall)

@@ -53,3 +53,11 @@ end
 if not LOGFILE then
 	LOGFILE = assert(io.open("txt/log.txt", "a"))
 end
+
+if not G_CURSERS then
+	G_CURSERS = {}
+end
+
+if not G_NUMLINES then
+	G_NUMLINES = {}
+end
