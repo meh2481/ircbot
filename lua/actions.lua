@@ -231,6 +231,7 @@ local functab = {
 	["lmgtfy"] = 	lmgtfy,
 	["tell"] =		settelluser,
 	["wp"] = 		wikisearch,
+	["picnic"] =	function(channel) say(channel, "[Problem In Chair, Not In Computer] - http://en.wikipedia.org/wiki/User_error") end,
 }
 
 local funchelp = {
@@ -259,6 +260,7 @@ local funchelp = {
 	["xkcd"] =		'displays a random xkcd comic',
 	["lmgtfy"] = 	'lets me google that for you',
 	["tell"] = 		'gives a user a message next time they join (Usage: \"!tell [nick] [message]\")',
+	["picnic"] = 	'alerts the user as to what REALLY is the problem',
 }
 
 help = function(unused, channel, str, admin)
