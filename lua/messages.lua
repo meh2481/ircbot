@@ -51,7 +51,7 @@ local function gotmessage(user, cmd, where, target, message)
 			if G_BADWORDS[w] then
 				action(target, "slaps "..user.." for their foul language")
 				if G_CURSERS[user:lower()] then
-					G_CURSERS[user:lower()] = G_CURSERS[user] + 1
+					G_CURSERS[user:lower()] = G_CURSERS[user:lower()] + 1
 				else
 					G_CURSERS[user:lower()] = 1
 				end
