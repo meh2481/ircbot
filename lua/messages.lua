@@ -151,6 +151,7 @@ local function changenick(channel, user, buf)
 	G_LASTSEEN[buf:lower()] = os.time()
 	G_LASTMESSAGE[user:lower()] = "changing nick to "..buf 
 	G_LASTMESSAGE[buf:lower()] = "changing nick from "..user
+	tellnow(channel, buf)	--Tell the user any pending messages they have
 end
 
 local function command(channel, cmd, user, buf)
