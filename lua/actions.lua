@@ -339,7 +339,7 @@ end
 
 local function doaction(channel, str, user)
 	--Get command all the way until whitespace
-	local act = string.sub(str, string.find(str, "%S+"))
+	local act = str:sub(str:find("%S+")):lower()
 	
 	local f = functab[act]
 	if f then
