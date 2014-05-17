@@ -22,6 +22,14 @@ local function gotmessage(user, cmd, where, target, message)
 			local botaction = message:sub(2)	--Get bot action
 			doaction(target, botaction, user)
 		end
+		if where:find(getnick()) then		--If they're in a PM with us, assume everything they say can be a command
+			doaction(target, message, user)
+		end
+		if message:lower():find(getnick()..":") == 1 then
+			local botaction = trim(message:sub(getnick():len()+2))
+			doaction(target, botaction, user)
+		end
+		
 		
 		--Update last seen message
 		if where == getchannel() then	--Keep PM's private
