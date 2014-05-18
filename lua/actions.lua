@@ -210,14 +210,10 @@ local function define(channel, user, str, verbose)
 	end
 	--Go to dictionaryapi.com to get your own key to use here (only 1000 accesses allowed per day per key)
 	local searchURL = "http://www.dictionaryapi.com/api/v1/references/collegiate/xml/"..trim(word).."?key=78452540-8d68-4323-9964-9847af6158bf"
-	local webpage = wget(searchURL)
-	local success = false
-	if webpage then
-		if verbose then
-			channel = user	--User is told definition in PM if we're spitting out ALL the definitions of a word
-		end
-		success = defineWord(webpage, channel, verbose)
+	if verbose then
+		channel = user	--User is told definition in PM if we're spitting out ALL the definitions of a word
 	end
+	local success = defineWord(searchURL, channel, verbose)
 	if not success then
 		say(channel, "Unable to find word in dictionary")
 	end

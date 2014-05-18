@@ -184,10 +184,13 @@ luaFunc(getLatestRSS)
 
 luaFunc(defineWord)
 {
+	string sURL = lua_tostring(L,1);
+	if(sURL.size() < 1)
+		luaReturnBool(false);
 	bool success = false;
 	bool verbose = lua_toboolean(L, 3);
 	tinyxml2::XMLDocument doc;
-	tinyxml2::XMLError err = doc.Parse(lua_tostring(L,1));	//Parse this as XML document
+	tinyxml2::XMLError err = doc.Parse(HTTPGet(sURL).c_str());	//Parse this as XML document
 	if(err != tinyxml2::XML_NO_ERROR)
 		luaReturnNil();
 	tinyxml2::XMLElement* root = doc.RootElement();
