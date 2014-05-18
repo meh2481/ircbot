@@ -13,36 +13,37 @@ std::string remove_letter_easy( std::string str, char c )
 	return str ;
 }
 
+string	sBuf;
+bool	bStop;
+string	sRedir;
+string	sSearch;
+
 #define MAX_DOWNLOAD_SIZE 1048576	//1 MB oughta be plenty
 class HttpGet : public minihttp::HttpSocket
 {
 public:
-	HttpGet() 					{m_bStop = false;};
-	virtual ~HttpGet()			{};
-	string getBuf()				{return m_sBuf;};
-	bool isStopped()			{return m_bStop;};
-	string getRedir()			{return m_sRedir;};
-	void searchFor(string s)	{m_sSearch = s;};
+	HttpGet() : minihttp::HttpSocket()	{bStop = false; sBuf.clear(); sRedir.clear(); sSearch.clear();};
+	virtual ~HttpGet()					{};
+	string getBuf()						{return sBuf;};
+	int getSize()						{return sBuf.size();};
+	bool isStopped()					{return bStop;};
+	string getRedir()					{return sRedir;};
+	void searchFor(string s)			{sSearch = s;};
 
 protected:
 	virtual void _OnRecv(char *buf, unsigned int size)
 	{
 		if(IsRedirecting())
-			m_sRedir = Hdr("location");
+			sRedir = Hdr("location");
 		
 		if(!size)
 			return;
 			
 		for(char* i = buf; i < buf+size; i++)
-			m_sBuf.push_back(*i);
-		if(m_sBuf.size() >= MAX_DOWNLOAD_SIZE || (m_sSearch.size() > 1 && m_sBuf.find(m_sSearch) != string::npos))
-			m_bStop = true;
+			sBuf.push_back(*i);
+		if(sBuf.size() >= MAX_DOWNLOAD_SIZE || (sSearch.size() > 1 && sBuf.find(sSearch) != string::npos))
+			bStop = true;
 	}
-
-	string	m_sBuf;
-	bool	m_bStop;
-	string	m_sRedir;
-	string	m_sSearch;
 };
 
 string HTTPGet(string sURL)
@@ -56,11 +57,9 @@ string HTTPGet(string sURL)
 	minihttp::SocketSet ss;
 	ss.add(ht, true);
 	uint32_t startTicks = getTicks();
-	while(ss.size() && !ht->isStopped() && getTicks() < startTicks + 1000*10)	//Just spin here (for a maximum of 10 seconds)
+	while(ss.size() && !bStop && getTicks() < startTicks + 1000*10)	//Just spin here (for a maximum of 10 seconds)
 		ss.update();
-	
-	string sRet = ht->getBuf();
-	return sRet;
+	return sBuf;
 }
 
 luaFunc(wget)
@@ -113,10 +112,9 @@ luaFunc(getURLTitle)	//URL
 	minihttp::SocketSet ss;
 	ss.add(ht, true);
 	uint32_t startTicks = getTicks();
-	while(ss.size() && !ht->isStopped() && getTicks() < startTicks + 1000*5)	//Just spin here for a maximum of 5 seconds
+	while(ss.size() && !bStop && getTicks() < startTicks + 1000*5)	//Just spin here for a maximum of 5 seconds
 		ss.update();
-		
-	string sBuf = ht->getBuf();
+	
 	//Ok, now we have data in sBuf, parse for title
 	size_t start = sBuf.find("<title>");
 	if(start != string::npos)
@@ -126,7 +124,6 @@ luaFunc(getURLTitle)	//URL
 			sRet = sBuf.substr(start+7, stop-(start+7));
 	}
 	
-	string sRedir = ht->getRedir();
 	luaReturn2Strings(sRet.c_str(), sRedir.c_str());
 }
 
