@@ -9,76 +9,56 @@
 //Thaaaanks http://www.cplusplus.com/forum/beginner/115247/#msg629035
 std::string remove_letter_easy( std::string str, char c )
 {
-    str.erase( std::remove( str.begin(), str.end(), c ), str.end() ) ;
-    return str ;
+	str.erase( std::remove( str.begin(), str.end(), c ), str.end() ) ;
+	return str ;
 }
-
-#define MAX_TITLE_ATTEMPT_LEN	4096	//4kB should be plenty
-static string sBuf;
-static bool bStop;
-static string sRedir;
-//Class for fetching just the title of a page from a URL
-class HttpTitleSearch : public minihttp::HttpSocket
-{
-public:
-    virtual ~HttpTitleSearch() {}
-
-protected:
-    virtual void _OnRecv(char *buf, unsigned int size)
-    {
-		if(IsRedirecting())
-			sRedir = Hdr("location");
-		
-        if(!size)
-            return;
-			
-        for(char* i = buf; i < buf+size; i++)
-			sBuf.push_back(*i);
-		if(sBuf.size() >= MAX_TITLE_ATTEMPT_LEN || sBuf.find("</title>") != string::npos)
-			//Shutdown socket; if we haven't hit it by now, we likely won't.
-			bStop = true;
-    }
-};
 
 #define MAX_DOWNLOAD_SIZE 1048576	//1 MB oughta be plenty
 class HttpGet : public minihttp::HttpSocket
 {
 public:
-    virtual ~HttpGet() {}
+	virtual ~HttpGet()			{m_bStop = false;};
+	string getBuf()				{return m_sBuf;};
+	bool isStopped()			{return m_bStop;};
+	string getRedir()			{return m_sRedir;};
+	void searchFor(string s)	{m_sSearch = s;};
 
 protected:
-    virtual void _OnRecv(char *buf, unsigned int size)
-    {
+	virtual void _OnRecv(char *buf, unsigned int size)
+	{
 		if(IsRedirecting())
-			sRedir = Hdr("location");
+			m_sRedir = Hdr("location");
 		
-        if(!size)
-            return;
+		if(!size)
+			return;
 			
-        for(char* i = buf; i < buf+size; i++)
-			sBuf.push_back(*i);
-		if(sBuf.size() >= MAX_DOWNLOAD_SIZE)
-			bStop = true;
-    }
+		for(char* i = buf; i < buf+size; i++)
+			m_sBuf.push_back(*i);
+		if(m_sBuf.size() >= MAX_DOWNLOAD_SIZE || (m_sSearch.size() > 1 && m_sBuf.find(m_sSearch) != string::npos))
+			m_bStop = true;
+	}
+
+	string	m_sBuf;
+	bool	m_bStop;
+	string	m_sRedir;
+	string	m_sSearch;
 };
 
 string HTTPGet(string sURL)
 {
-	sBuf.clear();
-	bStop = false;
 	HttpGet *ht = new HttpGet;
 
-    ht->SetKeepAlive(5);
-    ht->SetBufsizeIn(MAX_TITLE_ATTEMPT_LEN);
+	ht->SetKeepAlive(5);
+	ht->SetBufsizeIn(MAX_DOWNLOAD_SIZE);
 	ht->Download(sURL);
 	ht->SetAlwaysHandle(true);
 	minihttp::SocketSet ss;
-    ss.add(ht, true);
+	ss.add(ht, true);
 	uint32_t startTicks = getTicks();
-	while(ss.size() && !bStop && getTicks() < startTicks + 1000*10)	//Just spin here (for a maximum of 10 seconds)
-        ss.update();
+	while(ss.size() && !ht->isStopped() && getTicks() < startTicks + 1000*10)	//Just spin here (for a maximum of 10 seconds)
+		ss.update();
 	
-	return sBuf;
+	return ht->getBuf();
 }
 
 luaFunc(wget)
@@ -119,23 +99,22 @@ luaFunc(join)	//channel
 
 luaFunc(getURLTitle)	//URL
 {
-	sBuf.clear();
 	string sURL = lua_tostring(L,1);
 	string sRet;
-	bStop = false;
-	sRedir.clear();
-	HttpTitleSearch *ht = new HttpTitleSearch;
+	HttpGet *ht = new HttpGet;
 
-    ht->SetKeepAlive(5);
-    ht->SetBufsizeIn(MAX_TITLE_ATTEMPT_LEN);
+	ht->SetKeepAlive(5);
+	ht->SetBufsizeIn(MAX_DOWNLOAD_SIZE);
 	ht->Download(sURL);
 	ht->SetAlwaysHandle(true);
+	ht->searchFor("</title>");
 	minihttp::SocketSet ss;
-    ss.add(ht, true);
+	ss.add(ht, true);
 	uint32_t startTicks = getTicks();
-	while(ss.size() && !bStop && getTicks() < startTicks + 1000*5)	//Just spin here for a maximum of 5 seconds
-        ss.update();
+	while(ss.size() && !ht->isStopped() && getTicks() < startTicks + 1000*5)	//Just spin here for a maximum of 5 seconds
+		ss.update();
 		
+	string sBuf = ht->getBuf();
 	//Ok, now we have data in sBuf, parse for title
 	size_t start = sBuf.find("<title>");
 	if(start != string::npos)
@@ -145,7 +124,7 @@ luaFunc(getURLTitle)	//URL
 			sRet = sBuf.substr(start+7, stop-(start+7));
 	}
 	
-	luaReturn2Strings(sRet.c_str(), sRedir.c_str());
+	luaReturn2Strings(sRet.c_str(), ht->getRedir().c_str());
 }
 
 luaFunc(getLatestRSS)

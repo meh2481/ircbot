@@ -282,7 +282,7 @@ local funchelp = {
 	["tell"] = 		'gives a user a message next time they join (Usage: \"!tell [nick] [message]\")',
 	["picnic"] = 	'alerts the user as to what REALLY is the problem',
 	["define"] =	'tells you the most common meaning of a word',
-	["dictionary"] =	'Looks up a word in the dictionary',
+	["dictionary"] =	'looks up a word in the dictionary',
 }
 
 help = function(unused, channel, str, admin)
