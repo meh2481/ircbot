@@ -201,6 +201,24 @@ local function updates(channel)
 	say(channel, "Get your unofficial update packs right here! http://www.bit-blot.com/forum/index.php?topic=4313.0")
 end
 
+local function define(channel, user, str, verbose)
+	local word = str:gsub("%S+", "", 1)	--Remove first word
+	word = word:gsub("(%S+).*", "%1")	--Remove trailing words
+	--Go to dictionaryapi.com to get your own key to use here (only 1000 accesses allowed per day per key)
+	local searchURL = "http://www.dictionaryapi.com/api/v1/references/collegiate/xml/"..trim(word).."?key=78452540-8d68-4323-9964-9847af6158bf"
+	local webpage = wget(searchURL)
+	local success = false
+	if webpage then
+		if verbose then
+			channel = user	--User is told definition in PM if we're spitting out ALL the definitions of a word
+		end
+		success = defineWord(webpage, channel, verbose)
+	end
+	if not success then
+		say(channel, "Unable to find word in dictionary")
+	end
+end
+
 local help
 
 local functab = {
@@ -232,6 +250,8 @@ local functab = {
 	["tell"] =		settelluser,
 	["wp"] = 		wikisearch,
 	["picnic"] =	function(channel) say(channel, "[Problem In Chair, Not In Computer] - http://en.wikipedia.org/wiki/User_error") end,
+	["define"] = 	function(channel, user, str) define(channel, user, str, false) end,
+	["dictionary"] = 	function(channel, user, str) define(channel, user, str, true) end,
 }
 
 local funchelp = {
@@ -261,6 +281,8 @@ local funchelp = {
 	["lmgtfy"] = 	'lets me google that for you',
 	["tell"] = 		'gives a user a message next time they join (Usage: \"!tell [nick] [message]\")',
 	["picnic"] = 	'alerts the user as to what REALLY is the problem',
+	["define"] =	'tells you the most common meaning of a word',
+	["dictionary"] =	'Looks up a word in the dictionary',
 }
 
 help = function(unused, channel, str, admin)

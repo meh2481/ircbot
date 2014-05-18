@@ -3,6 +3,16 @@
 #include "bot.h"
 #include "tinyxml2.h"
 
+#include <algorithm>
+#include <sstream>
+
+//Thaaaanks http://www.cplusplus.com/forum/beginner/115247/#msg629035
+std::string remove_letter_easy( std::string str, char c )
+{
+    str.erase( std::remove( str.begin(), str.end(), c ), str.end() ) ;
+    return str ;
+}
+
 #define MAX_TITLE_ATTEMPT_LEN	4096	//4kB should be plenty
 static string sBuf;
 static bool bStop;
@@ -69,6 +79,13 @@ string HTTPGet(string sURL)
         ss.update();
 	
 	return sBuf;
+}
+
+luaFunc(wget)
+{
+	string sURL = lua_tostring(L,1);
+	string s = HTTPGet(sURL);
+	luaReturnStr(s.c_str());
 }
 
 luaFunc(sleep)	//seconds
@@ -190,6 +207,59 @@ luaFunc(getLatestRSS)
 	luaReturn3Strings(feedtitle.c_str(), itemtitle.c_str(), url.c_str());
 }
 
+luaFunc(defineWord)
+{
+	bool success = false;
+	bool verbose = lua_toboolean(L, 3);
+	tinyxml2::XMLDocument* doc = new tinyxml2::XMLDocument;
+	tinyxml2::XMLError err = doc->Parse(lua_tostring(L,1));	//Parse this as XML document
+	if(err != tinyxml2::XML_NO_ERROR)
+	{
+		delete doc;
+		luaReturnNil();
+	}
+	tinyxml2::XMLElement* root = doc->RootElement();
+	if(root != NULL)
+	{
+		int cur = 0;
+		for(tinyxml2::XMLElement* entry = root->FirstChildElement("entry"); entry != NULL; entry = entry->NextSiblingElement("entry"))
+		{
+			ostringstream toSay;
+			if(verbose)
+				toSay << ++cur << ". ";
+			for(tinyxml2::XMLElement* def = entry->FirstChildElement("def"); def != NULL; def = def->NextSiblingElement("def"))
+			{
+				for(tinyxml2::XMLElement* dt = def->FirstChildElement("dt"); dt != NULL; dt = dt->NextSiblingElement("dt"))
+				{
+					const char* cDef = dt->GetText();
+					if(cDef != NULL && strlen(cDef) > 3)
+					{
+						string s = remove_letter_easy(cDef, ':');
+						while(isspace(s[s.size()-1]))
+							s.erase(s.size()-1);
+						while(isspace(s[0]))
+							s.erase(0,1);
+						toSay << s;
+						if(verbose)
+							toSay << "; ";
+						else break;
+					}
+				}
+			}
+			if(toSay.str().size() > 3)
+			{
+				raw("PRIVMSG %s :%s\r\n", lua_tostring(L,2), toSay.str().c_str());
+				success = true;
+				if(!verbose)
+					break;
+			}
+			if(!verbose)
+				break;
+		}
+	}
+	luaReturnBool(success);
+}
+
 luaFunc(getnick)
 {
 	luaReturnStr(nick.c_str());
@@ -235,6 +305,8 @@ static LuaFunctions s_functab[] =
 	luaRegister(reload),
 	luaRegister(getLatestRSS),
 	luaRegister(newnick),
+	luaRegister(wget),
+	luaRegister(defineWord),
 	{NULL, NULL}
 };
 

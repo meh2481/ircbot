@@ -12,10 +12,10 @@ void shutdownNetworking()
 
 void raw(const char *fmt, ...) 
 {
-	char sbuf[512];
+	char sbuf[1024];
 	va_list ap;
 	va_start(ap, fmt);
-	vsnprintf(sbuf, 512, fmt, ap);
+	vsnprintf(sbuf, 1024, fmt, ap);
 	va_end(ap);
 #ifdef DEBUG
 	printf("<< %s", sbuf);
