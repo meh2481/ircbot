@@ -194,8 +194,10 @@ luaFunc(defineWord)
 	if(root != NULL)
 	{
 		int cur = 0;
+		int iters = 0;
 		for(tinyxml2::XMLElement* entry = root->FirstChildElement("entry"); entry != NULL; entry = entry->NextSiblingElement("entry"))
 		{
+			iters++;
 			ostringstream toSay;
 			if(verbose)
 				toSay << ++cur << ". ";
@@ -227,6 +229,27 @@ luaFunc(defineWord)
 			}
 			if(!verbose)
 				break;
+		}
+		if(!iters)	//We got a page without an entry; see if there are spelling suggestions
+		{
+			const char* errtxt = "Not a real word. Spelling suggestions: ";
+			ostringstream oss;
+			oss << errtxt;
+			for(tinyxml2::XMLElement* suggestion = root->FirstChildElement("suggestion"); suggestion != NULL; suggestion = suggestion->NextSiblingElement("suggestion"))
+			{
+				const char* cSug = suggestion->GetText();
+				if(cSug != NULL)
+				{
+					oss << cSug;
+					if(suggestion->NextSiblingElement("suggestion") != NULL)
+						oss << ", ";
+				}
+			}
+			if(oss.str().size() > strlen(errtxt))
+			{
+				raw("PRIVMSG %s :%s\r\n", lua_tostring(L,2), oss.str().c_str());
+				success = true;
+			}
 		}
 	}
 	luaReturnBool(success);

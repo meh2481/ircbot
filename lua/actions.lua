@@ -91,7 +91,7 @@ local function botsnack(channel, act, user)
 	action(channel, eatit[math.random(#eatit)])
 end
 
-local function insult(channel, message)
+local function insult(channel, user, message)
 	local insultee = string.gsub(message, "%S+%s", "", 1)
 	if insultee == "insult" then
 		insultee = "Thou art"
@@ -228,17 +228,15 @@ local help
 local functab = {
 	["beep"] = 		function(channel) say(channel, "Imma bot. Beep.") end,
 	["d6"] = 		d6,
-	["dice"] = 		d6,
 	["coin"] = 		coin,
 	["bitcoin"] = 	getbitcoin,
-	["search"] = 	googlesearch,
 	["google"] = 	googlesearch,
 	["8ball"] = 	eightball,
 	["cookie"] = 	function(channel, user) botsnack(channel, "cookie", user) end,
 	["botsnack"] = 	function(channel, user) botsnack(channel, "botsnack", user) end,
 	["snack"] = 	function(channel, user) botsnack(channel, "snack", user) end,
-	["ex"] = 		function(channel) insult(channel, "derp Thy ex") end,
-	["insult"] = 	function(channel, user, str) insult(channel, str) end,
+	["ex"] = 		function(channel) insult(channel, "PAD", "PAD Thy ex") end,
+	["insult"] = 	insult,
 	["uptime"] = 	uptime,
 	["seen"] = 		seen,
 	["hug"] =		hug,
@@ -261,11 +259,9 @@ local functab = {
 local funchelp = {
 	["beep"] = 		'displays a beep message',
 	["d6"] = 		'rolls a 6-sided die and displays the result',
-	["dice"] = 		'rolls a 6-sided die and displays the result',
 	["coin"] = 		'flips a coin and says heads or tails',
 	["bitcoin"] = 	'returns the current bitcoin mining complexity',
 	["search"] = 	'searches Google for the given search query and returns the first result (\"I\'m Feeling Lucky\" search)',
-	["google"] = 	'searches Google for the given search query and returns the first result (\"I\'m Feeling Lucky\" search)',
 	["wp"] =		'searches Wikipedia for the given search query',
 	["8ball"] = 	'shakes a Magic 8-ball and says the result',
 	["cookie"] = 	'feeds me a cookie',
@@ -286,7 +282,7 @@ local funchelp = {
 	["tell"] = 		'gives a user a message next time they join (Usage: \"!tell [nick] [message]\")',
 	["picnic"] = 	'alerts the user as to what REALLY is the problem',
 	["define"] =	'tells you the most common meaning of a word',
-	["dictionary"] =	'looks up a word in the dictionary',
+	["dictionary"] =	'looks up a word in the dictionary (verbose)',
 }
 
 help = function(unused, channel, str, admin)
