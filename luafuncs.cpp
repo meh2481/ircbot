@@ -17,7 +17,8 @@ std::string remove_letter_easy( std::string str, char c )
 class HttpGet : public minihttp::HttpSocket
 {
 public:
-	virtual ~HttpGet()			{m_bStop = false;};
+	HttpGet() 					{m_bStop = false;};
+	virtual ~HttpGet()			{};
 	string getBuf()				{return m_sBuf;};
 	bool isStopped()			{return m_bStop;};
 	string getRedir()			{return m_sRedir;};
@@ -236,6 +237,7 @@ luaFunc(defineWord)
 				break;
 		}
 	}
+	delete doc;
 	luaReturnBool(success);
 }
 

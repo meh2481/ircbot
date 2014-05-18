@@ -204,6 +204,10 @@ end
 local function define(channel, user, str, verbose)
 	local word = str:gsub("%S+", "", 1)	--Remove first word
 	word = word:gsub("(%S+).*", "%1")	--Remove trailing words
+	if G_BADWORDS[word] then
+		say(channel, "you perv")
+		return
+	end
 	--Go to dictionaryapi.com to get your own key to use here (only 1000 accesses allowed per day per key)
 	local searchURL = "http://www.dictionaryapi.com/api/v1/references/collegiate/xml/"..trim(word).."?key=78452540-8d68-4323-9964-9847af6158bf"
 	local webpage = wget(searchURL)
