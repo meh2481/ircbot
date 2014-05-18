@@ -47,7 +47,7 @@ protected:
 
 string HTTPGet(string sURL)
 {
-	HttpGet *ht = new HttpGet;
+	HttpGet* ht = new HttpGet;
 
 	ht->SetKeepAlive(5);
 	ht->SetBufsizeIn(MAX_DOWNLOAD_SIZE);
@@ -59,7 +59,8 @@ string HTTPGet(string sURL)
 	while(ss.size() && !ht->isStopped() && getTicks() < startTicks + 1000*10)	//Just spin here (for a maximum of 10 seconds)
 		ss.update();
 	
-	return ht->getBuf();
+	string sRet = ht->getBuf();
+	return sRet;
 }
 
 luaFunc(wget)
@@ -102,7 +103,7 @@ luaFunc(getURLTitle)	//URL
 {
 	string sURL = lua_tostring(L,1);
 	string sRet;
-	HttpGet *ht = new HttpGet;
+	HttpGet* ht = new HttpGet;
 
 	ht->SetKeepAlive(5);
 	ht->SetBufsizeIn(MAX_DOWNLOAD_SIZE);
@@ -125,7 +126,8 @@ luaFunc(getURLTitle)	//URL
 			sRet = sBuf.substr(start+7, stop-(start+7));
 	}
 	
-	luaReturn2Strings(sRet.c_str(), ht->getRedir().c_str());
+	string sRedir = ht->getRedir();
+	luaReturn2Strings(sRet.c_str(), sRedir.c_str());
 }
 
 luaFunc(getLatestRSS)
@@ -134,15 +136,12 @@ luaFunc(getLatestRSS)
 	string sResult = HTTPGet(sURL);
 	if(!sResult.size())
 		luaReturnNil();
-	tinyxml2::XMLDocument* doc = new tinyxml2::XMLDocument;
-	tinyxml2::XMLError err = doc->Parse(sResult.c_str());	//Parse this as XML document
+	tinyxml2::XMLDocument doc;
+	tinyxml2::XMLError err = doc.Parse(sResult.c_str());	//Parse this as XML document
 	if(err != tinyxml2::XML_NO_ERROR)
-	{
-		delete doc;
 		luaReturnNil();
-	}
 	string feedtitle, itemtitle, url;
-	tinyxml2::XMLElement* root = doc->RootElement();
+	tinyxml2::XMLElement* root = doc.RootElement();
 	if(root != NULL)
 	{
 		tinyxml2::XMLElement* channel = root->FirstChildElement("channel");
@@ -183,7 +182,6 @@ luaFunc(getLatestRSS)
 		}
 	}
 	//Done; clear it all out
-	delete doc;
 	luaReturn3Strings(feedtitle.c_str(), itemtitle.c_str(), url.c_str());
 }
 
@@ -191,14 +189,11 @@ luaFunc(defineWord)
 {
 	bool success = false;
 	bool verbose = lua_toboolean(L, 3);
-	tinyxml2::XMLDocument* doc = new tinyxml2::XMLDocument;
-	tinyxml2::XMLError err = doc->Parse(lua_tostring(L,1));	//Parse this as XML document
+	tinyxml2::XMLDocument doc;
+	tinyxml2::XMLError err = doc.Parse(lua_tostring(L,1));	//Parse this as XML document
 	if(err != tinyxml2::XML_NO_ERROR)
-	{
-		delete doc;
 		luaReturnNil();
-	}
-	tinyxml2::XMLElement* root = doc->RootElement();
+	tinyxml2::XMLElement* root = doc.RootElement();
 	if(root != NULL)
 	{
 		int cur = 0;
@@ -237,7 +232,6 @@ luaFunc(defineWord)
 				break;
 		}
 	}
-	delete doc;
 	luaReturnBool(success);
 }
 
