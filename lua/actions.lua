@@ -250,6 +250,8 @@ local functab = {
 	["picnic"] =	function(channel) say(channel, "[Problem In Chair, Not In Computer] - http://en.wikipedia.org/wiki/User_error") end,
 	["define"] = 	function(channel, user, str) define(channel, user, str, false) end,
 	["dictionary"] = 	function(channel, user, str) define(channel, user, str, true) end,
+	["like"] =	function(channel) say(channel, "I don\'t know half of you half as well as I should like; and I like less than half of you half as well as you deserve.") end,
+	
 }
 
 local funchelp = {
@@ -279,6 +281,7 @@ local funchelp = {
 	["picnic"] = 	'alerts the user as to what REALLY is the problem',
 	["define"] =	'tells you the most common meaning of a word',
 	["dictionary"] =	'looks up a word in the dictionary (verbose)',
+	["like"] =		'explains how I truly feel about you',
 }
 
 help = function(unused, channel, str, admin)
