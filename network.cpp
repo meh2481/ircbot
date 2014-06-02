@@ -38,7 +38,10 @@ bool setupConnection(const char* host, const char* port, int* connection)
 	if(!result)
 	{
 		*connection = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-		connect(*connection, res->ai_addr, res->ai_addrlen);
+		if(*connection == -1)
+			return false;
+		if(connect(*connection, res->ai_addr, res->ai_addrlen) != 0) 
+			return false;
 		return true;
 	}
 	return false;
