@@ -95,10 +95,10 @@ local function gotmessage(user, cmd, where, target, message)
 		end
 		
 		--Test for temperature
-		for w in string.gmatch(message, "-?%d*%.?%d*%s*\xC2?\xB0?%s*[Cc]") do
+		for w in string.gmatch(message, "-?%d*%.?%d*%s*\xC2?\xB0?%s*[Cc][%W$]") do
 			tofarenheit(w, target)
 		end
-		for w in string.gmatch(message, "-?%d*%.?%d*%s*\xC2?\xB0?%s*[Ff]") do
+		for w in string.gmatch(message, "-?%d*%.?%d*%s*\xC2?\xB0?%s*[Ff][%W$]") do
 			tocelsius(w, target)
 		end
 	end
