@@ -219,6 +219,24 @@ local function define(channel, user, str, verbose)
 	end
 end
 
+local function tofarenheit(str, channel)
+	local degrees = trim(str:gsub("(-?%d+)%s*\xC2?\xB0?%s*[Cc]", "%1", 1))	--Remove all but numbers
+	local Tc = tonumber(degrees)
+	local Tf = (9/5)*Tc+32
+	local Tfstr = string.format("%.2f", Tf)
+	say(channel, Tc.." °C = "..Tfstr.." °F")
+end
+setglobal("tofarenheit", tofarenheit)
+
+local function tocelsius(str, channel)
+	local degrees = trim(str:gsub("(-?%d+)%s*\xC2?\xB0?%s*[Ff]", "%1", 1))	--Remove all but numbers
+	local Tf = tonumber(degrees)
+	local Tc = (5/9)*(Tf-32)
+	local Tcstr = string.format("%.2f", Tc)
+	say(channel, Tf.." °F = "..Tcstr.." °C")
+end
+setglobal("tocelsius", tocelsius)
+
 local help
 
 local functab = {
