@@ -220,7 +220,7 @@ local function define(channel, user, str, verbose)
 end
 
 local function tofarenheit(str, channel)
-	local degrees = trim(str:gsub("(-?%d*%.?%d*)%s*\xC2?\xB0?%s*[Cc][%W$]", "%1", 1))	--Remove all but numbers
+	local degrees = trim(str:gsub("%W(%-?%d*%.?%d*)%s*\xC2?\xB0?%s*[Cc]%W", "%1", 1))	--Remove all but numbers
 	local Tc = tonumber(degrees)
 	if Tc == nil then return end
 	local Tf = (9/5)*Tc+32
@@ -230,7 +230,7 @@ end
 setglobal("tofarenheit", tofarenheit)
 
 local function tocelsius(str, channel)
-	local degrees = trim(str:gsub("(-?%d*%.?%d*)%s*\xC2?\xB0?%s*[Ff][%W$]", "%1", 1))	--Remove all but numbers
+	local degrees = trim(str:gsub("%W(%-?%d*%.?%d*)%s*\xC2?\xB0?%s*[Ff]%W", "%1", 1))	--Remove all but numbers
 	local Tf = tonumber(degrees)
 	if Tf == nil then return end
 	local Tc = (5/9)*(Tf-32)
