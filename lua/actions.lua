@@ -5,6 +5,30 @@ local function trim(s)
 end
 setglobal("trim", trim)
 
+--Helper function from http://stackoverflow.com/questions/15706270/sort-a-table-in-lua
+local function spairs(t, order)
+    -- collect the keys
+    local keys = {}
+    for k in pairs(t) do keys[#keys+1] = k end
+
+    -- if order function given, sort by it by passing the table and keys a, b,
+    -- otherwise just sort the keys 
+    if order then
+        table.sort(keys, function(a,b) return order(t, a, b) end)
+    else
+        table.sort(keys)
+    end
+
+    -- return the iterator function
+    local i = 0
+    return function()
+        i = i + 1
+        if keys[i] then
+            return keys[i], t[keys[i]]
+        end
+    end
+end
+
 local function seen(channel, user, message)
 	--Get second word
 	local person = trim(string.gsub(message, "(%S+)%s*(.+)", "%2"))
@@ -219,6 +243,20 @@ local function define(channel, user, str, verbose)
 	end
 end
 
+local lastprintedactive = os.time()
+
+local function activeusers(channel, user, str)
+	if os.time() - lastprintedactive < 10 then return end	--Don't flood channel by doing this too often
+	lastprintedactive = os.time()
+	local total = 0
+	for k,v in spairs(G_NUMLINES,function(t,a,b) return t[b] < t[a] end) do
+		say(channel, k.." = "..v)
+		--print(k,v)
+		total = total + 1
+		if total >= 5 then break end
+	end
+end
+
 local help
 
 local functab = {
@@ -250,6 +288,7 @@ local functab = {
 	["picnic"] =	function(channel) say(channel, "[Problem In Chair, Not In Computer] - http://en.wikipedia.org/wiki/User_error") end,
 	["define"] = 	function(channel, user, str) define(channel, user, str, false) end,
 	["dictionary"] = 	function(channel, user, str) define(channel, user, str, true) end,
+	["active"] =	activeusers,
 }
 
 local funchelp = {
@@ -279,6 +318,7 @@ local funchelp = {
 	["picnic"] = 	'alerts the user as to what REALLY is the problem',
 	["define"] =	'tells you the most common meaning of a word',
 	["dictionary"] =	'looks up a word in the dictionary (verbose)',
+	["active"] = 	'lists the most active users',
 }
 
 help = function(unused, channel, str, admin)
