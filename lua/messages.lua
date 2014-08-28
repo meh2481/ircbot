@@ -93,6 +93,14 @@ local function gotmessage(user, cmd, where, target, message)
 		else
 			yelling[user] = 1
 		end
+		
+		--Test for temperature
+		for w in string.gmatch(" "..message.." ", "%W%-?%d*%.?%d*%s*\xC2?\xB0?%s*[Cc]%W") do
+			tofarenheit(w, target)
+		end
+		for w in string.gmatch(" "..message.." ", "%W%-?%d*%.?%d*%s*\xC2?\xB0?%s*[Ff]%W") do
+			tocelsius(w, target)
+		end
 	end
 end
 setglobal("gotmessage", gotmessage)

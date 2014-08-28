@@ -50,7 +50,6 @@ string HTTPGet(string sURL)
 {
 	HttpGet* ht = new HttpGet;
 
-	ht->SetKeepAlive(5);
 	ht->SetBufsizeIn(MAX_DOWNLOAD_SIZE);
 	ht->Download(sURL);
 	ht->SetAlwaysHandle(true);
@@ -104,7 +103,6 @@ luaFunc(getURLTitle)	//URL
 	string sRet;
 	HttpGet* ht = new HttpGet;
 
-	ht->SetKeepAlive(5);
 	ht->SetBufsizeIn(MAX_DOWNLOAD_SIZE);
 	ht->Download(sURL);
 	ht->SetAlwaysHandle(true);
