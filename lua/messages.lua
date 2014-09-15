@@ -129,6 +129,11 @@ local function left(channel, user)
 	G_LASTSEEN[user:lower()] = os.time()
 	G_LASTMESSAGE[user:lower()] = "leaving IRC"
 	G_NICKS[user:lower()] = nil
+	
+	--Check and see if this was one of our clones, in case of network issues
+	if(getnick():lower():find(user)) then
+		newnick()
+	end
 end
 
 local function kicked(channel, user, buf)
