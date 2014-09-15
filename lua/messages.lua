@@ -162,6 +162,11 @@ local function changenick(channel, user, buf)
 	tellnow(channel, buf)	--Tell the user any pending messages they have
 end
 
+local function getnewnick(channel, user, buf)
+	G_NICKS[getnick():lower()] = 1
+	newnick()
+end
+
 local function command(channel, cmd, user, buf)
 	local actions = {
 		["001"] = join,
@@ -171,7 +176,7 @@ local function command(channel, cmd, user, buf)
 		["KICK"] = kicked,
 		["353"] = nicklist,
 		["404"] = rejoin,
-		["433"] = newnick,
+		["433"] = getnewnick,
 		["NICK"] = changenick,
 	}
 	
@@ -181,3 +186,8 @@ local function command(channel, cmd, user, buf)
 	end
 end
 setglobal("command", command)
+
+local function hasnick(nick)
+	return G_NICKS[nick:lower()]
+end
+setglobal("hasnick", hasnick)

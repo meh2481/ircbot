@@ -263,7 +263,19 @@ luaFunc(getnick)
 
 luaFunc(newnick)
 {
-	nick = nick + "_";	//Tack underscore onto end
+	nick = "immabot";
+	while(true)
+	{
+		lua_getglobal(L, "hasnick");
+		lua_pushstring(L, nick.c_str());
+		if(lua_pcall(L, 1, 1, 0) != LUA_OK)
+			luaReturnNil();	//break out here if something goes terribly wrong
+		int z = lua_tointeger(L, -1);
+		lua_pop(L, 1);  // pop returned value 
+		if(!z)
+			break;
+		nick = nick + "_";	//Tack underscore onto end
+	}
 	raw("USER %s 0 0 :%s\r\n", nick.c_str(), nick.c_str());
 	raw("NICK %s\r\n", nick.c_str());
 	luaReturnNil();

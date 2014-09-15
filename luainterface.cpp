@@ -204,3 +204,13 @@ bool LuaInterface::call(const char *func, int a, int b, int c, int d, int e)
 	lua_pushinteger(_lua, e);
 	return doCall(5);
 }
+
+int LuaInterface::callret(const char* func, const char* a)
+{
+	lookupFunc(func);
+	lua_pushstring(_lua, a);
+	doCall(1,1);
+	int z = lua_tointeger(_lua, -1);
+    lua_pop(_lua, 1);  /* pop returned value */
+    return z;
+}
