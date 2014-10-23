@@ -422,7 +422,12 @@ local function doaction(channel, str, user)
 	local found = str:find("%S+")
 	local act
 	if found then
-		act = str:sub(found)
+		local temp = str:find("%s")
+		if temp then
+			act = str:sub(found, temp-1)
+		else
+			act = str:sub(found)
+		end
 		if act then act = act:lower() end
 	end
 	if act then
