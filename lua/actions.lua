@@ -419,15 +419,26 @@ end
 
 local function doaction(channel, str, user)
 	--Get command all the way until whitespace
-	local act = str:sub(str:find("%S+")):lower()
-	
-	local f = functab[act]
-	if f then
-		f(channel, user, str, nil)
-	else
-		f = adminfunctab[act]
+	local found = str:find("%S+")
+	local act
+	if found then
+		local temp = str:find("%s")
+		if temp then
+			act = str:sub(found, temp-1)
+		else
+			act = str:sub(found)
+		end
+		if act then act = act:lower() end
+	end
+	if act then
+		local f = functab[act]
 		if f then
-			testadmin_thenfunc(channel, user, str, f)
+			f(channel, user, str, nil)
+		else
+			f = adminfunctab[act]
+			if f then
+				testadmin_thenfunc(channel, user, str, f)
+			end
 		end
 	end
 end
