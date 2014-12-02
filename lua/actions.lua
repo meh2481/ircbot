@@ -295,7 +295,11 @@ local function dotime(channel, str)
 			local hour = curtime.hour + v
 			if hour < 0 then hour = hour + 24 end
 			if hour > 24 then hour = hour - 24 end
-			endstr = endstr..k..": "..string.format("%02d",hour)..":"..string.format("%02d",curtime.min)
+			local ampm = "am"
+			if hour >= 12 then ampm = "pm" end
+			if hour == 0 or hour == 24 then ampm = "am" hour = 12 end
+			if hour > 12 then hour = hour - 12 end
+			endstr = endstr..k..": "..hour..":"..string.format("%02d",curtime.min).." "..ampm
 			if loop < total then
 				endstr = endstr.." | "
 			end
@@ -306,16 +310,6 @@ local function dotime(channel, str)
 	else
 		say(channel, "No times set")
 	end
-end
-
-local function addtime(channel,str)
-	local name = str:gsub("%S+", "", 1)	--Remove first word
-	name = name:gsub("(%S+).*", "%1")	--Remove trailing words
-	name = name:gsub("%s+", "")	--Remove whitespace
-	local houroffset = str:gsub("%S+", "", 2) --Remove first two words
-	houroffset = houroffset:gsub("%s+", "")	--Remove whitespace
-	G_TIMES[name] = tonumber(houroffset)
-	setglobal("G_TIMES", G_TIMES)
 end
 
 local help
@@ -352,7 +346,7 @@ local functab = {
 	["active"] =	activeusers,
 	["like"] =	function(channel) say(channel, "I don\'t know half of you half as well as I should like; and I like less than half of you half as well as you deserve.") end,
 	["time"] = function(channel, user, str) dotime(channel, str) end,
-	["addtime"] = function(channel, user, str) addtime(channel,str) end,
+	--["addtime"] = function(channel, user, str) addtime(channel,str) end,
 }
 
 local funchelp = {
@@ -385,7 +379,6 @@ local funchelp = {
 	["active"] = 	'lists the most active users',
 	["like"] =		'explains how I truly feel about you',
 	["time"] =		'displays the current time in different timezones',
-	["addtime"] =	'adds the timezone to the time clock (format: !addtime [name] [UTC offset in hours])',
 }
 
 help = function(unused, channel, str, admin)

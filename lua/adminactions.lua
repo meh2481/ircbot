@@ -188,7 +188,7 @@ local function sayact(channel, user, str, admin)
 	end
 end
 
-local function testfunc(channel, user, str)
+local function testfunc(channel, user, str, admin)
 	if admin then
 		for item,val in pairs(G_ADMINS) do
 			print(item,val)
@@ -196,19 +196,33 @@ local function testfunc(channel, user, str)
 	end
 end
 
-local function checkrss()
-	for key, val in pairs(G_RSSFEEDS) do
-		local feedtitle,itemtitle,url = getLatestRSS(key)
-		if feedtitle and itemtitle and url and feedtitle:len() > 0 and itemtitle:len() > 0 and url:len() > 0 then
-			local result = "["..feedtitle.."] "..itemtitle.." -- "..url
-			if result ~= val then
-				G_RSSFEEDS[key] = result
-				say(getchannel(), result)	--New feed update; say so
+local function checkrss(channel, user, str, admin)
+	if admin then
+		for key, val in pairs(G_RSSFEEDS) do
+			local feedtitle,itemtitle,url = getLatestRSS(key)
+			if feedtitle and itemtitle and url and feedtitle:len() > 0 and itemtitle:len() > 0 and url:len() > 0 then
+				local result = "["..feedtitle.."] "..itemtitle.." -- "..url
+				if result ~= val then
+					G_RSSFEEDS[key] = result
+					say(getchannel(), result)	--New feed update; say so
+				end
 			end
 		end
 	end
 end
 setglobal("checkrss", checkrss)
+
+local function addtime(channel, user, str, admin)
+	if admin then
+		local name = str:gsub("%S+", "", 1)	--Remove first word
+		name = name:gsub("(%S+).*", "%1")	--Remove trailing words
+		name = name:gsub("%s+", "")	--Remove whitespace
+		local houroffset = str:gsub("%S+", "", 2) --Remove first two words
+		houroffset = houroffset:gsub("%s+", "")	--Remove whitespace
+		G_TIMES[name] = tonumber(houroffset)
+		setglobal("G_TIMES", G_TIMES)
+	end
+end
 
 local adminfunctab = {
 	["quit"] =		quit,
@@ -226,6 +240,8 @@ local adminfunctab = {
 	["reload"] =	reloadlater,
 	["test"] = 		testfunc,
 	["checkrss"] = 	checkrss,
+	["addtime"] = 	addtime,
+
 }
 setglobal("adminfunctab", adminfunctab)
 
@@ -244,5 +260,6 @@ local adminfunchelp = {
 	["join"] =		'makes me join a channel',
 	["part"] = 		'makes me leave a channel',
 	["checkrss"] = 	'forces a check of all RSS feeds (happens automatically every 5 minutes)',
+	["addtime"] =	'adds the timezone to the time clock (format: !addtime [name] [UTC offset in hours])',
 }
 setglobal("adminfunchelp", adminfunchelp)
