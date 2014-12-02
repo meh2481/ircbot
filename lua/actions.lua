@@ -280,7 +280,7 @@ setglobal("tocelsius", tocelsius)
 local function dotime(channel, str)
 	local offset = G_TIMES["offset"]
 	local curtime = os.date("*t")
-	curtime.hour = curtime.hour + offset
+	curtime.hour = curtime.hour - offset
 	local total = 0
 	for k,v in pairs(G_TIMES) do
 		total = total + 1
@@ -292,7 +292,7 @@ local function dotime(channel, str)
 		if k == "offset" then
 			-- do nothing
 		else
-			local hour = curtime.hour - v
+			local hour = curtime.hour + v
 			if hour < 0 then hour = hour + 24 end
 			if hour > 24 then hour = hour - 24 end
 			endstr = endstr..k..": "..string.format("%02d",hour)..":"..string.format("%02d",curtime.min)
