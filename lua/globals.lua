@@ -61,3 +61,7 @@ end
 if not G_NUMLINES then
 	G_NUMLINES = {}
 end
+
+if not G_TIMES then
+	G_TIMES = {["offset"]=-5,["NY"]=-5,}
+end

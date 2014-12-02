@@ -277,6 +277,47 @@ local function tocelsius(str, channel)
 end
 setglobal("tocelsius", tocelsius)
 
+local function dotime(channel, str)
+	local offset = G_TIMES["offset"]
+	local curtime = os.date("*t")
+	curtime.hour = curtime.hour + offset
+	local total = 0
+	for k,v in pairs(G_TIMES) do
+		total = total + 1
+	end
+	local loop = 0
+	local endstr = "Time in: "
+	for k,v in pairs(G_TIMES) do
+		loop = loop + 1
+		if k == "offset" then
+			-- do nothing
+		else
+			local hour = curtime.hour - v
+			if hour < 0 then hour = hour + 24 end
+			if hour > 24 then hour = hour - 24 end
+			endstr = endstr..k..": "..string.format("%02d",hour)..":"..string.format("%02d",curtime.min)
+			if loop < total then
+				endstr = endstr.." | "
+			end
+		end
+	end
+	if total > 1 then
+		say(channel, endstr)
+	else
+		say(channel, "No times set")
+	end
+end
+
+local function addtime(channel,str)
+	local name = str:gsub("%S+", "", 1)	--Remove first word
+	name = name:gsub("(%S+).*", "%1")	--Remove trailing words
+	name = name:gsub("%s+", "")	--Remove whitespace
+	local houroffset = str:gsub("%S+", "", 2) --Remove first two words
+	houroffset = houroffset:gsub("%s+", "")	--Remove whitespace
+	G_TIMES[name] = tonumber(houroffset)
+	setglobal("G_TIMES", G_TIMES)
+end
+
 local help
 
 local functab = {
@@ -310,6 +351,8 @@ local functab = {
 	["dictionary"] = 	function(channel, user, str) define(channel, user, str, true) end,
 	["active"] =	activeusers,
 	["like"] =	function(channel) say(channel, "I don\'t know half of you half as well as I should like; and I like less than half of you half as well as you deserve.") end,
+	["time"] = function(channel, user, str) dotime(channel, str) end,
+	["addtime"] = function(channel, user, str) addtime(channel,str) end,
 }
 
 local funchelp = {
@@ -341,6 +384,8 @@ local funchelp = {
 	["dictionary"] =	'looks up a word in the dictionary (verbose)',
 	["active"] = 	'lists the most active users',
 	["like"] =		'explains how I truly feel about you',
+	["time"] =		'displays the current time in different timezones',
+	["addtime"] =	'adds the timezone to the time clock (format: !addtime [name] [UTC offset in hours])',
 }
 
 help = function(unused, channel, str, admin)

@@ -18,6 +18,7 @@ local function saveall()
 	savetable(G_ADMINS, "txt/admins.txt")
 	savetable(G_CURSERS, "txt/cursers.txt")
 	savetable(G_NUMLINES, "txt/numlines.txt")
+	savetable(G_TIMES, "txt/times.txt")
 end
 setglobal("saveall", saveall)
 
@@ -68,6 +69,10 @@ local function restoreall()
 	local numlines = loadtable("txt/numlines.txt")
 	if numlines then
 		G_NUMLINES = numlines
+	end
+	local times = loadtable("txt/times.txt")
+	if times then
+		G_TIMES = times
 	end
 end
 setglobal("restoreall", restoreall)
