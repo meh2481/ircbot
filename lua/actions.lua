@@ -316,6 +316,75 @@ local function dotime(channel, str, military)
 	end
 end
 
+local function convert(channel, from, to, fac, str)
+	local word = str:gsub("%S+", "", 1)	--Remove first word
+	word = word:gsub("(%S+).*", "%1")	--Remove trailing words
+	local unit = tonumber(word)	--Remove all but numbers
+	if unit == nil then return end
+	local result = unit * fac
+	say(channel, unit.." "..from.." = "..result.." "..to)
+end
+
+local function fromcm(channel, user, str)
+	convert(channel, "cm", "in", 0.393701, str)
+end
+setglobal("fromcm", fromcm)
+
+local function frominches(channel, user, str)
+	convert(channel, "in", "cm", 2.54, str)
+end
+setglobal("frominches", frominches)
+
+local function fromfeet(channel, user, str)
+	convert(channel, "ft", "m", 0.3048, str)
+end
+setglobal("fromfeet", fromfeet)
+
+local function fromm(channel, user, str)
+	convert(channel, "m", "ft", 3.28084, str)
+end
+setglobal("fromm", fromm)
+
+local function fromkm(channel, user, str)
+	convert(channel, "km", "mi", 0.621371, str)
+end
+setglobal("fromkm", fromkm)
+
+local function frommiles(channel, user, str)
+	convert(channel, "mi", "km", 1.60934, str)
+end
+setglobal("frommiles", frommiles)
+
+local function fromkg(channel, user, str)
+	convert(channel, "kg", "lb", 2.20462, str)
+end
+setglobal("fromkg", fromkg)
+
+local function fromlb(channel, user, str)
+	convert(channel, "lb", "kg", 0.453592, str)
+end
+setglobal("fromlb", fromlb)
+
+local function fromg(channel, user, str)
+	convert(channel, "g", "oz", 0.035274, str)
+end
+setglobal("fromg", fromg)
+
+local function fromoz(channel, user, str)
+	convert(channel, "oz", "g", 28.3495, str)
+end
+setglobal("fromoz", fromoz)
+
+local function froml(channel, user, str)
+	convert(channel, "l", "gal", 0.264172, str)
+end
+setglobal("froml", froml)
+
+local function fromgal(channel, user, str)
+	convert(channel, "gal", "l", 3.78541, str)
+end
+setglobal("fromgal", fromgal)
+
 local help
 
 local functab = {
@@ -351,6 +420,33 @@ local functab = {
 	["like"] =	function(channel) say(channel, "I don\'t know half of you half as well as I should like; and I like less than half of you half as well as you deserve.") end,
 	["time"] = function(channel, user, str) dotime(channel, str, false) end,
 	["timem"] = function(channel, user, str) dotime(channel, str, true) end,
+	
+	["cm"] = fromcm,
+	["centimeters"] = fromcm,
+	["in"] = frominches,
+	["inches"] = frominches,
+	["ft"] = fromfeet,
+	["feet"] = fromfeet,
+	["m"] = fromm,
+	["meters"] = fromm,
+	["km"] = fromkm,
+	["kilometers"] = fromkm,
+	["mi"] = frommiles,
+	["miles"] = frommiles,
+	
+	["kg"] = fromkg,
+	["kilograms"] = fromkg,
+	["lb"] = fromlb,
+	["pounds"] = fromlb,
+	["g"] = fromg,
+	["grams"] = fromg,
+	["oz"] = fromoz,
+	["ounces"] = fromoz,
+	
+	["l"] = froml,
+	["liters"] = froml,
+	["gal"] = fromgal,
+	["gallons"] = fromgal,
 	--["addtime"] = function(channel, user, str) addtime(channel,str) end,
 }
 
@@ -385,6 +481,7 @@ local funchelp = {
 	["like"] =		'explains how I truly feel about you',
 	["time"] =		'displays the current time in different timezones',
 	["timem"] =		'displays the current time in different timezones, 24-hour format',
+	["[unit]"] =	'converts between US and metric units (Example: \"!km [kilometers]\", outputs in miles)'
 }
 
 help = function(unused, channel, str, admin)
