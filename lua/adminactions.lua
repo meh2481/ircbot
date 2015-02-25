@@ -197,7 +197,7 @@ local function testfunc(channel, user, str, admin)
 end
 
 local function checkrss(channel, user, str, admin)
-	if admin then
+	if admin == true or admin == nil then
 		for key, val in pairs(G_RSSFEEDS) do
 			local feedtitle,itemtitle,url = getLatestRSS(key)
 			if feedtitle and itemtitle and url and feedtitle:len() > 0 and itemtitle:len() > 0 and url:len() > 0 then
