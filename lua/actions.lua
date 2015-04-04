@@ -385,6 +385,10 @@ local function fromgal(channel, user, str)
 end
 setglobal("fromgal", fromgal)
 
+local function foulmouth(channel, user, str)
+	
+end
+
 local help
 
 local functab = {
@@ -448,6 +452,7 @@ local functab = {
 	["gal"] = fromgal,
 	["gallons"] = fromgal,
 	--["addtime"] = function(channel, user, str) addtime(channel,str) end,
+	["foulmouth"] = foulmouth,
 }
 
 local funchelp = {
@@ -481,7 +486,8 @@ local funchelp = {
 	["like"] =		'explains how I truly feel about you',
 	["time"] =		'displays the current time in different timezones',
 	["timem"] =		'displays the current time in different timezones, 24-hour format',
-	["[unit]"] =	'converts between US and metric units (Example: \"!km [kilometers]\", outputs in miles)'
+	["[unit]"] =	'converts between US and metric units (Example: \"!km [kilometers]\", outputs in miles)',
+	["foulmouth"] = 	'[user] tells you how many times said user has been slapped for their foul language',
 }
 
 help = function(unused, channel, str, admin)

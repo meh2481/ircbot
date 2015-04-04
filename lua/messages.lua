@@ -65,10 +65,11 @@ local function gotmessage(user, cmd, where, target, message)
 				end
 				break
 			end
-			if G_BIRDWORDS[w] then
-				action(target, "pecks "..user.." for their fowl language")
-				break
-			end
+			--Stop with the whole bird word nonsense
+			--if G_BIRDWORDS[w] then
+			--	action(target, "pecks "..user.." for their fowl language")
+			--	break
+			--end
 		end
 		
 		--See if yelling
