@@ -246,14 +246,32 @@ end
 local lastprintedactive = os.time()
 
 local function activeusers(channel, user, str)
-	if os.time() - lastprintedactive < 10 then return end	--Don't flood channel by doing this too often
-	lastprintedactive = os.time()
-	local total = 0
-	for k,v in spairs(G_NUMLINES,function(t,a,b) return t[b] < t[a] end) do
-		say(channel, k.." = "..v)
-		--print(k,v)
-		total = total + 1
-		if total >= 5 then break end
+	local person = string.gsub(str, "%S+", "", 1)	--Remove first word
+	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
+	person = string.gsub(person, "%s", "")			--Remove whitespace
+	local number = tonumber(person)
+	
+	if string.len(person) < 1 or number ~= nil then
+		if os.time() - lastprintedactive < 10 then return end	--Don't flood channel by doing this too often
+		lastprintedactive = os.time()
+		local total = 0
+		local toprint = 5
+		if number ~= nil then
+			toprint = number
+		end
+		for k,v in spairs(G_NUMLINES,function(t,a,b) return t[b] < t[a] end) do
+			say(channel, k.." = "..v)
+			--print(k,v)
+			total = total + 1
+			if total >= toprint then break end
+		end
+	else
+		local nummsg = G_NUMLINES[person:lower()]
+		if nummsg == nil then
+			say(channel, "I haven't seen "..person.."around here.")
+		else
+			say(channel, person.." has written "..nummsg.." lines here.")
+		end
 	end
 end
 
@@ -407,15 +425,14 @@ end
 local lastprintedfoul = os.time()
 
 local function foulmouth(channel, user, str)
-	if os.time() - lastprintedfoul < 10 then return end	--Don't flood channel by doing this too often
-	lastprintedfoul = os.time()
-	
 	local person = string.gsub(str, "%S+", "", 1)	--Remove first word
 	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
 	person = string.gsub(person, "%s", "")			--Remove whitespace
 	local number = tonumber(person)
 	
 	if string.len(person) < 1 or number ~= nil then
+		if os.time() - lastprintedfoul < 10 then return end	--Don't flood channel by doing this too often
+		lastprintedfoul = os.time()
 		--Print biggest cursers
 		local total = 0
 		local toprint = 5
@@ -533,7 +550,7 @@ local funchelp = {
 	["picnic"] = 	'alerts the user as to what REALLY is the problem',
 	["define"] =	'tells you the most common meaning of a word',
 	["dictionary"] =	'looks up a word in the dictionary (verbose)',
-	["active"] = 	'lists the most active users',
+	["active"] = 	'[user|number] lists the [number] most active users, or tells how active a user is',
 	["like"] =		'explains how I truly feel about you',
 	["time"] =		'displays the current time in different timezones',
 	["timem"] =		'displays the current time in different timezones, 24-hour format',
