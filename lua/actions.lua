@@ -404,7 +404,12 @@ local function cursedesc(person, percent)
 	return "Intermediate Foulmouth"
 end
 
+local lastprintedfoul = os.time()
+
 local function foulmouth(channel, user, str)
+	if os.time() - lastprintedfoul < 10 then return end	--Don't flood channel by doing this too often
+	lastprintedfoul = os.time()
+	
 	local person = string.gsub(str, "%S+", "", 1)	--Remove first word
 	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
 	person = string.gsub(person, "%s", "")			--Remove whitespace
