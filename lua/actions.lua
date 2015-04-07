@@ -385,8 +385,54 @@ local function fromgal(channel, user, str)
 end
 setglobal("fromgal", fromgal)
 
-local function foulmouth(channel, user, str)
+local function cursedesc(person, percent)
+	for k,v in spairs(G_CURSERS,function(t,a,b) return t[b] < t[a] end) do
+		if k == person then 
+			return "Biggest Foulmouth"
+		end
+		break
+	end
 	
+	if percent < 1 then
+		return "Junior Foulmouth"
+	end
+	
+	if percent > 5 then
+		return "Senior Foulmouth"
+	end
+	
+	return "Intermediate Foulmouth"
+end
+
+local function foulmouth(channel, user, str)
+	local person = string.gsub(str, "%S+", "", 1)	--Remove first word
+	person = string.gsub(person, "(%S+).*", "%1")	--Remove trailing words
+	person = string.gsub(person, "%s", "")			--Remove whitespace
+	local number = tonumber(person)
+	
+	if string.len(person) < 1 or number ~= nil then
+		--Print biggest cursers
+		local total = 0
+		local toprint = 5
+		if number ~= nil then
+			toprint = number
+		end
+		for k,v in spairs(G_CURSERS,function(t,a,b) return t[b] < t[a] end) do
+			say(channel, k.." has cursed "..v.." times")
+			total = total + 1
+			if total >= toprint then break end
+		end
+	else
+		local numcurses = G_CURSERS[person:lower()]
+		if numcurses == nil then
+			say(channel, person.." has a mouth like an angel. Thanks, Mom!")
+		else
+			local nummsgs = G_NUMLINES[person:lower()]
+			local percent = ((numcurses/nummsgs) * 100)
+			local percentstr = string.format("%.3f", percent)
+			say(channel, person.." has cursed a total of "..numcurses.." times, earning them the title of "..cursedesc(person:lower(), percent)..". "..percentstr.. "% of their messages contain foul language.")
+		end
+	end
 end
 
 local help
@@ -487,7 +533,7 @@ local funchelp = {
 	["time"] =		'displays the current time in different timezones',
 	["timem"] =		'displays the current time in different timezones, 24-hour format',
 	["[unit]"] =	'converts between US and metric units (Example: \"!km [kilometers]\", outputs in miles)',
-	["foulmouth"] = 	'[user] tells you how many times said user has been slapped for their foul language',
+	["foulmouth"] = 	'[user|number] tells you how many times [user] has been slapped for their foul language, or gives the top [number] of foul mouths',
 }
 
 help = function(unused, channel, str, admin)
