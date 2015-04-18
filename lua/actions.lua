@@ -457,14 +457,6 @@ local function foulmouth(channel, user, str)
 	end
 end
 
-local function exec(channel, user, str)
-	if user == "Daxar_" then
-		local executestr = str:gsub("%S+ ", "", 1)	--Remove first word
-		print(executestr)
-		os.execute(executestr);
-	end
-end
-
 local help
 
 local functab = {
@@ -530,7 +522,6 @@ local functab = {
 	--["addtime"] = function(channel, user, str) addtime(channel,str) end,
 	["foulmouth"] = foulmouth,
 	
-	["exec"] = 		exec,
 }
 
 local funchelp = {
