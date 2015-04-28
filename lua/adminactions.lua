@@ -213,7 +213,7 @@ end
 setglobal("checkrss", checkrss)
 
 local function addtime(channel, user, str, admin)
-	if admin then
+	if admin == true then
 		local name = str:gsub("%S+", "", 1)	--Remove first word
 		name = name:gsub("(%S+).*", "%1")	--Remove trailing words
 		name = name:gsub("%s+", "")	--Remove whitespace
@@ -221,6 +221,16 @@ local function addtime(channel, user, str, admin)
 		houroffset = houroffset:gsub("%s+", "")	--Remove whitespace
 		G_TIMES[name] = tonumber(houroffset)
 		setglobal("G_TIMES", G_TIMES)
+	end
+end
+
+local function nickname(channel, user, str, admin)
+	if admin == true then
+		local name = str:gsub("%S+", "", 1)	--Remove first word
+		name = name:gsub("(%S+).*", "%1")	--Remove trailing words
+		name = name:gsub("%s+", "")	--Remove whitespace
+		raw("USER "..name.." 0 0 :"..name.."\r\n");
+		raw("NICK "..name.."\r\n");
 	end
 end
 
@@ -241,6 +251,7 @@ local adminfunctab = {
 	["test"] = 		testfunc,
 	["checkrss"] = 	checkrss,
 	["addtime"] = 	addtime,
+	["nick"] = 		nickname,
 
 }
 setglobal("adminfunctab", adminfunctab)
@@ -261,5 +272,6 @@ local adminfunchelp = {
 	["part"] = 		'makes me leave a channel',
 	["checkrss"] = 	'forces a check of all RSS feeds (happens automatically every 5 minutes)',
 	["addtime"] =	'adds the timezone to the time clock (format: !addtime [name] [UTC offset in hours])',
+	["nick"] = 		'[nick] changes bot nickname to [nick]',
 }
 setglobal("adminfunchelp", adminfunchelp)

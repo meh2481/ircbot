@@ -521,6 +521,7 @@ local functab = {
 	["gallons"] = fromgal,
 	--["addtime"] = function(channel, user, str) addtime(channel,str) end,
 	["foulmouth"] = foulmouth,
+	
 }
 
 local funchelp = {

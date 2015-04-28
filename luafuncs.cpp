@@ -215,6 +215,23 @@ luaFunc(defineWord)
 						while(isspace(s[0]))
 							s.erase(0,1);
 						toSay << s;
+						
+						//Handle dictionary api having fw tags in it
+						tinyxml2::XMLElement* fw = dt->FirstChildElement("fw");
+						if(fw != NULL)
+						{
+							const char* cFw = fw->GetText();
+							if(cFw != NULL && strlen(cFw) > 3)
+							{
+								string sfw = cFw;
+								while(isspace(sfw[sfw.size()-1]))
+									sfw.erase(sfw.size()-1);
+								while(isspace(sfw[0]))
+									sfw.erase(0,1);
+								toSay << " ";
+								toSay << sfw;
+							}
+						}
 						if(verbose)
 							toSay << "; ";
 						else break;
