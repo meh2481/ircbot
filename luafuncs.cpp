@@ -31,7 +31,7 @@ public:
 	void searchFor(string s)			{sSearch = s;};
 
 protected:
-	virtual void _OnRecv(char *buf, unsigned int size)
+	virtual void _OnRecv(void *buf, unsigned int size)
 	{
 		if(IsRedirecting())
 			sRedir = Hdr("location");
@@ -39,7 +39,7 @@ protected:
 		if(!size)
 			return;
 			
-		for(char* i = buf; i < buf+size; i++)
+		for(char* i = (char*)buf; i < buf+size; i++)
 			sBuf.push_back(*i);
 		if(sBuf.size() >= MAX_DOWNLOAD_SIZE || (sSearch.size() > 1 && sBuf.find(sSearch) != string::npos))
 			bStop = true;

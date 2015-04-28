@@ -1,8 +1,8 @@
 OS = $(shell uname -s)
-LIBS = ./dep/lua/liblua.a ./dep/tinyxml2/libtinyxml2.a
+LIBS = ./dep/lua/liblua.a ./dep/tinyxml2/libtinyxml2.a -lmbedtls -L./dep/win32 -L./dep/lin64
 OBJECTS = bot.o network.o minihttp.o luainterface.o luafuncs.o
 CXXFLAGS = -Wno-write-strings
-INCLUDE = -I./dep/lua -I./dep/tinyxml2
+INCLUDE = -I./dep/lua -I./dep/tinyxml2 -I./dep
 CC = g++
 
 TARGET = ircbot
