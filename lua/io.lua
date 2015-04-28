@@ -1,6 +1,11 @@
 --Functions for dealing with file I/O
 
 local function savetable(tab, filename)
+	print("saving table " .. filename)
+	if tab == nil then
+		print("table " .. filename .. " is nil")
+		return
+	end
 	local file = io.open(filename, "w")
 	if file then
 		file:write(serialize_save(tab, false))
@@ -9,7 +14,7 @@ local function savetable(tab, filename)
 end
 
 local function saveall()
-	savetable(G_BIRDWORDS, "txt/birdwords.txt")
+	--savetable(G_BIRDWORDS, "txt/birdwords.txt")
 	savetable(G_BADWORDS, "txt/badwords.txt")
 	savetable(G_LASTSEEN, "txt/lastseen.txt")
 	savetable(G_LASTMESSAGE, "txt/lastmessage.txt")
@@ -32,13 +37,13 @@ local function loadtable(filename)
 end
 
 local function restoreall()
-	G_BIRDWORDS = loadtable("txt/birdwords.txt")
+	--G_BIRDWORDS = loadtable("txt/birdwords.txt")
 	G_BADWORDS = loadtable("txt/badwords.txt")
-	for key,val in pairs(G_BADWORDS) do
-		if key:find(" ") then
-			G_BADWORDS[key] = nil
-		end
-	end
+	--for key,val in pairs(G_BADWORDS) do
+	--	if key:find(" ") then
+	--		G_BADWORDS[key] = nil
+	--	end
+	--end
 	local tmpmsg = loadtable("txt/lastseen.txt")
 	if tmpmsg then
 		G_LASTSEEN = tmpmsg

@@ -73,7 +73,7 @@ local function gotmessage(user, cmd, where, target, message)
 		end
 		
 		--See if yelling
-		local allupper = true
+		--[=[local allupper = true
 		for w in string.gmatch(message, "%S+") do
 			local test = w:upper()
 			if test ~= w then
@@ -93,7 +93,7 @@ local function gotmessage(user, cmd, where, target, message)
 			end
 		else
 			yelling[user] = 1
-		end
+		end--]=]
 		
 		--Test for temperature
 		for w in string.gmatch(" "..message.." ", "%W%-?%d*%.?%d*%s*\xC2?\xB0?%s*[Cc]%W") do

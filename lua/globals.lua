@@ -18,9 +18,9 @@ if not G_BADWORDS then
 	G_BADWORDS = {}
 end
 
-if not G_BIRDWORDS then 
-	G_BIRDWORDS = {}
-end
+--if not G_BIRDWORDS then 
+--	G_BIRDWORDS = {}
+--end
 
 if not G_STARTTIME then
 	G_STARTTIME = os.time()
