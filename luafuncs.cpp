@@ -46,12 +46,12 @@ protected:
 	}
 };
 
-string HTTPGet(string sURL)
+string HTTPGet(string sURL, string sExtra)
 {
 	HttpGet* ht = new HttpGet;
 
 	ht->SetBufsizeIn(MAX_DOWNLOAD_SIZE);
-	ht->Download(sURL);
+	ht->Download(sURL, sExtra.c_str());
 	ht->SetAlwaysHandle(true);
 	minihttp::SocketSet ss;
 	ss.add(ht, true);
@@ -61,10 +61,77 @@ string HTTPGet(string sURL)
 	return sBuf;
 }
 
+string HTTPGet(string sURL)
+{
+	return HTTPGet(sURL, "");
+}
+
+//http://stackoverflow.com/questions/154536/encode-decode-urls-in-c
+#include <cctype>
+#include <iomanip>
+#include <sstream>
+#include <string>
+using namespace std;
+string url_encode(const string &value) 
+{
+    ostringstream escaped;
+    escaped.fill('0');
+    escaped << hex;
+
+    for (string::const_iterator i = value.begin(), n = value.end(); i != n; ++i) 
+	{
+        string::value_type c = (*i);
+
+        // Keep alphanumeric and other accepted characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') 
+		{
+            escaped << c;
+            continue;
+        }
+
+        // Any other characters are percent-encoded
+        escaped << '%' << setw(2) << int((unsigned char) c);
+    }
+    return escaped.str();
+}
+
+#include "polarssl/sha1.h"
+#include "polarssl/base64.h"
+luaFunc(encode64)
+{
+	string sEncode = lua_tostring(L,1);
+	size_t len = 0;
+	const unsigned char* cEncode = (const unsigned char*) sEncode.c_str();
+	base64_encode(NULL, &len, cEncode, sEncode.size());	//Grab length of our destination buffer
+	unsigned char* cBuf = (unsigned char*) malloc(len) + 1;
+	base64_encode(cBuf, &len, cEncode, sEncode.size());		//Do actual encode
+	cBuf[len] = '\0';
+	string s = (const char*)cBuf;
+	free(cBuf);
+	luaReturnStr(s.c_str());
+}
+
+luaFunc(hmacSHA1)
+{
+	string sKey = lua_tostring(L,1);
+	string sInput = lua_tostring(L,2);
+	unsigned char output[21];
+	sha1_hmac((const unsigned char*)sKey.c_str(), sKey.size(), (const unsigned char*)sInput.c_str(), sInput.size(), output);
+	output[20] = '\0';
+	luaReturnStr((const char*)output);
+}
+
+luaFunc(encodeURI)
+{
+	string sURI = lua_tostring(L,1);
+	luaReturnStr(url_encode(sURI).c_str());
+}
+
 luaFunc(wget)
 {
 	string sURL = lua_tostring(L,1);
-	string s = HTTPGet(sURL);
+	string sExtra = lua_tostring(L,2);
+	string s = HTTPGet(sURL, sExtra);
 	luaReturnStr(s.c_str());
 }
 
@@ -332,6 +399,9 @@ static LuaFunctions s_functab[] =
 	luaRegister(newnick),
 	luaRegister(wget),
 	luaRegister(defineWord),
+	luaRegister(encodeURI),
+	luaRegister(encode64),
+	luaRegister(hmacSHA1),
 	{NULL, NULL}
 };
 
