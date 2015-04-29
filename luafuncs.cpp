@@ -33,13 +33,14 @@ public:
 protected:
 	virtual void _OnRecv(void *buf, unsigned int size)
 	{
+		char* tmp = (char*) buf;
 		if(IsRedirecting())
 			sRedir = Hdr("location");
 		
 		if(!size)
 			return;
 			
-		for(char* i = (char*)buf; i < buf+size; i++)
+		for(char* i = tmp; i < tmp+size; i++)
 			sBuf.push_back(*i);
 		if(sBuf.size() >= MAX_DOWNLOAD_SIZE || (sSearch.size() > 1 && sBuf.find(sSearch) != string::npos))
 			bStop = true;
