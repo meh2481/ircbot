@@ -82,7 +82,7 @@ local function checktwitter(nopost)
 					end
 					
 					if totweet == true then
-						say(channel, "[@"..tweeter.."] "..tweettext.." (https://twitter.com/"..tweeter.."/status/"..twitter_table[i]["id_str"]..')')
+						say(channel, "[@"..tweeter.."] "..tweettext)
 					end
 				end
 			end
