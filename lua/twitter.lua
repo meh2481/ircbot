@@ -2,17 +2,13 @@
 
 
 
-
-local function checktwitter(channel)
+local function checktwitter(channel, nopost)
+	print("checking the twitterverse...")
 	local urlToGet = "https://api.twitter.com/1.1/statuses/user_timeline.json"
-	local urlParams1 = "count=2&"
-	local urlParams2 = "screen_name=infinite_ammo"	--TODO: Select different peoples
-	
-	--local teststr = wget(urlToGet)
-	--print(teststr)
-	
-	--teststr = wget("https://www.example.com")
-	--print(teststr)
+	local numtweets = 4
+	local tweeter = "infinite_ammo"	--TODO: Select different peoples
+	local urlParams1 = "count="..numtweets.."&"
+	local urlParams2 = "screen_name="..tweeter
 	
 	local headerStr = "Authorization: OAuth "
 	local authTab = {
@@ -37,9 +33,8 @@ local function checktwitter(channel)
 	for i,n in ipairs(orderedList) do 
 		sigBase = sigBase..encodeURI(n..'='..authTab[n]..'&')
 	end
-	--print(sigBase)
+	
 	sigBase = sigBase..encodeURI(urlParams2)
-	print(sigBase)
 	
 	local signKey = G_OAUTH["consumersecret"]..'&'..G_OAUTH["accesstokensecret"]
 	
@@ -47,17 +42,50 @@ local function checktwitter(channel)
 	
 	headerStr = headerStr.."oauth_consumer_key=\""..authTab["oauth_consumer_key"].."\", oauth_nonce=\""..authTab["oauth_nonce"].."\", oauth_signature=\""..authTab["oauth_signature"].."\", oauth_signature_method=\""..authTab["oauth_signature_method"].."\", oauth_timestamp=\""..authTab["oauth_timestamp"].."\", oauth_token=\""..authTab["oauth_token"].."\", oauth_version=\""..authTab["oauth_version"].."\""
 	
-	print(headerStr)
+	--Fetch result from twitter
+	local JSONScript = wget(urlToGet..'?'..urlParams1..urlParams2, headerStr)
 	
-	local finalStr = wget(urlToGet..'?'..urlParams1..urlParams2, headerStr)
-	print(finalStr)
+	--Decode into Lua-parsable table
+	local twitter_table = G_JSON:decode(JSONScript)
 	
-	--savetable(authTab, "authtest.txt")
+	local rtfiltertab = {
+		"nitw",
+		"night in the woods",
+		"nightinthewoods",
+		"aquaria"
+	}
 	
-	
-	--[=["Authorization: OAuth oauth_consumer_key="FLjh22Mqyr7rr30tlswBi9Tc2", oauth_nonce="cb748646f4e3be1244b35bedff1daf87", oauth_signature="whhEQWy64dj8PL6MIJ21CG2say0%3D", oauth_signature_method="HMAC-SHA1", oauth_timestamp="1430335537", oauth_token="325517524-qy7qQCBeaOxDcGDYWA5yxkFqDfmUt8N2fy39YMvN", oauth_version="1.0""--]=]
-	
-	
-	
+	--Format and output
+	if twitter_table ~= nil then
+		for i = numtweets, 1, -1 do	--Tweets are posted in reverse order from IRC, so spin backwards over this list to post oldest first
+			if G_TWEETS[twitter_table[i]["id_str"]] == nil then	--Haven't posted this tweet yet
+				G_TWEETS[twitter_table[i]["id_str"]] = 1
+				if nopost == nil then
+					local tweettext = twitter_table[i]["text"]
+					local totweet = true
+					
+					--if it's a RT, regex it so that aquaria, NITW, etc is okay
+					--if not an RT, post it and see what happens
+					
+					if tweettext:sub(1,2) == "RT" or tweettext:sub(1,1) == "@" then
+						totweet = false
+						
+						for k,v in pairs(rtfiltertab) do
+							if tweettext:lower():find(v) ~= nil then
+								totweet = true
+								break
+							end
+						end
+					else
+						totweet = true
+					end
+					
+					if totweet == true then
+						say(channel, "[@"..tweeter.."] "..tweettext.." (https://twitter.com/"..tweeter.."/status/"..twitter_table[i]["id_str"]..')')
+					end
+				end
+			end
+		end
+	end
 end
 setglobal("checktwitter", checktwitter)

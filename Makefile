@@ -1,7 +1,7 @@
 OS = $(shell uname -s)
 LIBS = ./dep/lua/liblua.a ./dep/tinyxml2/libtinyxml2.a ./dep/libmbedtls.a
 OBJECTS = bot.o network.o minihttp.o luainterface.o luafuncs.o
-CXXFLAGS = -Wno-write-strings -DMINIHTTP_USE_POLARSSL
+CXXFLAGS = -Wno-write-strings
 INCLUDE = -I./dep/lua -I./dep/tinyxml2 -I./dep
 CC = g++
 

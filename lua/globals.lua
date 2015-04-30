@@ -74,3 +74,6 @@ if not G_JSON then
 	G_JSON = (loadfile "lua/JSON.lua")()
 end
 
+if not G_TWEETS then
+	G_TWEETS = {}
+end
