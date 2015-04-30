@@ -1,6 +1,8 @@
 // minihttp.cpp - All functionality required for a minimal TCP/HTTP client packed in one file.
 // Released under the WTFPL (See minihttp.h)
 
+#define MINIHTTP_USE_POLARSSL
+
 #ifdef _MSC_VER
 #  ifndef _CRT_SECURE_NO_WARNINGS
 #    define _CRT_SECURE_NO_WARNINGS
@@ -589,7 +591,7 @@ int TcpSocket::_writeBytes(const unsigned char *buf, size_t len)
     else
         return net_send(&_s, buf, len);
 #else
-    return ::send(_s, buf, len, 0);
+    return ::send(_s, (const char*) buf, len, 0);
 #endif
 }
 
@@ -615,7 +617,7 @@ int TcpSocket::_readBytes(unsigned char *buf, size_t maxlen)
     else
         return net_recv(&_s, buf, maxlen);
 #else
-    return recv(_s, buf, maxlen, 0); // last char is used as string terminator
+    return recv(_s, (char*) buf, maxlen, 0); // last char is used as string terminator
 #endif
 }
 

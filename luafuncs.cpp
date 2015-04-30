@@ -52,7 +52,10 @@ string HTTPGet(string sURL, string sExtra)
 	HttpGet* ht = new HttpGet;
 
 	ht->SetBufsizeIn(MAX_DOWNLOAD_SIZE);
-	ht->Download(sURL, sExtra.c_str());
+	if(sExtra.size())
+		ht->Download(sURL, sExtra.c_str());
+	else
+		ht->Download(sURL);
 	ht->SetAlwaysHandle(true);
 	minihttp::SocketSet ss;
 	ss.add(ht, true);
@@ -91,7 +94,7 @@ string url_encode(const string &value)
         }
 
         // Any other characters are percent-encoded
-        escaped << '%' << setw(2) << int((unsigned char) c);
+        escaped << '%' << setw(2) << uppercase << int((unsigned char) c);
     }
     return escaped.str();
 }
@@ -131,7 +134,10 @@ luaFunc(encodeURI)
 luaFunc(wget)
 {
 	string sURL = lua_tostring(L,1);
-	string sExtra = lua_tostring(L,2);
+	const char* cExtra = lua_tostring(L,2);
+	string sExtra;
+	if(cExtra != NULL)
+		sExtra = cExtra;
 	string s = HTTPGet(sURL, sExtra);
 	luaReturnStr(s.c_str());
 }

@@ -65,3 +65,12 @@ end
 if not G_TIMES then
 	G_TIMES = {["offset"]=-5,["NY"]=-5,}
 end
+
+if not G_OAUTH then
+	G_OAUTH = {}
+end
+
+if not G_JSON then 
+	G_JSON = (loadfile "lua/JSON.lua")()
+end
+

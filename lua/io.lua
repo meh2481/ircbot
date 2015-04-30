@@ -12,6 +12,7 @@ local function savetable(tab, filename)
 		file:close()
 	end
 end
+setglobal("savetable", savetable)
 
 local function saveall()
 	--savetable(G_BIRDWORDS, "txt/birdwords.txt")
@@ -38,6 +39,7 @@ end
 
 local function restoreall()
 	--G_BIRDWORDS = loadtable("txt/birdwords.txt")
+	G_OAUTH = loadtable("txt/oauthkeys.txt")	--This is loaded but never saved
 	G_BADWORDS = loadtable("txt/badwords.txt")
 	--for key,val in pairs(G_BADWORDS) do
 	--	if key:find(" ") then
