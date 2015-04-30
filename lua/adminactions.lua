@@ -208,7 +208,7 @@ local function checkrss(channel, user, str, admin)
 				end
 			end
 		end
-		checktwitter(getchannel())	--Check twitter feeds while we're at it
+		--checktwitter(getchannel())	--Check twitter feeds while we're at it
 	end
 end
 setglobal("checkrss", checkrss)

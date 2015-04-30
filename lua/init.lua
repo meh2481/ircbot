@@ -9,4 +9,4 @@ dofile("lua/messages.lua")
 
 math.randomseed(os.time())
 restoreall()
-checktwitter(getchannel(), true)	--Force a twitter check to populate the list, but don't display them anywhere
+--checktwitter(getchannel(), true)	--Force a twitter check to populate the list, but don't display them anywhere

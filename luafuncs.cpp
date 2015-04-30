@@ -107,11 +107,11 @@ luaFunc(encode64)
 	size_t len = 0;
 	const unsigned char* cEncode = (const unsigned char*) sEncode.c_str();
 	base64_encode(NULL, &len, cEncode, sEncode.size());	//Grab length of our destination buffer
-	unsigned char* cBuf = (unsigned char*) malloc(len) + 1;
+	unsigned char cBuf[len + 1];
 	base64_encode(cBuf, &len, cEncode, sEncode.size());		//Do actual encode
 	cBuf[len] = '\0';
 	string s = (const char*)cBuf;
-	free(cBuf);
+	//free(cBuf);
 	luaReturnStr(s.c_str());
 }
 

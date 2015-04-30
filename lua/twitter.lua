@@ -2,7 +2,8 @@
 
 
 
-local function checktwitter(channel, nopost)
+local function checktwitter(nopost)
+	local channel = getchannel()
 	print("checking the twitterverse...")
 	local urlToGet = "https://api.twitter.com/1.1/statuses/user_timeline.json"
 	local numtweets = 4

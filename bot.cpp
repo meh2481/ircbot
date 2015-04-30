@@ -47,6 +47,8 @@ int main(int argc, char** argv)
 	
 	raw("USER %s 0 0 :%s\r\n", nick.c_str(), nick.c_str());
 	raw("NICK %s\r\n", nick.c_str());
+	
+	Lua.call("checktwitter", "false");
 	while(!bDone)
 	{
 		if(bShouldReload)
@@ -69,6 +71,7 @@ int main(int argc, char** argv)
 			#endif
 			Lua.call("saveall");
 			Lua.call("checkrss");
+			Lua.call("checktwitter");
 		}
 		
 		//Select loop so we can tell if we've timed out
