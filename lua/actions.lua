@@ -485,6 +485,50 @@ local function anagram(channel, user, str)
 	say(channel, "Anagrams for "..searchquery..": "..webpage)	
 end
 
+local function roll(channel, user, str)
+	str = string.gsub(str, "%S+%s", "", 1)		--Remove first word
+	
+	local dpos = string.find(str, "d")
+	if dpos == nil then
+		say(channel, "Rolling a d20: "..math.random(20))
+		return
+	end
+	
+	local numdice = string.sub(str, 1, dpos-1)
+	numdice = string.gsub(numdice, "%s", "")
+	local dicesides = string.sub(str, dpos+1)
+	dicesides = string.gsub(dicesides, "%s", "")
+	
+	--Error-check input
+	if string.len(numdice) > 0 then
+		numdice = tonumber(numdice)
+	else
+		numdice = 1
+	end
+	if string.len(dicesides) > 0 then
+		dicesides = tonumber(dicesides)
+	else
+		dicesides = 20	-- Roll a d20 by default
+	end
+	
+	if numdice == 0 or dicesides == 0 then return end
+	
+	local total = 0
+	local numstr = " ("
+	for i=1,numdice do
+		local rolled = math.random(dicesides)
+		total = total + rolled
+		numstr = numstr..rolled.." "
+	end
+	numstr = string.sub(numstr, 1, -2)..")"
+	
+	if numdice < 2 then
+		numstr = ""
+	end
+	
+	say(channel, "Rolling "..numdice.."d"..dicesides..": "..total..numstr)
+end
+
 local help
 
 local functab = {
@@ -550,6 +594,7 @@ local functab = {
 	--["addtime"] = function(channel, user, str) addtime(channel,str) end,
 	["foulmouth"] = foulmouth,
 	["anagram"] = anagram,
+	["roll"] = roll,
 }
 
 local funchelp = {
@@ -585,6 +630,8 @@ local funchelp = {
 	["timem"] =		'displays the current time in different timezones, 24-hour format',
 	["[unit]"] =	'converts between US and metric units (Example: \"!km [kilometers]\", outputs in miles)',
 	["foulmouth"] = 	'[user|number] tells you how many times [user] has been slapped for their foul language, or gives the top [number] of foul mouths',
+	["anagram"] = 	'[word(s)] outputs a list of anagrams for the given word or words',
+	["roll"] = 		'[XdY] simulates rolling X dice with Y sides',
 }
 
 help = function(unused, channel, str, admin)
