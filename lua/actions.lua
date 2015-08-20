@@ -457,6 +457,34 @@ local function foulmouth(channel, user, str)
 	end
 end
 
+local function anagram(channel, user, str)
+	local searchquery = string.gsub(str, "%S+%s", "", 1)		--Remove first word
+	searchquery = string.gsub(searchquery, "%s", "")			--Remove whitespace
+	
+	--wordsmith.org has an anagram thing yaaay!
+	local webpageURL = "http://wordsmith.org/anagram/anagram.cgi?anagram="..searchquery.."&t=1000&a=n"
+	
+	--Grab the full webpage
+	local webpage = wget(webpageURL)
+	
+	--Search for where on the webpage anagrams are placed...
+	local datastartStr = "Displaying all:"
+	local substrpos = string.find(webpage, datastartStr)
+	if substrpos == nil then
+		say(channel, "No anagrams of "..searchquery.." exist.")
+		return
+	end
+	
+	webpage = string.sub(webpage, substrpos + string.len(datastartStr))	-- Strip off start of file
+	webpage = string.sub(webpage, 1, string.find(webpage, "</div>")-1)	-- Strip off end of file
+	webpage = string.gsub(webpage, "%c", "")	-- Strip out newlines
+	webpage = string.gsub(webpage, "</b><br>", "")	-- Strip out first break
+	webpage = string.sub(webpage, 1, string.find(webpage, "<br>", -5)-1)	-- Cut out last <br> symbol
+	webpage = string.gsub(webpage, "<br>", ", ")	-- Make next newlines spaces to form a good list
+	
+	say(channel, "Anagrams for "..searchquery..": "..webpage)	
+end
+
 local help
 
 local functab = {
@@ -521,7 +549,7 @@ local functab = {
 	["gallons"] = fromgal,
 	--["addtime"] = function(channel, user, str) addtime(channel,str) end,
 	["foulmouth"] = foulmouth,
-	
+	["anagram"] = anagram,
 }
 
 local funchelp = {
