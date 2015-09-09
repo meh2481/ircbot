@@ -237,7 +237,7 @@ end
 
 local function checktweetybird(channel, user, str, admin)
 	if admin == true then
-		checktwitter(getchannel())
+		checktwitter()
 	end
 end
 
