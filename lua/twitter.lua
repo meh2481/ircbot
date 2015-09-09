@@ -1,4 +1,10 @@
 -- Functions for dealing with twitter API
+local function tablelength(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end
+
 local function checktwitter(nopost)
 	local channel = getchannel()
 	print("checking the twitterverse...")
@@ -32,8 +38,6 @@ local function checktwitter(nopost)
 		sigBase = sigBase..encodeURI(n..'='..authTab[n]..'&')
 	end
 	
-	--print(sigBase)
-	
 	--Strip the last ampersand
 	sigBase = string.sub(sigBase, 0, -4)
 	
@@ -48,8 +52,6 @@ local function checktwitter(nopost)
 	--Fetch result from twitter
 	local JSONScript = wget(urlToGet..'?'..urlParams1, headerStr)
 	
-	--print(JSONScript)
-	
 	--Decode into Lua-parsable table
 	local twitter_table = G_JSON:decode(JSONScript)
 	
@@ -59,10 +61,10 @@ local function checktwitter(nopost)
 		"nightinthewoods",
 		"aquaria"
 	}
-	--savetable(twitter_table, "test.txt")
+	
 	--Format and output
 	if twitter_table ~= nil then
-		for i = numtweets, 1, -1 do	--Tweets are posted in reverse order from IRC, so spin backwards over this list to post oldest first
+		for i = tablelength(twitter_table), 1, -1 do	--Tweets are posted in reverse order from IRC, so spin backwards over this list to post oldest first
 			if G_TWEETS[twitter_table[i]["id_str"]] == nil then	--Haven't posted this tweet yet
 				G_TWEETS[twitter_table[i]["id_str"]] = 1
 				if nopost == nil then
@@ -86,7 +88,7 @@ local function checktwitter(nopost)
 					end
 					
 					if totweet == true then
-						say(channel, "[@"..tweeter.."] "..tweettext)
+						say(channel, "[@"..twitter_table[i]["user"]["screen_name"].."] "..tweettext)
 					end
 				end
 			end
