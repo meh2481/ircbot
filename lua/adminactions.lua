@@ -235,6 +235,12 @@ local function nickname(channel, user, str, admin)
 	end
 end
 
+local function checktweetybird(channel, user, str, admin)
+	if admin == true then
+		checktwitter(getchannel())
+	end
+end
+
 local adminfunctab = {
 	["quit"] =		quit,
 	["addbad"] =	addbad,
@@ -253,6 +259,7 @@ local adminfunctab = {
 	["checkrss"] = 	checkrss,
 	["addtime"] = 	addtime,
 	["nick"] = 		nickname,
+	["checktwitter"] = checktweetybird,
 
 }
 setglobal("adminfunctab", adminfunctab)
@@ -274,5 +281,6 @@ local adminfunchelp = {
 	["checkrss"] = 	'forces a check of all RSS feeds (happens automatically every 5 minutes)',
 	["addtime"] =	'adds the timezone to the time clock (format: !addtime [name] [UTC offset in hours])',
 	["nick"] = 		'[nick] changes bot nickname to [nick]',
+	["checktwitter"] = 'checks the twitterverse',
 }
 setglobal("adminfunchelp", adminfunchelp)
