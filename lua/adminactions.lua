@@ -241,6 +241,13 @@ local function checktweetybird(channel, user, str, admin)
 	end
 end
 
+local function dotweet(channel, user, str, admin)
+	if admin == true then
+		local tweetstr = str:gsub("%S+", "", 1)	--Remove first word
+		tweet(tweetstr)
+	end
+end
+
 local adminfunctab = {
 	["quit"] =		quit,
 	["addbad"] =	addbad,
@@ -260,7 +267,7 @@ local adminfunctab = {
 	["addtime"] = 	addtime,
 	["nick"] = 		nickname,
 	["checktwitter"] = checktweetybird,
-
+	["tweet"] =		dotweet,
 }
 setglobal("adminfunctab", adminfunctab)
 
@@ -282,5 +289,6 @@ local adminfunchelp = {
 	["addtime"] =	'adds the timezone to the time clock (format: !addtime [name] [UTC offset in hours])',
 	["nick"] = 		'[nick] changes bot nickname to [nick]',
 	["checktwitter"] = 'checks the twitterverse',
+	["tweet"] =		'tweets at a bird, aka twitter',
 }
 setglobal("adminfunchelp", adminfunchelp)

@@ -1,15 +1,12 @@
 -- Functions for dealing with twitter API
-
-
-
 local function checktwitter(nopost)
 	local channel = getchannel()
 	print("checking the twitterverse...")
-	local urlToGet = "https://api.twitter.com/1.1/statuses/user_timeline.json"
+	local urlToGet = "https://api.twitter.com/1.1/statuses/home_timeline.json"
 	local numtweets = 4
 	local tweeter = "infinite_ammo"	--TODO: Select different peoples
-	local urlParams1 = "count="..numtweets.."&"
-	local urlParams2 = "screen_name="..tweeter
+	local urlParams1 = "count="..numtweets--.."&"
+	--local urlParams2 = "screen_name="..tweeter
 	
 	local headerStr = "Authorization: OAuth "
 	local authTab = {
@@ -23,7 +20,7 @@ local function checktwitter(nopost)
 	}
 	
 	local sigBase = "GET&"
-	sigBase = sigBase..encodeURI(urlToGet)..'&'..encodeURI(urlParams1)
+	sigBase = sigBase..encodeURI(urlToGet)..'&'..encodeURI(urlParams1.."&")
 	
 	--Sort the list
 	local orderedList = {}
@@ -35,7 +32,12 @@ local function checktwitter(nopost)
 		sigBase = sigBase..encodeURI(n..'='..authTab[n]..'&')
 	end
 	
-	sigBase = sigBase..encodeURI(urlParams2)
+	--print(sigBase)
+	
+	--Strip the last ampersand
+	sigBase = string.sub(sigBase, 0, -4)
+	
+	--sigBase = sigBase..encodeURI(urlParams2)
 	
 	local signKey = G_OAUTH["consumersecret"]..'&'..G_OAUTH["accesstokensecret"]
 	
@@ -44,7 +46,9 @@ local function checktwitter(nopost)
 	headerStr = headerStr.."oauth_consumer_key=\""..authTab["oauth_consumer_key"].."\", oauth_nonce=\""..authTab["oauth_nonce"].."\", oauth_signature=\""..authTab["oauth_signature"].."\", oauth_signature_method=\""..authTab["oauth_signature_method"].."\", oauth_timestamp=\""..authTab["oauth_timestamp"].."\", oauth_token=\""..authTab["oauth_token"].."\", oauth_version=\""..authTab["oauth_version"].."\""
 	
 	--Fetch result from twitter
-	local JSONScript = wget(urlToGet..'?'..urlParams1..urlParams2, headerStr)
+	local JSONScript = wget(urlToGet..'?'..urlParams1, headerStr)
+	
+	--print(JSONScript)
 	
 	--Decode into Lua-parsable table
 	local twitter_table = G_JSON:decode(JSONScript)
@@ -55,7 +59,7 @@ local function checktwitter(nopost)
 		"nightinthewoods",
 		"aquaria"
 	}
-	
+	--savetable(twitter_table, "test.txt")
 	--Format and output
 	if twitter_table ~= nil then
 		for i = numtweets, 1, -1 do	--Tweets are posted in reverse order from IRC, so spin backwards over this list to post oldest first
@@ -90,3 +94,48 @@ local function checktwitter(nopost)
 	end
 end
 setglobal("checktwitter", checktwitter)
+
+local function tweet(str)
+	--TODO: HTTP POST and all that
+
+	--[=[local channel = getchannel()
+	print("tweeting: "..str)
+	local urlToGet = "https://api.twitter.com/1.1/statuses/update.json"
+	local urlParams1 = "status="..str
+	
+	local headerStr = "Authorization: OAuth "
+	local authTab = {
+	["oauth_consumer_key"] = G_OAUTH["consumerkey"],
+	["oauth_nonce"] = encode64(tostring(os.time()*os.time())):gsub("%W",""),	--Don't care too much about randomness here, so get 24-ish bytes of junk from time
+	--["oauth_signature"] = "",
+	["oauth_signature_method"] = "HMAC-SHA1",
+	["oauth_timestamp"] = os.time(),
+	["oauth_token"] = G_OAUTH["accesstoken"],
+	["oauth_version"] = "1.0",
+	}
+	
+	local sigBase = "POST&"
+	sigBase = sigBase..encodeURI(urlToGet)..'&'..encodeURI(urlParams1)
+	
+	--Sort the list
+	local orderedList = {}
+	for k,v in pairs(authTab) do
+		table.insert(orderedList,k)
+	end
+	table.sort(orderedList)
+	for i,n in ipairs(orderedList) do 
+		sigBase = sigBase..encodeURI(n..'='..authTab[n]..'&')
+	end
+	
+	local signKey = G_OAUTH["consumersecret"]..'&'..G_OAUTH["accesstokensecret"]
+	
+	authTab["oauth_signature"] = encodeURI(encode64(hmacSHA1(signKey, sigBase)))	--Hash it
+	
+	headerStr = headerStr.."oauth_consumer_key=\""..authTab["oauth_consumer_key"].."\", oauth_nonce=\""..authTab["oauth_nonce"].."\", oauth_signature=\""..authTab["oauth_signature"].."\", oauth_signature_method=\""..authTab["oauth_signature_method"].."\", oauth_timestamp=\""..authTab["oauth_timestamp"].."\", oauth_token=\""..authTab["oauth_token"].."\", oauth_version=\""..authTab["oauth_version"].."\""
+	
+	--Fetch result from twitter
+	local JSONScript = wget(urlToGet..'?'..urlParams1, headerStr)
+	
+	print(JSONScript)--]=]
+end
+setglobal("tweet", tweet)
