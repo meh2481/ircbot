@@ -1,8 +1,6 @@
 // minihttp.cpp - All functionality required for a minimal TCP/HTTP client packed in one file.
 // Released under the WTFPL (See minihttp.h)
 
-#define MINIHTTP_USE_POLARSSL
-
 #ifdef _MSC_VER
 #  ifndef _CRT_SECURE_NO_WARNINGS
 #    define _CRT_SECURE_NO_WARNINGS
@@ -28,6 +26,7 @@
 #  include <unistd.h>
 #  include <fcntl.h>
 #  include <sys/socket.h>
+#  include <netinet/in.h>
 #  include <netdb.h>
 #  define SOCKET_ERROR (-1)
 #  define INVALID_SOCKET (SOCKET)(~0)
@@ -53,6 +52,7 @@
 #include "minihttp.h"
 
 #define SOCKETVALID(s) ((s) != INVALID_SOCKET)
+
 
 #ifdef _MSC_VER
 #  define STRNICMP _strnicmp
@@ -213,19 +213,25 @@ static bool _Resolve(const char *host, unsigned int port, struct sockaddr_in *ad
 // FIXME: this does currently not handle links like:
 // http://example.com/index.html#pos
 
-bool SplitURI(const std::string& uri, std::string& host, std::string& file, int& port, bool& useSSL)
+bool SplitURI(const std::string& uri, std::string& protocol, std::string& host, std::string& file, int& port, bool& useSSL)
 {
     const char *p = uri.c_str();
     const char *sl = strstr(p, "//");
     unsigned int offs = 0;
-    bool ssl = false;
     if(sl)
     {
+        size_t colon = uri.find(':');
+        size_t firstslash = uri.find('/');
+        if(colon < firstslash)
+            protocol = uri.substr(0, colon);
         if(strncmp(p, "http://", 7) == 0)
+        {
+            useSSL = false;
             offs = 7;
+        }
         else if(strncmp(p, "https://", 8) == 0)
         {
-            ssl = true;
+            useSSL = true;
             offs = 8;
         }
         else
@@ -253,9 +259,32 @@ bool SplitURI(const std::string& uri, std::string& host, std::string& file, int&
         port = atoi(host.c_str() + colon);
         host.erase(port);
     }
-    useSSL = ssl;
 
     return true;
+}
+
+void URLEncode(const std::string& s, std::string& enc)
+{
+    const size_t len = s.length();
+    char buf[3];
+    buf[0] = '%';
+    for(size_t i = 0; i < len; i++)
+    {
+        const unsigned char c = s[i];
+        // from  https://www.ietf.org/rfc/rfc1738.txt, page 3
+        if(isalnum(c) || c == '-' || c == '_' || c == '.' || c == ',')
+            enc += (char)c;
+        else if(c == ' ')
+            enc += '+';
+        else
+        {
+            unsigned nib = (c >> 4) & 0xf;
+            buf[1] = nib < 10 ? '0' + nib : 'a' + (nib-10);
+            nib = c & 0xf;
+            buf[2] = nib < 10 ? '0' + nib : 'a' + (nib-10);
+            enc.append(&buf[0], 3);
+        }
+    }
 }
 
 static bool _SetNonBlocking(SOCKET s, bool nonblock)
@@ -292,9 +321,6 @@ TcpSocket::~TcpSocket()
     close();
     if(_inbuf)
         free(_inbuf);
-#ifdef MINIHTTP_USE_POLARSSL
-    shutdownSSL();
-#endif
 }
 
 bool TcpSocket::isOpen(void)
@@ -307,12 +333,15 @@ void TcpSocket::close(void)
     if(!SOCKETVALID(_s))
         return;
 
+    traceprint("TcpSocket::close\n");
+
     _OnCloseInternal();
 
 #ifdef MINIHTTP_USE_POLARSSL
     if(_sslctx)
         ((SSLCtx*)_sslctx)->reset();
     net_close(_s);
+    shutdownSSL();
 #else
 #  ifdef _WIN32
     ::closesocket((SOCKET)_s);
@@ -322,6 +351,7 @@ void TcpSocket::close(void)
 #endif
 
     _s = INVALID_SOCKET;
+    _recvSize = 0;
 }
 
 void TcpSocket::_OnCloseInternal()
@@ -397,14 +427,19 @@ static bool _openSSL(void *ps, SSLCtx *ctx)
 
     /* SSLv3 is deprecated, set minimum to TLS 1.0 */
     ssl_set_min_version(&ctx->ssl, SSL_MAJOR_VERSION_3, SSL_MINOR_VERSION_1);
+
+    // The following is removed from newer polarssl versions
+#ifdef SSL_ARC4_DISABLED
     /* RC4 is deprecated, disable it */
     ssl_set_arc4_support(&ctx->ssl, SSL_ARC4_DISABLED );
+#endif
 
     ssl_set_rng(&ctx->ssl, ctr_drbg_random, &ctx->ctr_drbg);
     ssl_set_dbg(&ctx->ssl, traceprint_ssl, NULL);
     //ssl_set_ciphersuites( &ctx->ssl, ssl_default_ciphersuites); // FIXME
     ssl_set_bio(&ctx->ssl, net_recv, ps, net_send, ps);
 
+    traceprint("SSL handshake now...\n");
     int err;
     while( (err = ssl_handshake(&ctx->ssl)) )
     {
@@ -414,7 +449,7 @@ static bool _openSSL(void *ps, SSLCtx *ctx)
             return false;
         }
     }
-
+    traceprint("SSL handshake done\n");
     return true;
 }
 #endif
@@ -444,25 +479,40 @@ bool TcpSocket::open(const char *host /* = NULL */, unsigned int port /* = 0 */)
             return false;
     }
 
+    traceprint("TcpSocket::open(): host = [%s], port = %d\n", host, port);
 
     assert(!SOCKETVALID(_s));
+    
+    _recvSize = 0;
 
     {
         SOCKET s;
         if(!_openSocket(&s, host, port))
             return false;
         _s = s;
+
+#ifdef SO_NOSIGPIPE
+        // Don't fire SIGPIPE when trying to write to a closed socket
+        {
+            int set = 1;
+            setsockopt(s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+        }
+#endif
+
     }
 
     _SetNonBlocking(_s, _nonblocking); // restore setting if it was set in invalid state. static call because _s is intentionally still invalid here.
 
 #ifdef MINIHTTP_USE_POLARSSL
     if(_sslctx)
+    {
+        traceprint("TcpSocket::open(): SSL requested...\n");
         if(!_openSSL(&_s, (SSLCtx*)_sslctx))
         {
             close();
             return false;
         }
+    }
 #endif
 
     _OnOpen();
@@ -492,7 +542,7 @@ bool TcpSocket::initSSL(const char *certs)
             return false;
         }
     }
-    
+
     if(certs)
     {
         int err = x509_crt_parse(&ctx->cacert, (const unsigned char*)certs, strlen(certs));
@@ -539,7 +589,7 @@ SSLResult TcpSocket::verifySSL()
             r |= SSLR_CERT_FUTURE;
 
         // More than just this?
-        if(res != BADCERT_SKIP_VERIFY)
+        if(res & (BADCERT_SKIP_VERIFY | SSLR_CERT_NOT_TRUSTED))
             r |= SSLR_FAIL;
     }
 
@@ -547,12 +597,18 @@ SSLResult TcpSocket::verifySSL()
 }
 #else // MINIHTTP_USE_POLARSSL
 void TcpSocket::shutdownSSL() {}
-bool TcpSocket::initSSL(const char *certs) { return false; }
+bool TcpSocket::initSSL(const char *certs)
+{
+    traceprint("initSSL: Compiled without SSL support!");
+    return false;
+}
 SSLResult TcpSocket::verifySSL() { return SSLR_NO_SSL; }
 #endif
 
 bool TcpSocket::SendBytes(const void *str, unsigned int len)
 {
+    if(!len)
+        return true;
     if(!SOCKETVALID(_s))
         return false;
     //traceprint("SEND: '%s'\n", str);
@@ -561,22 +617,21 @@ bool TcpSocket::SendBytes(const void *str, unsigned int len)
     while(true) // FIXME: buffer bytes to an internal queue instead?
     {
         int ret = _writeBytes((const unsigned char*)str + written, len - written);
-        if(ret >= 0)
+        if(ret > 0)
         {
             assert((unsigned)ret <= len);
             written += (unsigned)ret;
             if(written >= len)
                 break;
         }
-        else
+        else if(ret < 0)
         {
-#ifdef MINIHTTP_USE_POLARSSL
-            if(ret == POLARSSL_ERR_NET_WANT_WRITE) // FIXME: wait? queue? try later?
-                continue;
-#endif
-            traceprint("SendBytes: error %d\n", ret);
+            int err = ret == -1 ? _GetError() : ret;
+            traceprint("SendBytes: error %d: %s\n", err, _GetErrorStr(err).c_str());
+            close();
             return false;
         }
+        // and if ret == 0, keep trying.
     }
 
     assert(written == len);
@@ -585,14 +640,31 @@ bool TcpSocket::SendBytes(const void *str, unsigned int len)
 
 int TcpSocket::_writeBytes(const unsigned char *buf, size_t len)
 {
+    int ret = 0;
+
 #ifdef MINIHTTP_USE_POLARSSL
+    int err;
     if(_sslctx)
-        return ssl_write(&((SSLCtx*)_sslctx)->ssl, buf, len);
+        err = ssl_write(&((SSLCtx*)_sslctx)->ssl, buf, len);
     else
-        return net_send(&_s, buf, len);
+        err = net_send(&_s, buf, len);
+
+    switch(err)
+    {
+        case POLARSSL_ERR_NET_WANT_WRITE:
+            ret = 0; // FIXME: Nothing written, try later?
+        default:
+            ret = err;
+    }
 #else
-    return ::send(_s, (const char*) buf, len, 0);
+    int flags = 0;
+    #ifdef MSG_NOSIGNAL
+       flags |= MSG_NOSIGNAL;
+    #endif
+    return ::send(_s, (const char*)buf, len, flags);
 #endif
+
+    return ret;
 }
 
 void TcpSocket::_ShiftBuffer(void)
@@ -617,7 +689,7 @@ int TcpSocket::_readBytes(unsigned char *buf, size_t maxlen)
     else
         return net_recv(&_s, buf, maxlen);
 #else
-    return recv(_s, (char*) buf, maxlen, 0); // last char is used as string terminator
+    return recv(_s, (char*)buf, maxlen, 0); // last char is used as string terminator
 #endif
 }
 
@@ -633,6 +705,7 @@ bool TcpSocket::update(void)
         SetBufsizeIn(DEFAULT_BUFSIZE);
 
     int bytes = _readBytes((unsigned char*)_writeptr, _writeSize);
+    //traceprint("TcpSocket::update: _readBytes() result %d\n", bytes);
     if(bytes > 0) // we received something
     {
         _inbuf[bytes] = 0;
@@ -646,13 +719,14 @@ bool TcpSocket::update(void)
     }
     else if(bytes == 0) // remote has closed the connection
     {
-        _recvSize = 0;
         close();
     }
     else // whoops, error?
     {
-        int e = _GetError();
-        switch(e)
+        // Possible that the error is returned directly (in that case, < -1, or -1 is returned and the error has to be retrieved seperately.
+        // But in the latter case, error numbers may be positive (at least on windows...)
+        int err = bytes == -1 ? _GetError() : bytes;
+        switch(err)
         {
         case EWOULDBLOCK:
 #if defined(EAGAIN) && (EWOULDBLOCK != EAGAIN)
@@ -660,17 +734,19 @@ bool TcpSocket::update(void)
 #endif
             return false;
 
+#ifdef MINIHTTP_USE_POLARSSL
+        case POLARSSL_ERR_NET_WANT_READ:
+            break; // Try again later
+#endif
+
         default:
-            traceprint("SOCKET UPDATE ERROR: (%d): %s\n", e, _GetErrorStr(e).c_str());
+            traceprint("SOCKET UPDATE ERROR: (%d): %s\n", err, _GetErrorStr(err).c_str());
         case ECONNRESET:
         case ENOTCONN:
         case ETIMEDOUT:
 #ifdef _WIN32
         case WSAECONNABORTED:
         case WSAESHUTDOWN:
-#endif
-#ifdef MINIHTTP_USE_POLARSSL
-        case 0: // no error from the network API, but notification that the SSL connection was terminated
 #endif
             close();
             break;
@@ -690,6 +766,17 @@ static void strToLower(std::string& s)
     std::transform(s.begin(), s.end(), s.begin(), tolower);
 }
 
+POST& POST::add(const char *key, const char *value)
+{
+    if(!empty())
+        data += '&';
+    URLEncode(key, data);
+    data += '=';
+    URLEncode(value, data);
+    return *this;
+}
+
+
 HttpSocket::HttpSocket()
 : TcpSocket(),
 _keep_alive(0), _remaining(0), _chunkedTransfer(false), _mustClose(true), _inProgress(false),
@@ -705,6 +792,7 @@ void HttpSocket::_OnOpen()
 {
     TcpSocket::_OnOpen();
     _chunkedTransfer = false;
+    _mustClose = true;
 }
 
 void HttpSocket::_OnCloseInternal()
@@ -721,6 +809,8 @@ bool HttpSocket::_OnUpdate()
     if(_inProgress && !_chunkedTransfer && !_remaining && _status)
         _FinishRequest();
 
+    //traceprint("HttpSocket::_OnUpdate, Q = %d\n", (unsigned)_requestQ.size());
+
     // initiate transfer if queue is not empty, but the socket somehow forgot to proceed
     if(_requestQ.size() && !_remaining && !_chunkedTransfer && !_inProgress)
         _DequeueMore();
@@ -728,42 +818,74 @@ bool HttpSocket::_OnUpdate()
     return true;
 }
 
-bool HttpSocket::Download(const std::string& url,  const char *extraRequest /*= NULL*/, void *user /* = NULL */)
+bool HttpSocket::Download(const std::string& url,  const char *extraRequest /*= NULL*/, void *user /* = NULL */, const POST *post /*= NULL*/)
 {
     Request req;
     req.user = user;
-    SplitURI(url, req.host, req.resource, req.port, req.useSSL);
+    if(post)
+        req.post = *post;
+    SplitURI(url, req.protocol, req.host, req.resource, req.port, req.useSSL);
+    if(IsRedirecting() && req.host.empty()) // if we're following a redirection to the same host, the server is likely to omit its hostname
+        req.host = _curRequest.host;
     if(req.port < 0)
         req.port = req.useSSL ? 443 : 80;
     if(extraRequest)
         req.extraGetHeaders = extraRequest;
-    return SendGet(req, false);
+    return SendRequest(req, false);
 }
 
-bool HttpSocket::SendGet(const std::string what, const char *extraRequest /*= NULL*/, void *user /* = NULL */)
+
+bool HttpSocket::_Redirect(std::string loc, bool forceGET)
+{
+    traceprint("Following HTTP redirect to: %s\n", loc.c_str());
+    if(loc.empty())
+        return false;
+
+    Request req;
+    req.user = _curRequest.user;
+    req.useSSL = _curRequest.useSSL;
+    if(!forceGET)
+        req.post = _curRequest.post;
+    SplitURI(loc, req.protocol, req.host, req.resource, req.port, req.useSSL);
+    if(req.protocol.empty()) // assume local resource
+    {
+        req.host = _curRequest.host;
+        req.resource = loc;
+    }
+    if(req.host.empty())
+        req.host = _curRequest.host;
+    if(req.port < 0)
+        req.port = _curRequest.port;
+    req.extraGetHeaders = _curRequest.extraGetHeaders;
+    return SendRequest(req, false);
+}
+
+bool HttpSocket::SendRequest(const std::string what, const char *extraRequest /*= NULL*/, void *user /* = NULL */)
 {
     Request req(what, _host, _lastport, user);
     if(extraRequest)
         req.extraGetHeaders = extraRequest;
-    return SendGet(req, false);
+    return SendRequest(req, false);
 }
 
-bool HttpSocket::QueueGet(const std::string what, const char *extraRequest /*= NULL*/, void *user /* = NULL */)
+bool HttpSocket::QueueRequest(const std::string what, const char *extraRequest /*= NULL*/, void *user /* = NULL */)
 {
     Request req(what, _host, _lastport, user);
     if(extraRequest)
         req.extraGetHeaders = extraRequest;
-    return SendGet(req, true);
+    return SendRequest(req, true);
 }
 
-bool HttpSocket::SendGet(Request& req, bool enqueue)
+bool HttpSocket::SendRequest(Request& req, bool enqueue)
 {
     if(req.host.empty() || !req.port)
         return false;
 
+    const bool post = !req.post.empty();
+
     std::stringstream r;
     const char *crlf = "\r\n";
-    r << "GET " << req.resource << " HTTP/1.1" << crlf;
+    r << (post ? "POST " : "GET ") << req.resource << " HTTP/1.1" << crlf;
     r << "Host: " << req.host << crlf;
     if(_keep_alive)
     {
@@ -779,6 +901,12 @@ bool HttpSocket::SendGet(Request& req, bool enqueue)
     if(_accept_encoding.length())
         r << "Accept-Encoding: " << _accept_encoding << crlf;
 
+    if(post)
+    {
+        r << "Content-Length: " << req.post.length() << crlf;
+        r << "Content-Type: application/x-www-form-urlencoded" << crlf;
+    }
+
     if(req.extraGetHeaders.length())
     {
         r << req.extraGetHeaders;
@@ -788,6 +916,10 @@ bool HttpSocket::SendGet(Request& req, bool enqueue)
 
     r << crlf; // header terminator
 
+    // FIXME: appending this to the 'header' field is probably not a good idea
+    if(post)
+        r << req.post.str();
+
     req.header = r.str();
 
     return _EnqueueOrSend(req, enqueue);
@@ -795,22 +927,26 @@ bool HttpSocket::SendGet(Request& req, bool enqueue)
 
 bool HttpSocket::_EnqueueOrSend(const Request& req, bool forceQueue /* = false */)
 {
+    traceprint("HttpSocket::_EnqueueOrSend, forceQueue = %d\n", forceQueue);
     if(_inProgress || forceQueue) // do not send while receiving other data
     {
-        traceprint("HTTP: Transfer pending; putting into queue. Now %u waiting.\n", (unsigned int)_requestQ.size()); // DEBUG
+        traceprint("HTTP: Transfer pending; putting into queue. Now %u waiting.\n", (unsigned int)_requestQ.size());
         _requestQ.push(req);
         return true;
     }
     // ok, we can send directly
+    traceprint("HTTP: Open request for immediate send.\n");
     if(!_OpenRequest(req))
         return false;
-    _inProgress = SendBytes(req.header.c_str(), req.header.length());
-    return _inProgress;
+    bool sent = SendBytes(req.header.c_str(), req.header.length());
+    _inProgress = sent;
+    return sent;
 }
 
 // called whenever a request is finished completely and the socket checks for more things to send
 void HttpSocket::_DequeueMore(void)
 {
+    traceprint("HttpSocket::_DequeueMore, Q = %u\n", (unsigned)_requestQ.size());
     _FinishRequest(); // In case this was not done yet.
 
     // _inProgress is known to be false here
@@ -831,7 +967,11 @@ bool HttpSocket::_OpenRequest(const Request& req)
     if(req.useSSL && !hasSSL())
     {
         traceprint("HttpSocket::_OpenRequest(): Is an SSL connection, but SSL was not inited, doing that now\n");
-        initSSL(NULL); // FIXME: supply cert list?
+        if(!initSSL(NULL)) // FIXME: supply cert list?
+        {
+            traceprint("FAILED to init SSL");
+            return false;
+        }
     }
     if(!open(req.host.c_str(), req.port))
         return false;
@@ -843,12 +983,16 @@ bool HttpSocket::_OpenRequest(const Request& req)
 
 void HttpSocket::_FinishRequest(void)
 {
+    traceprint("HttpSocket::_FinishRequest\n");
     if(_inProgress)
     {
+        traceprint("... in progress. redirecting = %d\n", IsRedirecting());
         if(!IsRedirecting() || _alwaysHandle)
             _OnRequestDone(); // notify about finished request
         _inProgress = false;
         _hdrs.clear();
+        if(_mustClose)
+            close();
     }
 }
 
@@ -939,7 +1083,9 @@ void HttpSocket::_ParseHeaderFields(const char *s, size_t size)
             ++val;
         std::string key(s, colon - s);
         strToLower(key);
-        _hdrs[key] = std::string(val, valEnd - val);
+        std::string valstr(val, valEnd - val);
+        _hdrs[key] = valstr;
+        traceprint("HDR: %s: %s\n", key.c_str(), valstr.c_str());
         s = valEnd;
     }
 }
@@ -965,25 +1111,28 @@ bool HttpSocket::_HandleStatus()
     const char *conn = Hdr("connection"); // if its not keep-alive, server will close it, so we can too
     _mustClose = !conn || STRNICMP(conn, "keep-alive", 10);
 
-    if(!(_chunkedTransfer || _contentLen) && _status == 200)
+    const bool success = IsSuccess();
+
+    if(!(_chunkedTransfer || _contentLen) && success)
         traceprint("_ParseHeader: Not chunked transfer and content-length==0, this will go fail");
 
+    traceprint("Got HTTP Status %d\n", _status);
+
+    if(success)
+        return true;
+
+    bool forceGET = false;
     switch(_status)
     {
-        case 200:
-            return true;
-
+        case 303:
+            forceGET = true; // As per spec, continue with a GET request
         case 301:
         case 302:
-        case 303:
         case 307:
         case 308:
             if(_followRedir)
                 if(const char *loc = Hdr("location"))
-                {
-                    traceprint("Following HTTP redirect to: %s\n", loc);
-                    Download(loc, _curRequest.extraGetHeaders.c_str(), _curRequest.user);
-                }
+                    _Redirect(loc, forceGET);
             return false;
 
         default:
@@ -1004,6 +1153,13 @@ bool HttpSocket::IsRedirecting() const
     }
     return false;
 }
+
+bool HttpSocket::IsSuccess() const
+{
+    const unsigned s = _status;
+    return s >= 200 && s <= 205;
+}
+
 
 
 void HttpSocket::_ParseHeader(void)
@@ -1092,7 +1248,7 @@ void HttpSocket::_OnClose()
 
 void HttpSocket::_OnRecvInternal(void *buf, unsigned int size)
 {
-    if(_status == 200 || _alwaysHandle)
+    if(IsSuccess() || _alwaysHandle)
         _OnRecv(buf, size);
 }
 
@@ -1126,6 +1282,7 @@ bool SocketSet::update(void)
         interesting = sock->update() || interesting;
         if(sdata.deleteWhenDone && !sock->isOpen() && !sock->HasPendingTask())
         {
+            traceprint("Delete socket\n");
             delete sock;
             _store.erase(it++);
         }

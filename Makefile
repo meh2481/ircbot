@@ -1,14 +1,14 @@
 OS = $(shell uname -s)
 LIBS = ./dep/lua/liblua.a ./dep/tinyxml2/libtinyxml2.a ./dep/libmbedtls.a
 OBJECTS = bot.o network.o minihttp.o luainterface.o luafuncs.o
-CXXFLAGS = -Wno-write-strings
+CXXFLAGS = -Wno-write-strings -DMINIHTTP_USE_POLARSSL
 INCLUDE = -I./dep/lua -I./dep/tinyxml2 -I./dep
 CC = g++
 
 TARGET = ircbot
 ifeq ($(BUILD),debug)
     TARGET = ircbot_test
-    CXXFLAGS = -Wno-write-strings -DDEBUG
+    CXXFLAGS = -Wno-write-strings -DDEBUG -D_DEBUG -DMINIHTTP_USE_POLARSSL
 endif
 
 ifneq (,$(findstring MINGW,$(OS)))

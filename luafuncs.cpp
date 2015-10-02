@@ -5,6 +5,8 @@
 
 #include <algorithm>
 #include <sstream>
+#include <iostream>
+using namespace std;
 
 //Thaaaanks http://www.cplusplus.com/forum/beginner/115247/#msg629035
 std::string remove_letter_easy( std::string str, char c )
@@ -47,15 +49,16 @@ protected:
 	}
 };
 
-string HTTPGet(string sURL, string sExtra)
+string HTTPGet(string sURL, string sExtra = "", string sPostName = "", string sPost = "")
 {
 	HttpGet* ht = new HttpGet;
+	
+	minihttp::POST post;
+	if(sPost.size())
+		post.add(sPostName.c_str(), sPost.c_str());
 
 	ht->SetBufsizeIn(MAX_DOWNLOAD_SIZE);
-	if(sExtra.size())
-		ht->Download(sURL, sExtra.c_str());
-	else
-		ht->Download(sURL);
+	ht->Download(sURL, (sExtra.size())?(sExtra.c_str()):(NULL), NULL, (sPost.size())?(&post):(NULL));
 	ht->SetAlwaysHandle(true);
 	minihttp::SocketSet ss;
 	ss.add(ht, true);
@@ -63,11 +66,6 @@ string HTTPGet(string sURL, string sExtra)
 	while(ss.size() && !bStop && getTicks() < startTicks + 1000*10)	//Just spin here (for a maximum of 10 seconds)
 		ss.update();
 	return sBuf;
-}
-
-string HTTPGet(string sURL)
-{
-	return HTTPGet(sURL, "");
 }
 
 //http://stackoverflow.com/questions/154536/encode-decode-urls-in-c
@@ -142,6 +140,16 @@ luaFunc(wget)
 	luaReturnStr(s.c_str());
 }
 
+luaFunc(post) // url, extra, postName, postData
+{
+	string sURL = lua_tostring(L,1);
+	string sExtra = lua_tostring(L,2);
+	string sPostName = lua_tostring(L,3);
+	string sPost = lua_tostring(L,4);
+	string s = HTTPGet(sURL, sExtra, sPostName, sPost);
+	luaReturnStr(s.c_str());
+}
+
 luaFunc(sleep)	//seconds
 {
 	sleep(lua_tointeger(L, 1));
@@ -188,6 +196,7 @@ luaFunc(getURLTitle)	//URL
 		ss.update();
 	
 	//Ok, now we have data in sBuf, parse for title
+	cout << sBuf << endl;
 	size_t start = sBuf.find("<title>");
 	if(start != string::npos)
 	{
@@ -405,6 +414,7 @@ static LuaFunctions s_functab[] =
 	luaRegister(getLatestRSS),
 	luaRegister(newnick),
 	luaRegister(wget),
+	luaRegister(post),
 	luaRegister(defineWord),
 	luaRegister(encodeURI),
 	luaRegister(encode64),

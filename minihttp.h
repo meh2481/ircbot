@@ -7,13 +7,12 @@
 #ifndef MINIHTTPSOCKET_H
 #define MINIHTTPSOCKET_H
 
-
 // ---- Compile config -----
 #define MINIHTTP_SUPPORT_HTTP
 #define MINIHTTP_SUPPORT_SOCKET_SET
 // -------------------------
 
-
+// Intentionally avoid pulling in any other headers
 
 #include <string>
 
@@ -25,6 +24,9 @@ void StopNetwork();
 bool HasSSL();
 
 bool SplitURI(const std::string& uri, std::string& host, std::string& file, int& port);
+
+// append to enc
+void URLEncode(const std::string& s, std::string& enc);
 
 enum SSLResult
 {
@@ -91,7 +93,11 @@ protected:
 
     bool _nonblocking; // Default true. If false, the current thread is blocked while waiting for input.
 
+#ifdef _WIN32
     intptr_t _s; // socket handle. really an int, but to be sure its 64 bit compatible as it seems required on windows, we use this.
+#else
+    long _s;
+#endif
 
     std::string _host;
 
@@ -120,12 +126,26 @@ enum HttpCode
     HTTP_NOTFOUND = 404,
 };
 
+class POST
+{
+public:
+    void reserve(size_t res) { data.reserve(res); }
+    POST& add(const char *key, const char *value);
+    const char *c_str() const { return data.c_str(); }
+    const std::string& str() const { return data; }
+    bool empty() const { return data.empty(); }
+    size_t length() const { return data.length(); }
+private:
+    std::string data;
+};
+
 struct Request
 {
     Request() : port(80), user(NULL) {}
     Request(const std::string& h, const std::string& res, int p = 80, void *u = NULL)
         : host(h), resource(res), port(80), user(u), useSSL(false) {}
 
+    std::string protocol;
     std::string host;
     std::string header; // set by socket
     std::string resource;
@@ -133,6 +153,7 @@ struct Request
     int port;
     void *user;
     bool useSSL;
+    POST post; // if this is empty, it's a GET request, otherwise a POST request
 };
 
 class HttpSocket : public TcpSocket
@@ -153,10 +174,10 @@ public:
     void SetFollowRedirect(bool follow) { _followRedir = follow; }
     void SetAlwaysHandle(bool h) { _alwaysHandle = h; }
 
-    bool Download(const std::string& url, const char *extraRequest = NULL, void *user = NULL);
-    bool SendGet(Request& what, bool enqueue);
-    bool SendGet(const std::string what, const char *extraRequest = NULL, void *user = NULL);
-    bool QueueGet(const std::string what, const char *extraRequest = NULL, void *user = NULL);
+    bool Download(const std::string& url, const char *extraRequest = NULL, void *user = NULL, const POST *post = NULL);
+    bool SendRequest(Request& what, bool enqueue);
+    bool SendRequest(const std::string what, const char *extraRequest = NULL, void *user = NULL);
+    bool QueueRequest(const std::string what, const char *extraRequest = NULL, void *user = NULL);
 
     unsigned int GetRemaining() const { return _remaining; }
 
@@ -169,6 +190,7 @@ public:
     const char *Hdr(const char *h) const;
 
     bool IsRedirecting() const;
+    bool IsSuccess() const;
 
 protected:
     virtual void _OnCloseInternal();
@@ -180,6 +202,8 @@ protected:
 
     // new ones:
     virtual void _OnRequestDone() {}
+
+    bool _Redirect(std::string loc, bool forceGET);
 
     void _ProcessChunk();
     bool _EnqueueOrSend(const Request& req, bool forceQueue = false);

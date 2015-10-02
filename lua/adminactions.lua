@@ -244,7 +244,9 @@ end
 local function dotweet(channel, user, str, admin)
 	if admin == true then
 		local tweetstr = str:gsub("%S+", "", 1)	--Remove first word
-		tweet(tweetstr)
+		tweetstr = tweetstr:gsub("%s+", "", 1)	--Remove whitespace after said first word
+		if tweetstr:len() < 2 then return end	--Ignore empty or close-to-empty tweets
+		tweet(user..": "..tweetstr)
 	end
 end
 
