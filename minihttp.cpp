@@ -272,7 +272,7 @@ void URLEncode(const std::string& s, std::string& enc)
     {
         const unsigned char c = s[i];
         // from  https://www.ietf.org/rfc/rfc1738.txt, page 3
-        if(isalnum(c) || c == '-' || c == '_' || c == '.' || c == ',')
+        if(isalnum(c) || c == '_' || c == '.' || c == ',')
             enc += (char)c;
         else if(c == ' ')
             enc += '+';
