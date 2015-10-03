@@ -9,7 +9,7 @@ local function tweetsat()
 	local channel = getchannel()
 	print("checking twitter mentions...")
 	local urlToGet = "https://api.twitter.com/1.1/statuses/mentions_timeline.json"
-	local numtweets = 5
+	local numtweets = 10
 	local urlParams1 = "count="..numtweets
 	--local urlParams2 = "screen_name="..tweeter
 	
@@ -77,7 +77,7 @@ local function checktwitter(nopost)
 	local channel = getchannel()
 	print("checking the twitterverse...")
 	local urlToGet = "https://api.twitter.com/1.1/statuses/home_timeline.json"
-	local numtweets = 5
+	local numtweets = 10
 	local urlParams1 = "count="..numtweets--.."&"
 	
 	local headerStr = "Authorization: OAuth "
