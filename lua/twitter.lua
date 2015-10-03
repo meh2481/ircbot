@@ -200,7 +200,7 @@ local function tweet(str)
 	--Strip the last ampersand
 	--sigBase = string.sub(sigBase, 0, -4)
 	sigBase = sigBase..encodeURI(urlParams1)
-	print(sigBase)
+	--print(sigBase)
 	
 	local signKey = G_OAUTH["consumersecret"]..'&'..G_OAUTH["accesstokensecret"]
 	
@@ -226,6 +226,6 @@ local function tweet(str)
 		end
 	end
 	
-	print(JSONScript)
+	--print(JSONScript)
 end
 setglobal("tweet", tweet)
