@@ -45,11 +45,13 @@ local function gotmessage(user, cmd, where, target, message)
 		end
 		
 		--Test for links
-		for w in message:gmatch("https?://%S+") do
-			--w = w:gsub("https", "http", 1)
-			local title = gettitle(w)
-			if title and title:len() > 0 then
-				say(target, "["..title.."]")
+		if string.find(user, "GitHub") == nil then
+			for w in message:gmatch("https?://%S+") do
+				--w = w:gsub("https", "http", 1)
+				local title = gettitle(w)
+				if title and title:len() > 0 then
+					say(target, "["..title.."]")
+				end
 			end
 		end
 		
