@@ -120,7 +120,7 @@ local function insult(channel, user, message)
 	if insultee == "insult" then
 		insultee = "Thou art"
 	else
-		insultee = insultee.." is"
+		insultee = insultee.." doth be"
 	end
 	local adj1 = G_INSULTADJ1[math.random(#G_INSULTADJ1)]
 	local adj2 = G_INSULTADJ2[math.random(#G_INSULTADJ2)]
