@@ -532,6 +532,7 @@ end
 local help
 
 local functab = {
+	["barf"] =              function(channel) say(channel, "BLEEEEEEEEEHHHHHH") end,
 	["beep"] = 		function(channel) say(channel, "Imma bot. Beep.") end,
 	["d6"] = 		d6,
 	["coin"] = 		coin,
@@ -599,6 +600,7 @@ local functab = {
 
 local funchelp = {
 	["beep"] = 		'displays a beep message',
+	["barf"] =              'does what it says on the tin',
 	["d6"] = 		'rolls a 6-sided die and displays the result',
 	["coin"] = 		'flips a coin and says heads or tails',
 	["bitcoin"] = 	'returns the current bitcoin mining complexity',
