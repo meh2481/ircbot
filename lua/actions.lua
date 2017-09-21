@@ -529,6 +529,113 @@ local function roll(channel, user, str)
 	say(channel, "Rolling "..numdice.."d"..dicesides..": "..total..numstr)
 end
 
+local COMPADJ1 = {
+	"rare",
+	"sugared",
+	"precious",
+	"dutiful",
+	"damasked",
+	"flowering",
+	"gallant",
+	"celestial",
+	"sweet",
+	"saucy",
+	"sportful",
+	"artful",
+	"heavenly",
+	"yarely",
+	"tuneful",
+	"courteous",
+	"delicate",
+	"silken",
+	"brave",
+	"complete",
+	"vasty",
+	"pleasing",
+	"cheek-rosy",
+	"deserving",
+	"melting",
+	"wholesome",
+	"fruitful",
+}
+
+local COMPADJ2 = {
+	"honey-tongued",
+	"well-wishing",
+	"berhyming",
+	"fair-faced",
+	"five-fingered-tied",
+	"heart-inflaming",
+	"not-answering",
+	"spleenative",
+	"softly-sprighted",
+	"smooth-faced",
+	"sweet-suggesting",
+	"swinge-buckling",
+	"tender-hearted",
+	"tender-feeling",
+	"thunder-darting",
+	"tiger-booted",
+	"lustyhooded",
+	"welsh",
+	"superstitious",
+	"sympathizing",
+	"sweet-tongued",
+	"weeping-ripe",
+	"well-favoured",
+	"young-eyed",
+	"primrose",
+	"best-tempered",
+	"well-graced",
+}
+
+local COMPNOUN = {
+	"nymph",
+        "ornament",
+        "toast",
+        "curiosity",
+        "apple-john",
+        "bilbo",
+        "cuckoo-bud",
+        "nose-herb",
+        "gamester",
+        "ouch",
+        "goddess",
+        "night-cap",
+        "delight",
+        "watercake",
+        "umpire",
+        "sprite",
+        "song",
+        "welsh cheese",
+        "kissing-comfit",
+        "wit-cracker",
+        "hawthorn-bud",
+        "valentine",
+        "smilet",
+        "true-penny",
+        "primrose path",
+        "gaudy-night",
+        "pigeon-egg",
+}
+
+local function compliment(channel, user, message)
+	local insultee = string.gsub(message, "%S+%s", "", 1)
+	if insultee == "insult" then
+		insultee = "Thou art"
+	else
+		insultee = insultee.." doth be"
+	end
+	local adj1 = COMPADJ1[math.random(#COMPADJ1)]
+	local adj2 = COMPADJ2[math.random(#COMPADJ2)]
+	local noun = G_INSULTNOUN[math.random(#G_INSULTNOUN)]
+	local pt1 = " a "
+	if string.find("aeiou", adj1:sub(1,1)) then
+		pt1 = " an "	--If first adjective starts with vowel, use proper grammar
+	end
+	say(channel, insultee..pt1..adj1..", "..adj2.." "..noun)
+end
+
 local help
 
 local functab = {
@@ -596,6 +703,8 @@ local functab = {
 	["foulmouth"] = foulmouth,
 	["anagram"] = anagram,
 	["roll"] = roll,
+	["compliment"] = compliment,
+	["mama"] = function(channel) compliment(channel, "PAD", "PAD Thy mother") end,
 }
 
 local funchelp = {
@@ -612,6 +721,8 @@ local funchelp = {
 	["snack"] = 	'feeds me a snack',
 	["ex"] = 		'insults thy ex in a Shakespearean manner',
 	["insult"] = 	'insults anyone or anything in a Shakespearean manner (Usage: \"!insult [thing]\", or just \"!insult\" for thou)',
+	["compliment"] = 'compliments anyone or anything in a Shakespearean manner (Usage: \"!compliment [thing]\", or just \"!compliment\" for thou)',
+	["mama"] = 'compliments thy mama in a Shakespearean manner',
 	["uptime"] = 	'displays how long I\'ve been running',
 	["seen"] = 		'says the last time I saw a particular user (Usage: \"!seen [user]\")',
 	["hug"] =		'hugs you or a particular user (Usage: \"!hug [user]\")',
