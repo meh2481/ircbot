@@ -281,7 +281,9 @@ local function tofarenheit(str, channel)
 	if Tc == nil then return end
 	local Tf = (9/5)*Tc+32
 	local Tfstr = string.format("%.2f", Tf)
-	say(channel, Tc.." °C = "..Tfstr.." °F")
+	local Tfe = (7/5)*Tc+16
+	local Tfestr = string.format("%.2f", Tfe)
+	say(channel, Tc.." °C = "..Tfstr.." °F ("..Tfestr.." °Є)")
 end
 setglobal("tofarenheit", tofarenheit)
 
@@ -291,7 +293,9 @@ local function tocelsius(str, channel)
 	if Tf == nil then return end
 	local Tc = (5/9)*(Tf-32)
 	local Tcstr = string.format("%.2f", Tc)
-	say(channel, Tf.." °F = "..Tcstr.." °C")
+	local Tfe = (Tf * 7 - 80) / 9
+	local Tfestr = string.format("%.2f", Tfe)
+	say(channel, Tf.." °F = "..Tcstr.." °C ("..Tfestr.." °Є)")
 end
 setglobal("tocelsius", tocelsius)
 
