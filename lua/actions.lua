@@ -494,7 +494,12 @@ local function roll(channel, user, str)
 	
 	local dpos = string.find(str, "d")
 	if dpos == nil then
-		say(channel, "Rolling a d20: "..math.random(20))
+		local number = math.random(20)
+		if number == 1 then
+			say(channel, "Rolling a d20: 1 (derp)")
+		else
+			say(channel, "Rolling a d20: "..number)
+		end
 		return
 	end
 	
@@ -707,6 +712,7 @@ local functab = {
 	["foulmouth"] = foulmouth,
 	["anagram"] = anagram,
 	["roll"] = roll,
+	["troll"] = function(channel) say(channel, "Rolling a d20: 1 (derp)") end,
 	["compliment"] = compliment,
 	["mama"] = function(channel) compliment(channel, "PAD", "PAD Thy mother") end,
 }
@@ -749,6 +755,7 @@ local funchelp = {
 	["foulmouth"] = 	'[user|number] tells you how many times [user] has been slapped for their foul language, or gives the top [number] of foul mouths',
 	["anagram"] = 	'[word(s)] outputs a list of anagrams for the given word or words',
 	["roll"] = 		'[XdY] simulates rolling X dice with Y sides',
+	["troll"] = 		'simulates rolling a 1',
 }
 
 help = function(unused, channel, str, admin)
